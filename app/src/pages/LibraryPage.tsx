@@ -2,12 +2,16 @@
 // start a new class.
 
 import { useRef, useState } from 'react';
-import { Copy, Download, Play, Plus, Trash2, Upload } from 'lucide-react';
+import { CircleHelp, Copy, Download, MonitorDown, Play, Plus, Trash2, Upload } from 'lucide-react';
 import { blankPlan, duplicatePlan, formatMinutes, normalizePlan, totalMinutes, type ClassPlan } from '../lib/plan.ts';
 import { hrefFor, navigate } from '../lib/router.ts';
 import type { PlansApi } from '../lib/usePlans.ts';
 import { ConfirmDialog } from '../components/feedback.tsx';
 import { formatDate } from '../components/PrintSheet.tsx';
+import { TemplatePicker } from '../components/TemplatePicker.tsx';
+import type { Template } from '../lib/samples.ts';
+import type { InstallState } from '../lib/pwa.ts';
+import { FREE_PLAN_LIMIT, type LicenseApi } from '../lib/license.ts';
 
 const STRUCTURE = ['Warm-up', 'Concept', 'Positional game', 'Gems', 'Free roll'];
 
@@ -21,16 +25,40 @@ export function downloadJson(filename: string, data: unknown) {
   URL.revokeObjectURL(url);
 }
 
-export function LibraryPage({ api, notify }: { api: PlansApi; notify: (m: string) => void }) {
+export function LibraryPage({
+  api,
+  notify,
+  install,
+  onHelp,
+  pickerOpen,
+  setPickerOpen,
+  canCreate,
+  license,
+  onUnlock,
+}: {
+  api: PlansApi;
+  notify: (m: string) => void;
+  install: InstallState;
+  onHelp: () => void;
+  pickerOpen: boolean;
+  setPickerOpen: (open: boolean) => void;
+  /** False (and shows the unlock sheet) when the free plan limit is reached. */
+  canCreate: () => boolean;
+  license: LicenseApi;
+  onUnlock: () => void;
+}) {
   const [pendingDelete, setPendingDelete] = useState<ClassPlan | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const sorted = [...api.plans].sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt));
 
-  const create = () => {
-    const plan = blankPlan();
+  const open = (plan: ClassPlan) => {
     api.upsert(plan);
+    setPickerOpen(false);
     navigate({ name: 'edit', id: plan.id });
+  };
+  const create = () => {
+    if (canCreate()) setPickerOpen(true);
   };
 
   const onImport = async (file: File) => {
@@ -51,6 +79,14 @@ export function LibraryPage({ api, notify }: { api: PlansApi; notify: (m: string
           <span className="wordmark">Maestranada</span>
         </div>
         <div className="topbar-actions">
+          {install.kind === 'prompt' && (
+            <button type="button" className="btn btn-secondary" onClick={install.install}>
+              <MonitorDown size={16} /> Install app
+            </button>
+          )}
+          <button type="button" className="btn btn-ghost" onClick={onHelp}>
+            <CircleHelp size={16} /> <span className="hide-sm">How it works</span>
+          </button>
           <button type="button" className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
             <Upload size={16} /> <span className="hide-sm">Import</span>
           </button>
@@ -157,6 +193,7 @@ export function LibraryPage({ api, notify }: { api: PlansApi; notify: (m: string
                     aria-label="Duplicate"
                     title="Duplicate"
                     onClick={() => {
+                      if (!canCreate()) return;
                       api.upsert(duplicatePlan(p));
                       notify('Plan duplicated');
                     }}
@@ -177,6 +214,40 @@ export function LibraryPage({ api, notify }: { api: PlansApi; notify: (m: string
             </article>
           ))}
         </div>
+      )}
+
+      <footer className="library-foot">
+        <span>Works offline</span>
+        <span className="sep">·</span>
+        <span>Your plans stay on this device</span>
+        {license.enabled && (
+          <>
+            <span className="sep">·</span>
+            {license.unlocked ? (
+              <span>Full version</span>
+            ) : (
+              <button type="button" className="link" onClick={onUnlock}>
+                Free version: {Math.min(api.plans.length, FREE_PLAN_LIMIT)} of {FREE_PLAN_LIMIT} plans. Unlock
+              </button>
+            )}
+          </>
+        )}
+        {api.plans.length > 0 && (
+          <>
+            <span className="sep">·</span>
+            <button type="button" className="link" onClick={() => downloadJson('maestranada-plans.json', api.plans)}>
+              Back up all plans
+            </button>
+          </>
+        )}
+      </footer>
+
+      {pickerOpen && (
+        <TemplatePicker
+          onClose={() => setPickerOpen(false)}
+          onBlank={() => open(blankPlan())}
+          onTemplate={(t: Template) => open(t.build())}
+        />
       )}
 
       {pendingDelete && (
