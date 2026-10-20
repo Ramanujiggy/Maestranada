@@ -11,6 +11,8 @@
 // Everything here is pure data + pure functions so it can be tested without
 // a browser and stored as plain JSON.
 
+import { getLang, t } from './i18n.ts';
+
 export interface ListItem {
   id: string;
   text: string;
@@ -84,7 +86,7 @@ export interface ClassPlan {
   freeRoll: FreeRoll;
 }
 
-export const MOVEMENT_SUGGESTIONS = [
+const MOVEMENTS_EN = [
   'Forward rolls',
   'Backward rolls',
   'Shrimps',
@@ -98,6 +100,26 @@ export const MOVEMENT_SUGGESTIONS = [
   'Sit-throughs',
   'Hip switches',
 ];
+
+const MOVEMENTS_PT = [
+  'Rolamento para frente',
+  'Rolamento para trás',
+  'Fuga de quadril',
+  'Fuga de quadril para frente',
+  'Estrelinha',
+  'Levantada técnica',
+  'Ponte',
+  'Rolamento granby',
+  'Sprawl',
+  'Andar de urso',
+  'Sit-through',
+  'Troca de quadril',
+];
+
+/** Movement drills to tap into the warm-up, in the app's language. */
+export function movementSuggestions(): string[] {
+  return getLang() === 'pt' ? MOVEMENTS_PT : MOVEMENTS_EN;
+}
 
 export function uid(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -146,6 +168,10 @@ export function blankPlan(now = new Date()): ClassPlan {
 
 /** The example class: offensive opportunities from the leg drag. */
 export function samplePlan(now = new Date()): ClassPlan {
+  return getLang() === 'pt' ? samplePlanPt(now) : samplePlanEn(now);
+}
+
+function samplePlanEn(now: Date): ClassPlan {
   const plan = blankPlan(now);
   return {
     ...plan,
@@ -187,6 +213,48 @@ export function samplePlan(now = new Date()): ClassPlan {
   };
 }
 
+function samplePlanPt(now: Date): ClassPlan {
+  const plan = blankPlan(now);
+  return {
+    ...plan,
+    title: 'Leg drag para as costas',
+    warmup: {
+      minutes: 10,
+      drills: ['Rolamento para frente', 'Rolamento para trás', 'Fuga de quadril', 'Fuga de quadril para frente', 'Estrelinha'].map(item),
+    },
+    concept: {
+      minutes: 5,
+      rule: 'Oportunidades de ataque a partir do leg drag.',
+      notes: 'O leg drag prende o quadril para um lado. Toda opção de hoje vem de manter ele ali.',
+    },
+    game: {
+      ...plan.game,
+      start: 'Leg drag',
+      objective: 'Pegar as costas',
+      goals: [
+        'Por cima: prenda o quadril e vá para as costas',
+        'Por baixo: fique de frente, recupere a guarda ou suba numa single leg',
+        'Recomeça se quem está por baixo recuperar a guarda fechada',
+      ].map(item),
+      details: [
+        'Peito no quadril de longe, não no de perto',
+        'Controle a manga ou o punho de longe antes de se mexer',
+        'Encaixe o joelho de trás quando ele virar de costas',
+      ].map(item),
+      transition: 'Leg drag → pegada nas costas quando ele vira',
+      submission: 'Mata-leão, ou arco e flecha de kimono',
+    },
+    gems: {
+      minutes: 15,
+      moves: [
+        move('Pegada nas costas quando ele vira', 'Primeiro a pegada de cinto, depois o gancho. Deixe ele te dar o giro.'),
+        move('Passagem de joelho do outro lado', 'Quando ele bloqueia o giro, corte de volta para a montada.'),
+      ],
+      options: ['Chave de braço do lado de perto se ele apoiar o braço de longe', 'Troque para o leg drag do outro lado'].map(item),
+    },
+  };
+}
+
 // ─── Time ────────────────────────────────────────────────────────────────────
 
 export function gameRoundCount(r: GameRounds): number {
@@ -217,21 +285,18 @@ export interface TimelineSegment {
 
 export type SectionKey = 'warmup' | 'concept' | 'game' | 'gems' | 'freeRoll';
 
-export const SECTION_LABELS: Record<SectionKey, string> = {
-  warmup: 'Warm-up · Movement',
-  concept: 'Concept',
-  game: 'Positional game',
-  gems: 'Gems',
-  freeRoll: 'Free roll',
-};
+/** The block's name in the app's language. */
+export function sectionLabel(key: SectionKey): string {
+  return t(`sec.${key}`);
+}
 
 export function timeline(plan: ClassPlan): TimelineSegment[] {
   return [
-    { key: 'warmup', label: SECTION_LABELS.warmup, minutes: plan.warmup.minutes },
-    { key: 'concept', label: SECTION_LABELS.concept, minutes: plan.concept.minutes },
-    { key: 'game', label: SECTION_LABELS.game, minutes: gameSeconds(plan) / 60 },
-    { key: 'gems', label: SECTION_LABELS.gems, minutes: plan.gems.minutes },
-    { key: 'freeRoll', label: SECTION_LABELS.freeRoll, minutes: freeRollSeconds(plan) / 60 },
+    { key: 'warmup', label: sectionLabel('warmup'), minutes: plan.warmup.minutes },
+    { key: 'concept', label: sectionLabel('concept'), minutes: plan.concept.minutes },
+    { key: 'game', label: sectionLabel('game'), minutes: gameSeconds(plan) / 60 },
+    { key: 'gems', label: sectionLabel('gems'), minutes: plan.gems.minutes },
+    { key: 'freeRoll', label: sectionLabel('freeRoll'), minutes: freeRollSeconds(plan) / 60 },
   ];
 }
 
@@ -258,9 +323,9 @@ export function formatClock(totalSeconds: number): string {
 
 /** "2 × 3 min, switch partners, then switch positions" */
 export function describeGameRounds(r: GameRounds): string {
-  const parts = [`${r.roundsPerSide} × ${r.minutes} min`];
-  if (r.switchPartners) parts.push('switch partners');
-  if (r.switchPositions) parts.push('then switch positions');
+  const parts = [t('roundsDescribe', { n: r.roundsPerSide, min: r.minutes })];
+  if (r.switchPartners) parts.push(t('switchPartnersLower'));
+  if (r.switchPositions) parts.push(t('thenSwitchPositionsLower'));
   return parts.join(', ');
 }
 
@@ -278,7 +343,7 @@ export function gameSchedule(plan: ClassPlan): RoundSegment[] {
   const r = plan.game.rounds;
   const sides = r.switchPositions ? 2 : 1;
   const total = gameRoundCount(r);
-  const position = plan.game.start || 'the position';
+  const position = plan.game.start || t('thePosition');
   const out: RoundSegment[] = [];
   let n = 0;
   for (let side = 0; side < sides; side++) {
@@ -286,22 +351,22 @@ export function gameSchedule(plan: ClassPlan): RoundSegment[] {
       n++;
       const first = i === 0;
       let cue: string;
-      if (n === 1) cue = `Start in ${position}`;
-      else if (first) cue = 'Switch positions';
-      else if (r.switchPartners) cue = 'Switch partners';
-      else cue = 'Same partner, go again';
+      if (n === 1) cue = t('cueStartIn', { position });
+      else if (first) cue = t('cueSwitchPositions');
+      else if (r.switchPartners) cue = t('cueSwitchPartners');
+      else cue = t('cueSameAgain');
       out.push({
         kind: 'round',
-        label: `Round ${n} of ${total}`,
-        cue: sides === 2 ? `${cue} · Side ${side === 0 ? 'A' : 'B'}` : cue,
+        label: t('roundNofM', { n, total }),
+        cue: sides === 2 ? t('cueSide', { cue, side: side === 0 ? 'A' : 'B' }) : cue,
         seconds: r.minutes * 60,
       });
       if (n < total && r.restSeconds > 0) {
         const nextSwitchesSide = i === r.roundsPerSide - 1;
         out.push({
           kind: 'rest',
-          label: 'Rest',
-          cue: nextSwitchesSide ? 'Next: switch positions' : r.switchPartners ? 'Next: switch partners' : 'Next round',
+          label: t('rest'),
+          cue: nextSwitchesSide ? t('nextSwitchPositions') : r.switchPartners ? t('nextSwitchPartners') : t('nextRound'),
           seconds: r.restSeconds,
         });
       }
@@ -314,9 +379,14 @@ export function freeRollSchedule(plan: ClassPlan): RoundSegment[] {
   const f = plan.freeRoll;
   const out: RoundSegment[] = [];
   for (let i = 1; i <= f.rounds; i++) {
-    out.push({ kind: 'round', label: `Roll ${i} of ${f.rounds}`, cue: i === 1 ? 'Slap, bump, roll' : 'New partner', seconds: f.minutes * 60 });
+    out.push({
+      kind: 'round',
+      label: t('rollNofM', { n: i, total: f.rounds }),
+      cue: i === 1 ? t('cueSlapRoll') : t('cueNewPartner'),
+      seconds: f.minutes * 60,
+    });
     if (i < f.rounds && f.restSeconds > 0) {
-      out.push({ kind: 'rest', label: 'Rest', cue: 'Find a new partner', seconds: f.restSeconds });
+      out.push({ kind: 'rest', label: t('rest'), cue: t('cueFindPartner'), seconds: f.restSeconds });
     }
   }
   return out;
@@ -402,7 +472,7 @@ export function duplicatePlan(plan: ClassPlan, now = new Date()): ClassPlan {
   return {
     ...plan,
     id: uid(),
-    title: plan.title ? `${plan.title} (copy)` : '',
+    title: plan.title ? t('copyOf', { title: plan.title }) : '',
     createdAt: stamp,
     updatedAt: stamp,
     warmup: { ...plan.warmup, drills: reid(plan.warmup.drills) },

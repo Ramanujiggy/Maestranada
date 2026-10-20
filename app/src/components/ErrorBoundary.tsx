@@ -3,6 +3,7 @@
 
 import { Component, type ReactNode } from 'react';
 import { PLANS_KEY } from '../lib/storage.ts';
+import { t } from '../lib/i18n.ts';
 
 function rawPlans(): string {
   try {
@@ -33,9 +34,9 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
     return (
       <div className="shell">
         <div className="card empty">
-          <h1 className="card-title">Something went wrong</h1>
+          <h1 className="card-title">{t('errorTitle')}</h1>
           <p className="muted" style={{ margin: 0 }}>
-            Your plans are still saved on this device. Go back to your classes, or save a copy of your plans first.
+            {t('errorBody')}
           </p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
             <button
@@ -46,10 +47,10 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
                 window.location.reload();
               }}
             >
-              Back to classes
+              {t('backToClasses')}
             </button>
             <button type="button" className="btn btn-secondary" onClick={saveRaw}>
-              Save a copy of my plans
+              {t('errorSaveCopy')}
             </button>
           </div>
         </div>

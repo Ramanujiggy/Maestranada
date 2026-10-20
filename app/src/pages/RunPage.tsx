@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, X } from 'lucide-react';
 import {
-  SECTION_LABELS,
+  sectionLabel,
   describeGameRounds,
   freeRollSchedule,
   gameSchedule,
@@ -18,10 +18,11 @@ import {
 import { navigate } from '../lib/router.ts';
 import { RoundTimer } from '../components/RoundTimer.tsx';
 import { ClipView } from '../components/ClipField.tsx';
+import { t, type Key } from '../lib/i18n.ts';
 
 const ORDER: SectionKey[] = ['warmup', 'concept', 'game', 'gems', 'freeRoll'];
 const TIMED = ['warmup', 'game', 'freeRoll'] as const;
-const TIMER_TITLES: Record<(typeof TIMED)[number], string> = { warmup: 'Warm-up', game: 'Positional rounds', freeRoll: 'Free roll' };
+const TIMER_TITLES: Record<(typeof TIMED)[number], Key> = { warmup: 'sec.warmupShort', game: 'timerGame', freeRoll: 'sec.freeRoll' };
 
 /** Keeps the screen on while the class is being taught, so the timer stays
  *  visible and audible. The lock drops when the page hides, so it is taken
@@ -65,7 +66,7 @@ function BigList({ items }: { items: ListItem[] }) {
 }
 
 function Empty() {
-  return <p className="muted">Nothing planned here yet.</p>;
+  return <p className="muted">{t('nothingPlanned')}</p>;
 }
 
 export function RunPage({ plan }: { plan: ClassPlan }) {
@@ -109,7 +110,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
     () => ({
       warmup:
         plan.warmup.minutes > 0
-          ? [{ kind: 'round', label: 'Warm-up', cue: 'Keep moving', seconds: plan.warmup.minutes * 60 }]
+          ? [{ kind: 'round', label: t('sec.warmupShort'), cue: t('cueKeepMoving'), seconds: plan.warmup.minutes * 60 }]
           : [],
       game: gameSchedule(plan),
       freeRoll: freeRollSchedule(plan),
@@ -129,10 +130,10 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       body = (
         <>
           <div className="eyebrow-strong" style={{ marginBottom: 8 }}>
-            General rule
+            {t('generalRule')}
           </div>
           <p className="run-big run-lead" style={{ fontSize: 'clamp(26px, 3.6vw, 36px)' }}>
-            {concept.rule || <span className="muted">No rule set</span>}
+            {concept.rule || <span className="muted">{t('noRule')}</span>}
           </p>
           {concept.notes && <p className="run-big muted">{concept.notes}</p>}
         </>
@@ -143,7 +144,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
         <>
           <div className="run-block">
             <div className="eyebrow-strong" style={{ marginBottom: 12 }}>
-              Goals and movements
+              {t('goalsAndMovements')}
             </div>
             {game.goals.length ? <BigList items={game.goals} /> : <Empty />}
           </div>
@@ -152,12 +153,10 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
           </div>
           <div className="run-block run-reveal">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-              <div className="eyebrow-strong">
-                Details: beating the position
-              </div>
+              <div className="eyebrow-strong">{t('details')}</div>
               <button type="button" className="btn btn-secondary" onClick={() => setShowDetails((v) => !v)}>
                 {showDetails ? <EyeOff size={15} /> : <Eye size={15} />}
-                {showDetails ? 'Hide' : 'Show details'}
+                {showDetails ? t('hide') : t('showDetails')}
               </button>
             </div>
             {showDetails ? (
@@ -165,14 +164,14 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
                 <BigList items={game.details} />
                 {game.transition && (
                   <p className="run-big">
-                    <span className="sub-label">Transition</span>
+                    <span className="sub-label">{t('transition')}</span>
                     <br />
                     {game.transition}
                   </p>
                 )}
                 {game.submission && (
                   <p className="run-big" style={{ marginBottom: 0 }}>
-                    <span className="sub-label">Submission</span>
+                    <span className="sub-label">{t('submission')}</span>
                     <br />
                     {game.submission}
                   </p>
@@ -180,7 +179,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
               </div>
             ) : (
               <p className="section-hint" style={{ marginTop: 8 }}>
-                Let them play the first rounds before you show these.
+                {t('detailsLater')}
               </p>
             )}
           </div>
@@ -195,19 +194,19 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
           {moves.map((m, i) => (
             <div className="run-block" key={m.id}>
               <div className="eyebrow-strong" style={{ marginBottom: 6 }}>
-                Move {i + 1}
+                {t('moveN', { n: i + 1 })}
               </div>
               <p className="run-big run-lead" style={{ fontSize: 'clamp(24px, 3.2vw, 32px)', marginBottom: 6 }}>
-                {m.name || 'Untitled move'}
+                {m.name || t('untitledMove')}
               </p>
-              {m.clip && <ClipView clip={m.clip} label={m.name || `Move ${i + 1}`} />}
+              {m.clip && <ClipView clip={m.clip} label={m.name || t('moveN', { n: i + 1 })} />}
               {m.notes && <p className="run-big muted">{m.notes}</p>}
             </div>
           ))}
           {gems.options.length > 0 && (
             <div className="run-block">
               <div className="eyebrow-strong" style={{ marginBottom: 12 }}>
-                Options
+                {t('options')}
               </div>
               <BigList items={gems.options} />
             </div>
@@ -217,27 +216,27 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       break;
     }
     case 'freeRoll':
-      body = freeRoll.notes ? <p className="run-big">{freeRoll.notes}</p> : <p className="run-big muted">Roll it out.</p>;
+      body = freeRoll.notes ? <p className="run-big">{freeRoll.notes}</p> : <p className="run-big muted">{t('rollItOut')}</p>;
       break;
   }
 
   const heading =
     key === 'game'
-      ? `${game.start || 'Positional game'}${game.objective ? ` → ${game.objective}` : ''}`
+      ? `${game.start || sectionLabel('game')}${game.objective ? ` → ${game.objective}` : ''}`
       : key === 'warmup'
-        ? 'Movement'
-        : SECTION_LABELS[key];
+        ? t('sec.movement')
+        : sectionLabel(key);
 
   return (
     <div className="shell run" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <header className="topbar" style={{ marginBottom: 18 }}>
-        <span className="run-head-title">{plan.title || 'Untitled class'}</span>
+        <span className="run-head-title">{plan.title || t('untitledClass')}</span>
         <button type="button" className="btn btn-ghost" onClick={() => navigate({ name: 'edit', id: plan.id })}>
-          <X size={17} /> Exit
+          <X size={17} /> {t('exit')}
         </button>
       </header>
 
-      <nav className="run-progress" aria-label="Class blocks">
+      <nav className="run-progress" aria-label={t('classBlocks')}>
         {ORDER.map((k, i) => (
           <button
             type="button"
@@ -248,7 +247,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
           >
             <span className="bar" />
             <span className="label">
-              {i + 1} · {SECTION_LABELS[k]}
+              {i + 1} · {sectionLabel(k)}
             </span>
           </button>
         ))}
@@ -257,7 +256,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       <div className={`run-stage ${schedule ? '' : 'solo'}`}>
         <div key={key}>
           <div className="eyebrow">
-            {String(step + 1).padStart(2, '0')} · {SECTION_LABELS[key]}
+            {String(step + 1).padStart(2, '0')} · {sectionLabel(key)}
           </div>
           <h1 className="run-title">{heading}</h1>
           {body}
@@ -267,7 +266,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
         {TIMED.map((k) =>
           schedules[k] ? (
             <div className="card run-timer" key={k} hidden={k !== key}>
-              <RoundTimer segments={schedules[k]!} title={TIMER_TITLES[k]} />
+              <RoundTimer segments={schedules[k]!} title={t(TIMER_TITLES[k])} />
             </div>
           ) : null,
         )}
@@ -275,15 +274,15 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
 
       <div className="run-nav">
         <button type="button" className="btn btn-secondary" disabled={step === 0} onClick={() => setStep(step - 1)}>
-          <ArrowLeft size={16} /> {step > 0 ? SECTION_LABELS[ORDER[step - 1]] : 'Back'}
+          <ArrowLeft size={16} /> {step > 0 ? sectionLabel(ORDER[step - 1]) : t('back')}
         </button>
         {step < ORDER.length - 1 ? (
           <button type="button" className="btn btn-primary" onClick={() => setStep(step + 1)}>
-            {SECTION_LABELS[ORDER[step + 1]]} <ArrowRight size={16} />
+            {sectionLabel(ORDER[step + 1])} <ArrowRight size={16} />
           </button>
         ) : (
           <button type="button" className="btn btn-primary" onClick={() => navigate({ name: 'edit', id: plan.id })}>
-            Finish class
+            {t('finishClass')}
           </button>
         )}
       </div>

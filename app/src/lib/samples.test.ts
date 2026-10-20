@@ -1,9 +1,13 @@
-import { TEMPLATES } from './samples.ts';
+import { templates } from './samples.ts';
+import { setLang } from './i18n.ts';
 import { gameSchedule, totalMinutes } from './plan.ts';
 
 describe('templates', () => {
-  it('each builds a complete class with fresh ids', () => {
-    for (const t of TEMPLATES) {
+  afterEach(() => setLang('en'));
+
+  it.each(['en', 'pt'] as const)('each builds a complete class with fresh ids (%s)', (lang) => {
+    setLang(lang);
+    for (const t of templates()) {
       const a = t.build();
       const b = t.build();
       expect(a.title).toBe(t.title);
@@ -18,6 +22,7 @@ describe('templates', () => {
   });
 
   it('uses unique keys', () => {
-    expect(new Set(TEMPLATES.map((t) => t.key)).size).toBe(TEMPLATES.length);
+    const all = templates();
+    expect(new Set(all.map((t) => t.key)).size).toBe(all.length);
   });
 });

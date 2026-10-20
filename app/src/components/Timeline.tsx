@@ -3,6 +3,7 @@
 // itself builds from solo movement to live rolling.
 
 import { formatMinutes, timeline, totalMinutes, type ClassPlan, type SectionKey } from '../lib/plan.ts';
+import { t } from '../lib/i18n.ts';
 
 export const SECTION_COLORS: Record<SectionKey, string> = {
   warmup: 'var(--sec-1)',
@@ -18,7 +19,7 @@ export function Timeline({ plan, onJump }: { plan: ClassPlan; onJump?: (key: Sec
   return (
     <div className="card">
       <div className="eyebrow" style={{ marginBottom: 10 }}>
-        Class length
+        {t('classLength')}
       </div>
       <div className="timeline-total">{formatMinutes(total)}</div>
       <div className="timeline-bar" aria-hidden>

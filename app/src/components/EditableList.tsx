@@ -4,13 +4,14 @@
 import { useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react';
 import { item, type ListItem } from '../lib/plan.ts';
+import { t } from '../lib/i18n.ts';
 
 export function EditableList({
   items,
   onChange,
   placeholder,
   emptyText,
-  addLabel = 'Add',
+  addLabel = t('add'),
 }: {
   items: ListItem[];
   onChange: (items: ListItem[]) => void;
@@ -48,26 +49,26 @@ export function EditableList({
             <span className="list-bullet" aria-hidden />
             <input
               value={x.text}
-              aria-label={`Item ${i + 1}`}
+              aria-label={t('itemN', { n: i + 1 })}
               onChange={(e) => update(x.id, e.target.value)}
               onBlur={(e) => {
                 if (!e.target.value.trim()) remove(x.id);
               }}
             />
             <span className="list-row-actions">
-              <button type="button" className="icon-btn move" aria-label="Move up" disabled={i === 0} onClick={() => shift(i, -1)}>
+              <button type="button" className="icon-btn move" aria-label={t('moveUp')} disabled={i === 0} onClick={() => shift(i, -1)}>
                 <ArrowUp size={15} />
               </button>
               <button
                 type="button"
                 className="icon-btn move"
-                aria-label="Move down"
+                aria-label={t('moveDown')}
                 disabled={i === items.length - 1}
                 onClick={() => shift(i, 1)}
               >
                 <ArrowDown size={15} />
               </button>
-              <button type="button" className="icon-btn danger" aria-label="Remove" onClick={() => remove(x.id)}>
+              <button type="button" className="icon-btn danger" aria-label={t('remove')} onClick={() => remove(x.id)}>
                 <X size={15} />
               </button>
             </span>

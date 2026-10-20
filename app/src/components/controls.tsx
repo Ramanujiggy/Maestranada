@@ -2,6 +2,7 @@
 
 import { useId, type ReactNode } from 'react';
 import { Minus, Plus } from 'lucide-react';
+import { t } from '../lib/i18n.ts';
 
 export function Field({ label, children, hint }: { label: string; children: (id: string) => ReactNode; hint?: string }) {
   const id = useId();
@@ -87,13 +88,13 @@ export function Stepper({
     <div className="field">
       <span className="field-label">{label}</span>
       <div className="stepper" role="group" aria-label={label}>
-        <button type="button" aria-label={`Decrease ${label}`} onClick={() => onChange(clamp(value - step))} disabled={value <= min}>
+        <button type="button" aria-label={t('decrease', { label })} onClick={() => onChange(clamp(value - step))} disabled={value <= min}>
           <Minus size={15} />
         </button>
         <span className="stepper-value" aria-live="polite">
           {format(value)}
         </span>
-        <button type="button" aria-label={`Increase ${label}`} onClick={() => onChange(clamp(value + step))} disabled={value >= max}>
+        <button type="button" aria-label={t('increase', { label })} onClick={() => onChange(clamp(value + step))} disabled={value >= max}>
           <Plus size={15} />
         </button>
       </div>
@@ -111,7 +112,7 @@ export function Toggle({ label, checked, onChange }: { label: string; checked: b
 }
 
 export function formatRest(seconds: number): string {
-  if (seconds === 0) return 'None';
+  if (seconds === 0) return t('none');
   if (seconds < 60) return `${seconds}s`;
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;

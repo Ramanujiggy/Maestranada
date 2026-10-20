@@ -27,6 +27,7 @@ import {
 import { getClip } from './clips.ts';
 import { formatDate } from '../components/PrintSheet.tsx';
 import { formatRest } from '../components/controls.tsx';
+import { t } from './i18n.ts';
 
 const INK = '13233B';
 const MUTED = '5D6B80';
@@ -73,13 +74,13 @@ function bullets(items: ListItem[]): Paragraph[] {
 /** Builds the document from a plan and the GIF bytes of its clips. Pure, so it can be tested. */
 export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document {
   const { warmup, concept, game, gems, freeRoll } = plan;
-  const title = plan.title || 'Untitled class';
+  const title = plan.title || t('untitledClass');
 
   const gemParagraphs: Paragraph[] = [];
   gems.moves
     .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
     .forEach((m, i) => {
-      gemParagraphs.push(sub(`Move ${i + 1}: ${m.name || 'Untitled move'}`));
+      gemParagraphs.push(sub(t('moveNamed', { n: i + 1, name: m.name || t('untitledMove') })));
       const bytes = m.clip && clips.get(m.clip.id);
       if (m.clip && bytes) {
         const scale = Math.min(1, CLIP_WIDTH / m.clip.width);
@@ -91,7 +92,11 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
                 type: 'gif',
                 data: bytes,
                 transformation: { width: Math.round(m.clip.width * scale), height: Math.round(m.clip.height * scale) },
-                altText: { name: m.name || `Move ${i + 1}`, description: `Technique clip: ${m.name}`, title: m.name || `Move ${i + 1}` },
+                altText: {
+                  name: m.name || t('moveN', { n: i + 1 }),
+                  description: t('clipAlt', { name: m.name }),
+                  title: m.name || t('moveN', { n: i + 1 }),
+                },
               }),
             ],
           }),
@@ -126,33 +131,33 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
             ],
           }),
 
-          sectionHeading('Warm-up · Movement', formatMinutes(warmup.minutes)),
+          sectionHeading(t('sec.warmup'), formatMinutes(warmup.minutes)),
           ...bullets(warmup.drills),
 
-          sectionHeading('Concept', formatMinutes(concept.minutes)),
+          sectionHeading(t('sec.concept'), formatMinutes(concept.minutes)),
           ...(concept.rule ? [body(concept.rule, { bold: true })] : []),
           ...(concept.notes ? [body(concept.notes)] : []),
 
-          sectionHeading('Positional game', formatMinutes(gameSeconds(plan) / 60)),
-          body(`${game.start || 'Start position'} → ${game.objective || 'objective'}`, { bold: true }),
-          ...(game.goals.length ? [sub('Goals and movements'), ...bullets(game.goals)] : []),
-          ...(game.details.length ? [sub('Details: beating the position'), ...bullets(game.details)] : []),
-          ...(game.transition ? [body(game.transition, { label: 'Transition' })] : []),
-          ...(game.submission ? [body(game.submission, { label: 'Submission' })] : []),
-          body(`${describeGameRounds(game.rounds)} · rest ${formatRest(game.rounds.restSeconds)}`, { label: 'Rounds' }),
+          sectionHeading(t('sec.game'), formatMinutes(gameSeconds(plan) / 60)),
+          body(`${game.start || t('startPosition')} → ${game.objective || t('objectiveLower')}`, { bold: true }),
+          ...(game.goals.length ? [sub(t('goalsAndMovements')), ...bullets(game.goals)] : []),
+          ...(game.details.length ? [sub(t('details')), ...bullets(game.details)] : []),
+          ...(game.transition ? [body(game.transition, { label: t('transition') })] : []),
+          ...(game.submission ? [body(game.submission, { label: t('submission') })] : []),
+          body(`${describeGameRounds(game.rounds)} · ${t('restLower')} ${formatRest(game.rounds.restSeconds)}`, { label: t('rounds') }),
 
-          sectionHeading('Gems', formatMinutes(gems.minutes)),
+          sectionHeading(t('sec.gems'), formatMinutes(gems.minutes)),
           ...gemParagraphs,
-          ...(gems.options.length ? [sub('Options'), ...bullets(gems.options)] : []),
+          ...(gems.options.length ? [sub(t('options')), ...bullets(gems.options)] : []),
 
-          sectionHeading('Free roll', formatMinutes(freeRollSeconds(plan) / 60)),
-          body(`${freeRoll.rounds} × ${freeRoll.minutes} min · rest ${formatRest(freeRoll.restSeconds)}`),
+          sectionHeading(t('sec.freeRoll'), formatMinutes(freeRollSeconds(plan) / 60)),
+          body(`${freeRoll.rounds} × ${freeRoll.minutes} min · ${t('restLower')} ${formatRest(freeRoll.restSeconds)}`),
           ...(freeRoll.notes ? [body(freeRoll.notes)] : []),
 
           new Paragraph({
             alignment: AlignmentType.RIGHT,
             spacing: { before: 360 },
-            children: [new TextRun({ text: 'Made with Prancheta', color: MUTED, size: 16 })],
+            children: [new TextRun({ text: t('madeWith'), color: MUTED, size: 16 })],
           }),
         ],
       },

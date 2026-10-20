@@ -14,8 +14,10 @@ import type { Template } from '../lib/samples.ts';
 import type { InstallState } from '../lib/pwa.ts';
 import { restoreClipData, withClipData } from '../lib/clips.ts';
 import { saveFile } from '../lib/files.ts';
+import { t, type Key } from '../lib/i18n.ts';
+import { LangSwitch } from '../components/LangSwitch.tsx';
 
-const STRUCTURE = ['Warm-up', 'Concept', 'Positional game', 'Gems', 'Free roll'];
+const STRUCTURE: Key[] = ['stripWarmup', 'sec.concept', 'sec.game', 'sec.gems', 'sec.freeRoll'];
 
 /** Writes plans to a backup file, with their technique clips inside so nothing is lost. */
 export async function downloadBackup(filename: string, plans: ClassPlan | ClassPlan[]) {
@@ -65,24 +67,24 @@ export function LibraryPage({
       raw = [];
     }
     if (!list.length) {
-      notify('That file is not a class plan export');
+      notify(t('importBad'));
       return;
     }
     try {
       await restoreClipData(raw);
     } catch {
-      notify('Not enough space on this device for the clips in that file');
+      notify(t('importNoSpace'));
       return;
     }
     const changed = api.importMany(list);
-    notify(changed ? `Imported ${changed} class plan${changed === 1 ? '' : 's'}` : 'Those plans are already up to date here');
+    notify(changed ? (changed === 1 ? t('importedOne') : t('importedMany', { n: changed })) : t('importNothing'));
   };
 
   const exportAll = async () => {
     try {
       await downloadBackup(`prancheta-backup-${todayISO()}.json`, api.plans);
     } catch {
-      notify('The backup could not be made. Try again.');
+      notify(t('backupFailed'));
     }
   };
 
@@ -93,20 +95,21 @@ export function LibraryPage({
           <Logo />
         </div>
         <div className="topbar-actions">
+          <LangSwitch />
           {install.kind === 'prompt' && (
             <button type="button" className="btn btn-secondary" onClick={install.install}>
-              <MonitorDown size={16} /> Install app
+              <MonitorDown size={16} /> {t('installApp')}
             </button>
           )}
           <button type="button" className="btn btn-ghost" onClick={onHelp}>
-            <CircleHelp size={16} /> <span className="hide-sm">How it works</span>
+            <CircleHelp size={16} /> <span className="hide-sm">{t('howItWorks')}</span>
           </button>
           <button type="button" className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
-            <Upload size={16} /> <span className="hide-sm">Import</span>
+            <Upload size={16} /> <span className="hide-sm">{t('import')}</span>
           </button>
           {api.plans.length > 0 && (
-            <button type="button" className="btn btn-ghost" onClick={() => void exportAll()}>
-              <Download size={16} /> <span className="hide-sm">Export all</span>
+            <button type="button" className="btn btn-ghost hide-xs" onClick={() => void exportAll()}>
+              <Download size={16} /> <span className="hide-sm">{t('exportAll')}</span>
             </button>
           )}
           <input
@@ -124,19 +127,17 @@ export function LibraryPage({
       </header>
 
       <section className="hero-card">
-        <div className="eyebrow-strong">
-          Class prep
-        </div>
+        <div className="eyebrow-strong">{t('classPrep')}</div>
         <h1 className="page-title" style={{ margin: '10px 0 8px' }}>
-          Plan the class before you step on the mat.
+          {t('libraryTitle')}
         </h1>
-        <p className="narrative">Movement first, one idea, a game to find it, then the gems.</p>
+        <p className="narrative">{t('libraryLead')}</p>
         <div className="structure-strip">
           {STRUCTURE.map((s, i) => (
             <span key={s} style={{ display: 'contents' }}>
               <span className="step">
                 <b>{i + 1}</b>
-                {s}
+                {t(s)}
               </span>
               {i < STRUCTURE.length - 1 && <span className="sep">·</span>}
             </span>
@@ -144,28 +145,28 @@ export function LibraryPage({
         </div>
         <div style={{ marginTop: 24 }}>
           <button type="button" className="btn btn-primary btn-lg" onClick={create}>
-            <Plus size={18} /> New class plan
+            <Plus size={18} /> {t('newClassPlan')}
           </button>
         </div>
       </section>
 
       <div className="library-head">
         <div>
-          <div className="eyebrow">Your classes</div>
+          <div className="eyebrow">{t('yourClasses')}</div>
         </div>
         <span className="muted" style={{ fontSize: 13 }}>
-          {api.plans.length} plan{api.plans.length === 1 ? '' : 's'}
+          {api.plans.length === 1 ? t('planCountOne') : t('planCountMany', { n: api.plans.length })}
         </span>
       </div>
 
       {sorted.length === 0 ? (
         <div className="card empty">
-          <h2 className="card-title">No classes yet</h2>
+          <h2 className="card-title">{t('noClasses')}</h2>
           <p className="muted" style={{ margin: 0 }}>
-            Start one and the structure is already laid out for you.
+            {t('noClassesBody')}
           </p>
           <button type="button" className="btn btn-primary" onClick={create}>
-            <Plus size={16} /> New class plan
+            <Plus size={16} /> {t('newClassPlan')}
           </button>
         </div>
       ) : (
@@ -182,10 +183,10 @@ export function LibraryPage({
               </div>
               <h2 className="card-title">
                 <a href={hrefFor({ name: 'edit', id: p.id })} onClick={(e) => e.stopPropagation()}>
-                  {p.title || 'Untitled class'}
+                  {p.title || t('untitledClass')}
                 </a>
               </h2>
-              <p className="plan-card-concept">{p.concept.rule || <span className="muted">No concept yet</span>}</p>
+              <p className="plan-card-concept">{p.concept.rule || <span className="muted">{t('noConcept')}</span>}</p>
               <div className="plan-card-meta">
                 {p.game.start && (
                   <span className="pill">
@@ -194,22 +195,22 @@ export function LibraryPage({
                   </span>
                 )}
                 {p.gems.moves.filter((m) => m.name.trim()).length > 0 && (
-                  <span className="pill">{p.gems.moves.filter((m) => m.name.trim()).length} gems</span>
+                  <span className="pill">{t('gemCount', { n: p.gems.moves.filter((m) => m.name.trim()).length })}</span>
                 )}
               </div>
               <div className="plan-card-foot" onClick={(e) => e.stopPropagation()}>
                 <a className="btn btn-secondary" href={hrefFor({ name: 'run', id: p.id })}>
-                  <Play size={15} /> Teach
+                  <Play size={15} /> {t('teach')}
                 </a>
                 <div className="actions">
                   <button
                     type="button"
                     className="icon-btn"
-                    aria-label="Duplicate"
-                    title="Duplicate"
+                    aria-label={t('duplicate')}
+                    title={t('duplicate')}
                     onClick={() => {
                       api.upsert(duplicatePlan(p));
-                      notify('Plan duplicated');
+                      notify(t('planDuplicated'));
                     }}
                   >
                     <Copy size={16} />
@@ -217,8 +218,8 @@ export function LibraryPage({
                   <button
                     type="button"
                     className="icon-btn danger"
-                    aria-label="Delete"
-                    title="Delete"
+                    aria-label={t('delete')}
+                    title={t('delete')}
                     onClick={() => setPendingDelete(p)}
                   >
                     <Trash2 size={16} />
@@ -232,21 +233,19 @@ export function LibraryPage({
 
       {install.kind === 'ios' && (
         <div className="subpanel ios-keep">
-          <strong>Keep your plans safe on iPhone.</strong> Safari can clear a website's data when it goes unused for a
-          week. Add Prancheta to your Home Screen (tap <Share size={13} /> Share, then Add to Home Screen) and it keeps
-          your plans and works offline.
+          <strong>{t('iosKeepTitle')}</strong> {t('iosKeepBefore')} <Share size={13} /> {t('iosKeepAfter')}
         </div>
       )}
 
       <footer className="library-foot">
-        <span>Works offline</span>
+        <span>{t('worksOffline')}</span>
         <span className="sep">·</span>
-        <span>Your plans stay on this device</span>
+        <span>{t('plansStayHere')}</span>
         {api.plans.length > 0 && (
           <>
             <span className="sep">·</span>
             <button type="button" className="link" onClick={() => void exportAll()}>
-              Back up all plans
+              {t('backUpAll')}
             </button>
           </>
         )}
@@ -262,14 +261,14 @@ export function LibraryPage({
 
       {pendingDelete && (
         <ConfirmDialog
-          title="Delete this class?"
-          body={`“${pendingDelete.title || 'Untitled class'}” will be removed from this device.`}
-          confirmLabel="Delete"
+          title={t('deleteClassTitle')}
+          body={t('deleteClassBody', { title: pendingDelete.title || t('untitledClass') })}
+          confirmLabel={t('delete')}
           onCancel={() => setPendingDelete(null)}
           onConfirm={() => {
             api.remove(pendingDelete.id);
             setPendingDelete(null);
-            notify('Plan deleted');
+            notify(t('planDeleted'));
           }}
         />
       )}

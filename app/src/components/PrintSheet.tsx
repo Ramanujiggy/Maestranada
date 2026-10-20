@@ -16,6 +16,7 @@ import {
 import { useClipUrl } from '../lib/clips.ts';
 import { formatRest } from './controls.tsx';
 import { LogoMark } from './Tally.tsx';
+import { dateLocale, t } from '../lib/i18n.ts';
 
 function Bullets({ items }: { items: ListItem[] }) {
   const filled = items.filter((x) => x.text.trim());
@@ -60,7 +61,7 @@ function Line({ k, v }: { k: string; v: string }) {
 export function formatDate(iso: string): string {
   const d = new Date(`${iso}T00:00:00`);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export function PrintSheet({ plan }: { plan: ClassPlan }) {
@@ -70,7 +71,7 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
       <div className="ps-head">
         <h1>
           <LogoMark height={26} />
-          {plan.title || 'Untitled class'}
+          {plan.title || t('untitledClass')}
         </h1>
         <div className="ps-meta">
           {formatDate(plan.date)}
@@ -79,59 +80,59 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
         </div>
       </div>
 
-      <Block title="Warm-up · Movement" time={formatMinutes(warmup.minutes)}>
+      <Block title={t('sec.warmup')} time={formatMinutes(warmup.minutes)}>
         <Bullets items={warmup.drills} />
       </Block>
 
-      <Block title="Concept" time={formatMinutes(concept.minutes)}>
+      <Block title={t('sec.concept')} time={formatMinutes(concept.minutes)}>
         {concept.rule && (
           <p>
-            <strong>General rule:</strong> {concept.rule}
+            <strong>{t('generalRule')}:</strong> {concept.rule}
           </p>
         )}
         {concept.notes && <p>{concept.notes}</p>}
       </Block>
 
-      <Block title="Positional game" time={formatMinutes(gameSeconds(plan) / 60)}>
+      <Block title={t('sec.game')} time={formatMinutes(gameSeconds(plan) / 60)}>
         <p>
           <strong>
-            {game.start || 'Start position'} → {game.objective || 'objective'}
+            {game.start || t('startPosition')} → {game.objective || t('objectiveLower')}
           </strong>
         </p>
-        {game.goals.length > 0 && <h3>Goals and movements</h3>}
+        {game.goals.length > 0 && <h3>{t('goalsAndMovements')}</h3>}
         <Bullets items={game.goals} />
-        {game.details.length > 0 && <h3>Details: beating the position</h3>}
+        {game.details.length > 0 && <h3>{t('details')}</h3>}
         <Bullets items={game.details} />
-        <Line k="Transition" v={game.transition} />
-        <Line k="Submission" v={game.submission} />
-        <Line k="Rounds" v={`${describeGameRounds(game.rounds)} · rest ${formatRest(game.rounds.restSeconds)}`} />
+        <Line k={t('transition')} v={game.transition} />
+        <Line k={t('submission')} v={game.submission} />
+        <Line k={t('rounds')} v={`${describeGameRounds(game.rounds)} · ${t('restLower')} ${formatRest(game.rounds.restSeconds)}`} />
       </Block>
 
-      <Block title="Gems" time={formatMinutes(gems.minutes)}>
+      <Block title={t('sec.gems')} time={formatMinutes(gems.minutes)}>
         {gems.moves
           .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
           .map((m, i) => (
             <div key={m.id}>
               <h3>
-                Move {i + 1}: {m.name}
+                {t('moveNamed', { n: i + 1, name: m.name })}
               </h3>
               {m.clip && <PrintClip clip={m.clip} />}
               {m.notes && <p>{m.notes}</p>}
             </div>
           ))}
-        {gems.options.length > 0 && <h3>Options</h3>}
+        {gems.options.length > 0 && <h3>{t('options')}</h3>}
         <Bullets items={gems.options} />
       </Block>
 
-      <Block title="Free roll" time={formatMinutes(freeRollSeconds(plan) / 60)}>
+      <Block title={t('sec.freeRoll')} time={formatMinutes(freeRollSeconds(plan) / 60)}>
         <p>
-          {freeRoll.rounds} × {freeRoll.minutes} min · rest {formatRest(freeRoll.restSeconds)}
+          {freeRoll.rounds} × {freeRoll.minutes} min · {t('restLower')} {formatRest(freeRoll.restSeconds)}
         </p>
         {freeRoll.notes && <p>{freeRoll.notes}</p>}
       </Block>
 
       <div className="ps-notes">
-        <span className="ps-k">Notes</span>
+        <span className="ps-k">{t('notes')}</span>
       </div>
       <div className="ps-foot">
         <span>prancheta</span>

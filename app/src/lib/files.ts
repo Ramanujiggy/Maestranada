@@ -73,5 +73,11 @@ export function usePendingFile(): { file: File | null; save: () => void; dismiss
 }
 
 export function fileSlug(title: string, fallback = 'class'): string {
-  return (title || fallback).replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || fallback;
+  const slug = (title || fallback)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // "Saídas da montada" → "saidas-da-montada"
+    .replace(/[^\w-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+  return slug || fallback;
 }

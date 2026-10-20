@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { Fragment, useCallback, useState } from 'react';
 import { useRoute, navigate } from './lib/router.ts';
 import { usePlans } from './lib/usePlans.ts';
 import { LibraryPage } from './pages/LibraryPage.tsx';
@@ -9,6 +9,7 @@ import { Welcome } from './components/Welcome.tsx';
 import { useInstall } from './lib/pwa.ts';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { usePendingFile } from './lib/files.ts';
+import { t, useLang } from './lib/i18n.ts';
 
 const WELCOMED_KEY = 'maestranada.welcomed';
 
@@ -32,12 +33,12 @@ function NotFound() {
   return (
     <div className="shell">
       <div className="card empty">
-        <h1 className="card-title">That class isn't here</h1>
+        <h1 className="card-title">{t('notFoundTitle')}</h1>
         <p className="muted" style={{ margin: 0 }}>
-          Plans are saved on the device they were made on.
+          {t('notFoundBody')}
         </p>
         <button type="button" className="btn btn-primary" onClick={() => navigate({ name: 'library' })}>
-          Back to classes
+          {t('backToClasses')}
         </button>
       </div>
     </div>
@@ -45,6 +46,16 @@ function NotFound() {
 }
 
 export default function App() {
+  // Switching language redraws every screen from scratch in the new one.
+  const lang = useLang();
+  return (
+    <Fragment key={lang}>
+      <Screens />
+    </Fragment>
+  );
+}
+
+function Screens() {
   const route = useRoute();
   const api = usePlans();
   const [toast, setToast] = useState<string | null>(null);
@@ -89,26 +100,26 @@ export default function App() {
       {toast && <Toast message={toast} onDone={clearToast} />}
       {api.saveFailed && (
         <div className="save-alert" role="alert">
-          This device would not save your last change. Free up some space, or export a backup now so nothing is lost.
+          {t('saveFailed')}
         </div>
       )}
       {pendingFile.file && (
         <div className="toast update-toast" role="status">
-          {pendingFile.file.name} is ready.
+          {t('fileReady', { name: pendingFile.file.name })}
           <button type="button" className="btn btn-primary" onClick={pendingFile.save}>
-            Save
+            {t('save')}
           </button>
           <button type="button" className="btn btn-secondary" onClick={pendingFile.dismiss}>
-            Not now
+            {t('notNow')}
           </button>
         </div>
       )}
       {/* Updating reloads the page, so it waits until the coach is off the mat. */}
       {needRefresh && route.name !== 'run' && !pendingFile.file && (
         <div className="toast update-toast" role="status">
-          A new version is ready.
+          {t('newVersion')}
           <button type="button" className="btn btn-primary" onClick={() => updateServiceWorker(true)}>
-            Update
+            {t('update')}
           </button>
         </div>
       )}

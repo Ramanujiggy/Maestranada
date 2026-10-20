@@ -2,6 +2,7 @@
 // structure and is written the way you'd brief it on the mat.
 
 import { blankPlan, item, move, samplePlan, type ClassPlan } from './plan.ts';
+import { getLang } from './i18n.ts';
 
 export interface Template {
   key: string;
@@ -153,40 +154,129 @@ const mountEscapes: Spec = {
   freeRollNotes: 'Beginners start from mount bottom and switch every round.',
 };
 
-export const TEMPLATES: Template[] = [
-  {
-    key: 'leg-drag',
-    title: 'Leg drag to the back',
-    level: 'All levels',
-    blurb: 'Offensive opportunities from the leg drag.',
-    build: samplePlan,
-  },
-  {
-    key: 'closed-guard',
-    title: closedGuard.title,
-    level: 'Fundamentals',
-    blurb: closedGuard.rule,
-    build: (now) => fromSpec(closedGuard, now),
-  },
-  {
-    key: 'half-guard',
-    title: halfGuard.title,
-    level: 'All levels',
-    blurb: halfGuard.rule,
-    build: (now) => fromSpec(halfGuard, now),
-  },
-  {
-    key: 'back-control',
-    title: backControl.title,
-    level: 'Advanced',
-    blurb: backControl.rule,
-    build: (now) => fromSpec(backControl, now),
-  },
-  {
-    key: 'mount-escapes',
-    title: mountEscapes.title,
-    level: 'Fundamentals',
-    blurb: mountEscapes.rule,
-    build: (now) => fromSpec(mountEscapes, now),
-  },
+const closedGuardPt: Spec = {
+  title: 'Guarda fechada: quebre a postura primeiro',
+  drills: ['Fuga de quadril', 'Ponte', 'Fuga de quadril até os joelhos', 'Levantada técnica', 'Rolamento granby'],
+  rule: 'Quebre a postura antes de atacar.',
+  ruleNotes: 'Com postura, o adversário defende tudo. Traga a cabeça dele para baixo e os ataques aparecem.',
+  start: 'Guarda fechada',
+  objective: 'Raspar ou finalizar',
+  goals: [
+    'Por baixo: quebre a postura e mantenha quebrada',
+    'Por cima: recupere a postura e abra a guarda',
+    'Recomeça se quem está por cima abrir a guarda e passar da linha do joelho',
+  ],
+  details: [
+    'Puxe com as pernas, não só com os braços',
+    'Controle uma manga e a gola ou a cabeça',
+    'Saia do ângulo antes de atacar. Nunca ataque de frente',
+  ],
+  transition: 'Postura quebrada → raspagem de quadril para a montada',
+  submission: 'Kimura ou guilhotina a partir da raspagem de quadril',
+  moves: [
+    ['Raspagem de quadril', 'Sente em direção a ele quando ele recupera a postura. Apoie a mão, empurre com o quadril e vá para a montada.'],
+    ['Kimura a partir da raspagem', 'Ele apoia o braço para segurar a raspagem. Pegue o punho, feche a figura quatro e caia em ângulo.'],
+  ],
+  options: ['Guilhotina se ele abaixar a cabeça', 'Raspagem pêndulo se ele empurrar para levantar'],
+};
+
+const halfGuardPt: Spec = {
+  title: 'Meia-guarda: ganhe o underhook',
+  drills: ['Fuga de quadril', 'Fuga de quadril para frente', 'Sit-through', 'Andar de urso', 'Rolamento granby'],
+  rule: 'Na meia-guarda, quem tem o underhook manda na posição.',
+  ruleNotes: 'Quem está por baixo quer o underhook para subir. Quem está por cima quer ele para achatar.',
+  start: 'Meia-guarda',
+  objective: 'Subir para as costas ou numa single leg',
+  goals: [
+    'Por baixo: ganhe o underhook e fique de lado',
+    'Por cima: crossface, achate e ganhe o underhook você',
+    'Recomeça se quem está por baixo for achatado com o crossface encaixado',
+  ],
+  details: [
+    'Underhook alto nas costas, não no quadril',
+    'Cabeça no peito dele, nunca no chão',
+    'Joelho na frente como escudo até o underhook entrar',
+  ],
+  transition: 'Underhook → dogfight → pegada nas costas',
+  submission: 'Mata-leão depois que os ganchos entram',
+  moves: [
+    ['Raspagem old school', 'Do underhook, alcance o tornozelo de longe e empurre com a cabeça.'],
+    ['Dogfight para as costas', 'Suba no joelho, gire por trás quando ele fizer sprawl, pegada de cinto e gancho.'],
+  ],
+  options: ['Termine a single leg se ele levantar', 'Troque para a meia-guarda profunda se ele apertar o crossface'],
+};
+
+const backControlPt: Spec = {
+  title: 'Controle das costas: mãos antes do estrangulamento',
+  drills: ['Rolamento para frente', 'Rolamento para trás', 'Fuga de quadril', 'Troca de quadril', 'Ponte'],
+  rule: 'Ganhe a briga de mãos antes de ir para o estrangulamento.',
+  ruleNotes: 'Correr atrás do pescoço contra duas mãos faz você perder as costas. Tire uma mão, depois finalize.',
+  start: 'Costas com pegada de cinto',
+  objective: 'Finalizar no estrangulamento',
+  goals: [
+    'Por cima: mantenha a pegada de cinto e os ganchos, prenda ou tire uma mão',
+    'Por baixo: duas mãos no braço que estrangula e deslize para o chão',
+    'Recomeça se quem está por baixo encostar os ombros no chão',
+  ],
+  details: [
+    'Braço do estrangulamento por baixo, mas o peito colado nas costas dele',
+    'Use o gancho do lado preso para segurar o braço',
+    'Caia para o lado do braço que estrangula, nunca para o outro',
+  ],
+  transition: 'Pegada de cinto → triângulo de corpo quando os ganchos estiverem ameaçados',
+  submission: 'Mata-leão ou arco e flecha',
+  moves: [
+    ['Prender o braço para estrangular', 'A perna prende o braço de baixo. Agora é uma mão livre contra uma.'],
+    ['Arco e flecha', 'Passe a gola, pegue a calça, passe a perna por cima e puxe para os lados.'],
+  ],
+  options: ['Chave de braço quando ele defende demais o pescoço', 'Montada se ele virar para você'],
+};
+
+const mountEscapesPt: Spec = {
+  title: 'Saídas da montada para iniciantes',
+  drills: ['Ponte', 'Fuga de quadril', 'Fuga de quadril para frente', 'Levantada técnica', 'Andar de urso'],
+  rule: 'Primeiro o enquadramento, depois o quadril. Nunca empurre com o braço esticado.',
+  ruleNotes: 'O enquadramento cria espaço. O quadril usa esse espaço. Braço que empurra leva chave de braço.',
+  start: 'Montada',
+  objective: 'Recuperar a guarda ou inverter por cima',
+  goals: [
+    'Por baixo: enquadre, faça a ponte e coloque um joelho de volta para dentro',
+    'Por cima: fique pesado, joelhos fechados, suba alto',
+    'Recomeça quando quem está por baixo conseguir a meia-guarda ou melhor',
+  ],
+  details: [
+    'Cotovelos fechados, antebraço enquadrando no quadril',
+    'Ponte para um lado antes de fazer a fuga de quadril para o outro',
+    'Prenda o braço e o pé do mesmo lado para o upa',
+  ],
+  transition: 'Fuga cotovelo-joelho → meia-guarda → guarda fechada',
+  submission: 'Nenhuma por baixo hoje. Proteja os braços.',
+  moves: [
+    ['Upa', 'Prenda o braço e o pé de um lado, faça a ponte por cima do ombro e caia na guarda dele.'],
+    ['Fuga cotovelo-joelho', 'Enquadre, ponte, fuga de quadril e coloque o joelho para dentro. Repita do outro lado.'],
+  ],
+  options: ['Upa quando ele apoia uma mão', 'Cotovelo-joelho quando ele apoia um pé'],
+  freeRollNotes: 'Iniciantes começam por baixo da montada e trocam a cada round.',
+};
+
+const EXAMPLES: { key: string; level: Template['level']; en: Spec | null; pt: Spec | null }[] = [
+  { key: 'leg-drag', level: 'All levels', en: null, pt: null },
+  { key: 'closed-guard', level: 'Fundamentals', en: closedGuard, pt: closedGuardPt },
+  { key: 'half-guard', level: 'All levels', en: halfGuard, pt: halfGuardPt },
+  { key: 'back-control', level: 'Advanced', en: backControl, pt: backControlPt },
+  { key: 'mount-escapes', level: 'Fundamentals', en: mountEscapes, pt: mountEscapesPt },
 ];
+
+/** The ready-made classes, written in the app's language. */
+export function templates(): Template[] {
+  const pt = getLang() === 'pt';
+  return EXAMPLES.map(({ key, level, en, pt: ptSpec }) => {
+    const spec = pt ? ptSpec : en;
+    if (!spec) {
+      // The leg drag class is the app's own example, kept in plan.ts.
+      const sample = samplePlan();
+      return { key, level, title: sample.title, blurb: sample.concept.rule, build: samplePlan };
+    }
+    return { key, level, title: spec.title, blurb: spec.rule, build: (now?: Date) => fromSpec(spec, now) };
+  });
+}

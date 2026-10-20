@@ -5,13 +5,14 @@ import { useEffect } from 'react';
 import { Download, Share, X } from 'lucide-react';
 import type { InstallState } from '../lib/pwa.ts';
 import { Logo } from './Tally.tsx';
+import { t, type Key } from '../lib/i18n.ts';
 
-const BLOCKS: [string, string][] = [
-  ['Warm-up · Movement', 'Solo movement to wake the body up.'],
-  ['Concept', 'One general rule the whole class is about.'],
-  ['Positional game', 'A spar toward a goal. Goals first, details once they have felt it.'],
-  ['Gems', 'The specific moves that win the game, and their options.'],
-  ['Free roll', 'Live rounds to try it all out.'],
+const BLOCKS: [Key, Key][] = [
+  ['sec.warmup', 'welcomeWarmup'],
+  ['sec.concept', 'welcomeConcept'],
+  ['sec.game', 'welcomeGame'],
+  ['sec.gems', 'welcomeGems'],
+  ['sec.freeRoll', 'welcomeFreeRoll'],
 ];
 
 export function Welcome({
@@ -31,18 +32,18 @@ export function Welcome({
 
   return (
     <div className="backdrop" onClick={onClose}>
-      <div className="card sheet welcome" role="dialog" aria-modal="true" aria-label="Welcome" onClick={(e) => e.stopPropagation()}>
+      <div className="card sheet welcome" role="dialog" aria-modal="true" aria-label={t('welcome')} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
           <Logo />
-          <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
+          <button type="button" className="icon-btn" aria-label={t('close')} onClick={onClose}>
             <X size={18} />
           </button>
         </div>
         <h2 className="page-title" style={{ fontSize: 30, margin: '14px 0 6px' }}>
-          Every class, one shape.
+          {t('welcomeTitle')}
         </h2>
         <p className="narrative" style={{ fontSize: 17 }}>
-          Plan it before you step on the mat, then teach it from your phone.
+          {t('welcomeLead')}
         </p>
 
         <ol className="welcome-blocks">
@@ -52,8 +53,8 @@ export function Welcome({
                 {i + 1}
               </span>
               <span>
-                <strong>{title}</strong>
-                <span className="muted">{text}</span>
+                <strong>{t(title)}</strong>
+                <span className="muted">{t(text)}</span>
               </span>
             </li>
           ))}
@@ -61,17 +62,14 @@ export function Welcome({
 
         <div className="subpanel welcome-notes">
           <p>
-            <strong>Teach mode</strong> shows one block at a time in big type, with a round timer that calls the
-            switches for you.
+            <strong>{t('welcomeTeachTitle')}</strong> {t('welcomeTeach')}
           </p>
           <p>
-            <strong>Your plans stay on this device.</strong> No account, no sign-in. Use Export to keep a backup or move
-            plans to another device.
+            <strong>{t('welcomePrivateTitle')}</strong> {t('welcomePrivate')}
           </p>
           {install.kind === 'ios' && (
             <p>
-              <strong>Add it to your Home Screen</strong> to use it like an app, even offline: tap <Share size={13} /> Share,
-              then Add to Home Screen.
+              <strong>{t('welcomeIosTitle')}</strong> {t('welcomeIosBefore')} <Share size={13} /> {t('welcomeIosAfter')}
             </p>
           )}
         </div>
@@ -79,11 +77,11 @@ export function Welcome({
         <div className="dialog-actions" style={{ flexWrap: 'wrap' }}>
           {install.kind === 'prompt' && (
             <button type="button" className="btn btn-secondary" onClick={install.install}>
-              <Download size={16} /> Install app
+              <Download size={16} /> {t('installApp')}
             </button>
           )}
           <button type="button" className="btn btn-primary btn-lg" onClick={onStart}>
-            Plan your first class
+            {t('welcomeStart')}
           </button>
         </div>
       </div>

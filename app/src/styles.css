@@ -442,6 +442,39 @@ a {
   font-size: 15px;
 }
 
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--rule-strong);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.lang-switch button {
+  font: 600 13px/1 var(--font-num);
+  letter-spacing: 0.06em;
+  min-width: 40px;
+  height: 36px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background-color var(--fast),
+    color var(--fast);
+}
+
+.lang-switch button + button {
+  border-left: 1px solid var(--rule-strong);
+}
+
+.lang-switch button[aria-pressed='true'],
+.lang-switch button:active {
+  background: var(--ink);
+  color: var(--paper);
+  transition: none;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -1384,6 +1417,14 @@ html:has(.backdrop) body {
 
 @media (max-width: 620px) {
   .hide-sm {
+    display: none;
+  }
+}
+
+/* On a phone the footer's "Back up all plans" does this job, which leaves
+   room for the language switch in the top bar. */
+@media (max-width: 420px) {
+  .hide-xs {
     display: none;
   }
 }
