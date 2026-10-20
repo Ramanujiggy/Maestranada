@@ -24,6 +24,18 @@ const en = {
   'hint.gems': 'The specific moves that win the game, and the options off them.',
   'hint.freeRoll': 'Live rounds to try it all out.',
 
+  // Folded blocks in the editor
+  nextSection: 'Next: {name}',
+  addIfYouWant: 'Add if you want',
+  tapToAdd: 'Tap to add',
+  'sum.warmup': 'Pick a few drills',
+  'sum.concept': 'Name the one rule for today',
+  'sum.game': 'Set a position and a goal',
+  'sum.gems': 'Add the moves that win the game',
+  'sum.noRoll': 'No rolling today',
+  detailsChip: 'Details',
+  optionsChip: 'Options when the move is stopped',
+
   // Shared words
   untitledClass: 'Untitled class',
   untitledMove: 'Untitled move',
@@ -289,6 +301,17 @@ const pt: Record<Key, string> = {
   'hint.game': 'Um treino em cima do conceito. Primeiro os objetivos, os detalhes depois que eles sentirem a posição.',
   'hint.gems': 'As técnicas que vencem o jogo, e as opções a partir delas.',
   'hint.freeRoll': 'Rola valendo para testar tudo.',
+
+  nextSection: 'Próximo: {name}',
+  addIfYouWant: 'Adicione se quiser',
+  tapToAdd: 'Toque para adicionar',
+  'sum.warmup': 'Escolha alguns exercícios',
+  'sum.concept': 'Defina a regra do dia',
+  'sum.game': 'Defina uma posição e um objetivo',
+  'sum.gems': 'Adicione as técnicas que vencem o jogo',
+  'sum.noRoll': 'Sem rola hoje',
+  detailsChip: 'Detalhes',
+  optionsChip: 'Opções quando a técnica é bloqueada',
 
   untitledClass: 'Aula sem título',
   untitledMove: 'Técnica sem nome',

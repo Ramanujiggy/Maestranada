@@ -1,8 +1,9 @@
 // The class plan editor. Five numbered cards, one per block of the class,
-// in the order they are taught. Every change saves as you type.
+// in the order they are taught. One block is open at a time; the rest fold
+// to a line that says what's in them. Every change saves as you type.
 
 import { useState, type ReactNode } from 'react';
-import { ArrowLeft, Copy, Download, FileText, Play, Plus, Printer, Send, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, Copy, Download, FileText, Play, Plus, Printer, Send, Trash2, X } from 'lucide-react';
 import {
   movementSuggestions,
   describeGameRounds,
@@ -13,6 +14,9 @@ import {
   gameSeconds,
   item,
   move,
+  sectionLabel,
+  sectionSummary,
+  SECTION_ORDER,
   type ClassPlan,
   type SectionKey,
 } from '../lib/plan.ts';
@@ -33,30 +37,77 @@ function Section({
   index,
   title,
   hint,
-  aside,
+  time,
+  open,
+  onToggle,
+  plan,
+  next,
+  onNext,
   children,
 }: {
   id: SectionKey;
   index: number;
   title: string;
   hint: string;
-  aside?: ReactNode;
+  time: string;
+  open: boolean;
+  onToggle: () => void;
+  plan: ClassPlan;
+  next?: SectionKey;
+  onNext?: () => void;
   children: ReactNode;
 }) {
+  const summary = sectionSummary(plan, id);
   return (
-    <section className="card" id={`section-${id}`} style={{ scrollMarginTop: 20 }}>
-      <div className="section-head">
-        <div className="section-head-text">
-          <span className="section-index">{String(index).padStart(2, '0')}</span>
-          <div>
-            <h2 className="card-title">{title}</h2>
-            <p className="section-hint">{hint}</p>
-          </div>
+    <section className={`card section${open ? ' open' : ''}`} id={`section-${id}`}>
+      <button
+        type="button"
+        className="section-toggle"
+        aria-expanded={open}
+        aria-controls={`section-body-${id}`}
+        onClick={onToggle}
+      >
+        <span className="section-index">
+          <span className={`section-box${summary.filled ? ' filled' : ''}`} aria-hidden />
+          {String(index).padStart(2, '0')}
+        </span>
+        <span className="section-toggle-text">
+          <span className="card-title">{title}</span>
+          <span className={`section-summary${summary.filled ? '' : ' is-empty'}`}>{open ? hint : summary.text}</span>
+        </span>
+        <span className="section-time">{time}</span>
+        <ChevronDown size={18} className="section-chevron" aria-hidden />
+      </button>
+      {open && (
+        <div className="section-stack" id={`section-body-${id}`}>
+          {children}
+          {next && onNext && (
+            <div className="section-next">
+              <button type="button" className="btn btn-secondary" onClick={onNext}>
+                {t('nextSection', { name: sectionLabel(next) })} <ArrowRight size={15} />
+              </button>
+            </div>
+          )}
         </div>
-        {aside}
-      </div>
-      <div className="section-stack">{children}</div>
+      )}
     </section>
+  );
+}
+
+/** The parts of a block a coach can leave out. Folded into "+ Label" chips until used. */
+function Extras({ items }: { items: { key: string; label: string; onReveal: () => void }[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="extras">
+      <span className="extras-label">{t('addIfYouWant')}</span>
+      <div className="chips">
+        {items.map((x) => (
+          <button type="button" key={x.key} className="chip" onClick={x.onReveal}>
+            <Plus size={12} /> {x.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -77,6 +128,12 @@ function SubPanel({ title, hint, children }: { title: string; hint?: string; chi
   );
 }
 
+/** The first block that still has nothing in it, so a new class opens where the work is.
+    A class that's all planned opens folded, as an overview. */
+function firstOpen(plan: ClassPlan): SectionKey | null {
+  return SECTION_ORDER.find((k) => !sectionSummary(plan, k).filled) ?? null;
+}
+
 export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansApi; notify: (m: string) => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pendingMove, setPendingMove] = useState<string | null>(null);
@@ -84,6 +141,8 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
   const { warmup, concept, game, gems, freeRoll } = plan;
   const rounds = game.rounds;
   const [exporting, setExporting] = useState<'doc' | 'file' | null>(null);
+  const [open, setOpen] = useState<SectionKey | null>(() => firstOpen(plan));
+  const [shown, setShown] = useState<Record<string, boolean>>({});
 
   const exportDocument = async () => {
     setExporting('doc');
@@ -109,15 +168,41 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
     }
   };
 
-  const jump = (key: SectionKey) =>
-    document.getElementById(`section-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Opening one block folds the others. If the fold moved it off screen, or it
+  // opened low on the page, bring its top into view.
+  const openSection = (key: SectionKey, always = false) => {
+    setOpen(key);
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`section-${key}`);
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      if (always || top < 0 || top > window.innerHeight * 0.45) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+  const toggle = (key: SectionKey) => (open === key ? setOpen(null) : openSection(key));
+  const jump = (key: SectionKey) => openSection(key, true);
+  const nextOf = (key: SectionKey) => SECTION_ORDER[SECTION_ORDER.indexOf(key) + 1];
+  const sectionProps = (key: SectionKey) => {
+    const next = nextOf(key);
+    return { id: key, plan, open: open === key, onToggle: () => toggle(key), next, onNext: next ? () => openSection(next, true) : undefined };
+  };
+
+  const isShown = (key: string, has: boolean) => has || !!shown[key];
+  const reveal = (key: string) => {
+    setShown((s) => ({ ...s, [key]: true }));
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`#extra-${key} input, #extra-${key} textarea`)?.focus());
+  };
+  const extra = (key: string, label: string, has: boolean) =>
+    isShown(key, has) ? [] : [{ key, label, onReveal: () => reveal(key) }];
 
   const unusedSuggestions = movementSuggestions().filter(
     (s) => !warmup.drills.some((d) => d.text.trim().toLowerCase() === s.toLowerCase()),
   );
 
   const minutesStepper = (value: number, onChange: (v: number) => void) => (
-    <Stepper label={t('time')} value={value} onChange={onChange} min={0} max={60} format={(v) => t('minutes', { n: v })} />
+    <div className="time-row">
+      <Stepper label={t('time')} value={value} onChange={onChange} min={0} max={60} format={(v) => t('minutes', { n: v })} />
+    </div>
   );
 
   return (
@@ -158,7 +243,6 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                       id={id}
                       type="date"
                       className="input"
-                      style={{ height: 54, minWidth: 0 }}
                       value={plan.date}
                       onChange={(e) => set({ ...plan, date: e.target.value })}
                     />
@@ -168,41 +252,45 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             </div>
 
             <Section
-              id="warmup"
+              {...sectionProps('warmup')}
               index={1}
               title={t('sec.warmup')}
               hint={t('hint.warmup')}
-              aside={minutesStepper(warmup.minutes, (minutes) => set({ ...plan, warmup: { ...warmup, minutes } }))}
+              time={formatMinutes(warmup.minutes)}
             >
+              {minutesStepper(warmup.minutes, (minutes) => set({ ...plan, warmup: { ...warmup, minutes } }))}
               <EditableList
                 items={warmup.drills}
                 onChange={(drills) => set({ ...plan, warmup: { ...warmup, drills } })}
                 placeholder={t('addDrill')}
-                emptyText={t('noDrills')}
               />
               {unusedSuggestions.length > 0 && (
-                <div className="chips">
-                  {unusedSuggestions.map((s) => (
-                    <button
-                      type="button"
-                      key={s}
-                      className="chip"
-                      onClick={() => set({ ...plan, warmup: { ...warmup, drills: [...warmup.drills, item(s)] } })}
-                    >
-                      <Plus size={12} /> {s}
-                    </button>
-                  ))}
+                <div className="extras">
+                  <span className="extras-label">{t('tapToAdd')}</span>
+                  <div className="chips chips-scroll">
+                    {unusedSuggestions.map((s) => (
+                      <button
+                        type="button"
+                        key={s}
+                        className="chip"
+                        onClick={() => set({ ...plan, warmup: { ...warmup, drills: [...warmup.drills, item(s)] } })}
+                      >
+                        <Plus size={12} /> {s}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </Section>
 
             <Section
-              id="concept"
+              {...sectionProps('concept')}
               index={2}
               title={t('sec.concept')}
               hint={t('hint.concept')}
-              aside={minutesStepper(concept.minutes, (minutes) => set({ ...plan, concept: { ...concept, minutes } }))}
+              time={formatMinutes(concept.minutes)}
             >
+              {minutesStepper(concept.minutes, (minutes) => set({ ...plan, concept: { ...concept, minutes } }))}
               <Field label={t('generalRule')}>
                 {(id) => (
                   <TextInput
@@ -213,24 +301,29 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                   />
                 )}
               </Field>
-              <Field label={t('explainLabel')}>
-                {(id) => (
-                  <TextArea
-                    id={id}
-                    value={concept.notes}
-                    placeholder={t('explainPh')}
-                    onChange={(notes) => set({ ...plan, concept: { ...concept, notes } })}
-                  />
-                )}
-              </Field>
+              {isShown('explain', !!concept.notes.trim()) && (
+                <div id="extra-explain">
+                  <Field label={t('explainLabel')}>
+                    {(id) => (
+                      <TextArea
+                        id={id}
+                        value={concept.notes}
+                        placeholder={t('explainPh')}
+                        onChange={(notes) => set({ ...plan, concept: { ...concept, notes } })}
+                      />
+                    )}
+                  </Field>
+                </div>
+              )}
+              <Extras items={extra('explain', t('explainLabel'), !!concept.notes.trim())} />
             </Section>
 
             <Section
-              id="game"
+              {...sectionProps('game')}
               index={3}
               title={t('sec.game')}
               hint={t('hint.game')}
-              aside={<span className="pill">{formatMinutes(gameSeconds(plan) / 60)}</span>}
+              time={formatMinutes(gameSeconds(plan) / 60)}
             >
               <div className="grid-2">
                 <Field label={t('startPosition')}>
@@ -266,39 +359,61 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                 />
               </SubPanel>
 
-              <SubPanel
-                title={t('details')}
-                hint={t('detailsHint')}
-              >
-                <EditableList
-                  items={game.details}
-                  onChange={(details) => set({ ...plan, game: { ...game, details } })}
-                  placeholder={t('detailsPh')}
-                />
-              </SubPanel>
+              {isShown('details', game.details.length > 0) && (
+                <div id="extra-details">
+                  <SubPanel
+                    title={t('details')}
+                    hint={t('detailsHint')}
+                  >
+                    <EditableList
+                      items={game.details}
+                      onChange={(details) => set({ ...plan, game: { ...game, details } })}
+                      placeholder={t('detailsPh')}
+                    />
+                  </SubPanel>
+                </div>
+              )}
 
-              <div className="grid-2">
-                <Field label={t('transitionLabel')}>
-                  {(id) => (
-                    <TextInput
-                      id={id}
-                      value={game.transition}
-                      placeholder={t('transitionPh')}
-                      onChange={(transition) => set({ ...plan, game: { ...game, transition } })}
-                    />
+              {(isShown('transition', !!game.transition.trim()) || isShown('submission', !!game.submission.trim())) && (
+                <div className="grid-2">
+                  {isShown('transition', !!game.transition.trim()) && (
+                    <div id="extra-transition">
+                      <Field label={t('transitionLabel')}>
+                        {(id) => (
+                          <TextInput
+                            id={id}
+                            value={game.transition}
+                            placeholder={t('transitionPh')}
+                            onChange={(transition) => set({ ...plan, game: { ...game, transition } })}
+                          />
+                        )}
+                      </Field>
+                    </div>
                   )}
-                </Field>
-                <Field label={t('submissionLabel')}>
-                  {(id) => (
-                    <TextInput
-                      id={id}
-                      value={game.submission}
-                      placeholder={t('submissionPh')}
-                      onChange={(submission) => set({ ...plan, game: { ...game, submission } })}
-                    />
+                  {isShown('submission', !!game.submission.trim()) && (
+                    <div id="extra-submission">
+                      <Field label={t('submissionLabel')}>
+                        {(id) => (
+                          <TextInput
+                            id={id}
+                            value={game.submission}
+                            placeholder={t('submissionPh')}
+                            onChange={(submission) => set({ ...plan, game: { ...game, submission } })}
+                          />
+                        )}
+                      </Field>
+                    </div>
                   )}
-                </Field>
-              </div>
+                </div>
+              )}
+
+              <Extras
+                items={[
+                  ...extra('details', t('detailsChip'), game.details.length > 0),
+                  ...extra('transition', t('transition'), !!game.transition.trim()),
+                  ...extra('submission', t('submission'), !!game.submission.trim()),
+                ]}
+              />
 
               <SubPanel title={t('rounds')}>
                 <div className="stepper-row">
@@ -346,12 +461,13 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             </Section>
 
             <Section
-              id="gems"
+              {...sectionProps('gems')}
               index={4}
               title={t('sec.gems')}
               hint={t('hint.gems')}
-              aside={minutesStepper(gems.minutes, (minutes) => set({ ...plan, gems: { ...gems, minutes } }))}
+              time={formatMinutes(gems.minutes)}
             >
+              {minutesStepper(gems.minutes, (minutes) => set({ ...plan, gems: { ...gems, minutes } }))}
               {gems.moves.map((m, i) => (
                 <div className="move-card" key={m.id}>
                   <div className="move-head">
@@ -402,21 +518,26 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                   <Plus size={15} /> {t('addMove')}
                 </button>
               </div>
-              <SubPanel title={t('options')} hint={t('optionsHint')}>
-                <EditableList
-                  items={gems.options}
-                  onChange={(options) => set({ ...plan, gems: { ...gems, options } })}
-                  placeholder={t('optionsPh')}
-                />
-              </SubPanel>
+              {isShown('options', gems.options.length > 0) && (
+                <div id="extra-options">
+                  <SubPanel title={t('options')} hint={t('optionsHint')}>
+                    <EditableList
+                      items={gems.options}
+                      onChange={(options) => set({ ...plan, gems: { ...gems, options } })}
+                      placeholder={t('optionsPh')}
+                    />
+                  </SubPanel>
+                </div>
+              )}
+              <Extras items={extra('options', t('optionsChip'), gems.options.length > 0)} />
             </Section>
 
             <Section
-              id="freeRoll"
+              {...sectionProps('freeRoll')}
               index={5}
               title={t('sec.freeRoll')}
               hint={t('hint.freeRoll')}
-              aside={<span className="pill">{formatMinutes(freeRollSeconds(plan) / 60)}</span>}
+              time={formatMinutes(freeRollSeconds(plan) / 60)}
             >
               <div className="stepper-row">
                 <Stepper
@@ -444,17 +565,22 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                   onChange={(restSeconds) => set({ ...plan, freeRoll: { ...freeRoll, restSeconds } })}
                 />
               </div>
-              <Field label={t('notes')}>
-                {(id) => (
-                  <TextArea
-                    id={id}
-                    value={freeRoll.notes}
-                    rows={2}
-                    placeholder={t('freeRollNotesPh')}
-                    onChange={(notes) => set({ ...plan, freeRoll: { ...freeRoll, notes } })}
-                  />
-                )}
-              </Field>
+              {isShown('rollNotes', !!freeRoll.notes.trim()) && (
+                <div id="extra-rollNotes">
+                  <Field label={t('notes')}>
+                    {(id) => (
+                      <TextArea
+                        id={id}
+                        value={freeRoll.notes}
+                        rows={2}
+                        placeholder={t('freeRollNotesPh')}
+                        onChange={(notes) => set({ ...plan, freeRoll: { ...freeRoll, notes } })}
+                      />
+                    )}
+                  </Field>
+                </div>
+              )}
+              <Extras items={extra('rollNotes', t('notes'), !!freeRoll.notes.trim())} />
             </Section>
           </div>
 
