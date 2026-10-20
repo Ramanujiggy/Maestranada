@@ -296,11 +296,6 @@ a {
     flex-direction: column;
     align-items: stretch;
   }
-  /* The desk aligns to the top, so in a column it would size to its widest
-     line, like the swipeable chip row. Pin it to the screen instead. */
-  .desk-main {
-    width: 100%;
-  }
   .desk-margin {
     position: static;
     flex: 1 1 auto;
@@ -417,14 +412,13 @@ a {
   text-overflow: ellipsis;
 }
 
-.section-summary.is-empty,
-.section.open .section-summary {
+.section-summary.is-empty {
   color: var(--muted);
 }
 
-/* Open, the hint is a full sentence, so let it wrap. */
-.section.open .section-summary {
-  white-space: normal;
+/* Open, the hint reads under the header at full width, then the fields. */
+.section-hint.section-lead {
+  margin: -6px 0 0;
 }
 
 .section-time {
@@ -929,6 +923,14 @@ a {
 .list-add .input {
   font-size: 14.5px;
   padding: 9px 12px;
+}
+
+/* On the narrowest phones the Add button keeps just its plus, so the line
+   being typed has room. */
+@media (max-width: 360px) {
+  .list-add-label {
+    display: none;
+  }
 }
 
 .list-empty {

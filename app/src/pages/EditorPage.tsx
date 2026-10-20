@@ -73,13 +73,14 @@ function Section({
         </span>
         <span className="section-toggle-text">
           <span className="card-title">{title}</span>
-          <span className={`section-summary${summary.filled ? '' : ' is-empty'}`}>{open ? hint : summary.text}</span>
+          {!open && <span className={`section-summary${summary.filled ? '' : ' is-empty'}`}>{summary.text}</span>}
         </span>
         <span className="section-time">{time}</span>
         <ChevronDown size={18} className="section-chevron" aria-hidden />
       </button>
       {open && (
         <div className="section-stack" id={`section-body-${id}`}>
+          <p className="section-hint section-lead">{hint}</p>
           {children}
           {next && onNext && (
             <div className="section-next">
