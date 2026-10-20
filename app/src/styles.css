@@ -1440,3 +1440,162 @@ a {
     letter-spacing: 0.08em;
   }
 }
+
+/* ─── Sheets: welcome + new class ────────────────────────────────────────── */
+
+.sheet {
+  width: min(640px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  animation: card-enter 0.4s var(--ease-heavy);
+}
+
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.template {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-2);
+  transition:
+    border-color 0.2s ease,
+    transform 0.35s var(--ease-heavy),
+    background 0.2s ease;
+}
+
+.template:hover {
+  border-color: rgba(218, 116, 34, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.template > span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.template.blank {
+  margin-top: 18px;
+  align-items: center;
+  border-style: dashed;
+  border-color: rgba(218, 116, 34, 0.45);
+}
+
+.template-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.template-title.serif {
+  font-family: var(--font-serif);
+  font-size: 21px;
+  line-height: 1.15;
+  color: var(--champagne);
+  font-variant-numeric: lining-nums;
+}
+
+.template-blurb {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .template-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.welcome-blocks {
+  list-style: none;
+  margin: 22px 0 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.welcome-blocks li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.welcome-blocks li > span:last-child {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.welcome-blocks strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.welcome-notes p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-body);
+}
+
+.welcome-notes p + p {
+  margin-top: 8px;
+}
+
+.welcome-notes svg {
+  vertical-align: -2px;
+}
+
+.library-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 48px;
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+}
+
+.library-foot .sep {
+  color: var(--text-hint);
+}
+
+.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--copper);
+  font-weight: 600;
+  font-size: inherit;
+}
+
+.link:hover {
+  color: var(--orange);
+}
+
+.update-toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 8px 8px 18px;
+}

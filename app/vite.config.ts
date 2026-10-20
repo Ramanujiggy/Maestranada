@@ -1,9 +1,39 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Installable and fully offline: the app shell, fonts and icons are all
+    // precached, so after the first visit it runs with no connection.
+    VitePWA({
+      registerType: 'prompt',
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'Maestranada · BJJ Class Prep',
+        short_name: 'Maestranada',
+        description: 'Plan, teach and print Jiu-Jitsu classes: warm-up, concept, positional game, gems, free roll.',
+        theme_color: '#0D1A14',
+        background_color: '#0D1A14',
+        display: 'standalone',
+        orientation: 'any',
+        start_url: '/',
+        scope: '/',
+        categories: ['sports', 'education', 'productivity'],
+        icons: [
+          { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        navigateFallback: 'index.html',
+      },
+    }),
+  ],
   // Railway mounts a cache volume at node_modules/.vite; keep Vite's cache elsewhere.
   cacheDir: '.vite-cache',
   test: {

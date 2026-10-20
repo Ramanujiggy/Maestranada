@@ -5,6 +5,29 @@ import { LibraryPage } from './pages/LibraryPage.tsx';
 import { EditorPage } from './pages/EditorPage.tsx';
 import { RunPage } from './pages/RunPage.tsx';
 import { Toast } from './components/feedback.tsx';
+import { Welcome } from './components/Welcome.tsx';
+import { useInstall } from './lib/pwa.ts';
+import { useLicense } from './lib/license.ts';
+import { UnlockSheet } from './components/UnlockSheet.tsx';
+import { useRegisterSW } from 'virtual:pwa-register/react';
+
+const WELCOMED_KEY = 'maestranada.welcomed';
+
+function readFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return true;
+  }
+}
+
+function setFlag(key: string): void {
+  try {
+    localStorage.setItem(key, '1');
+  } catch {
+    // Private mode: the welcome just shows again next time.
+  }
+}
 
 function NotFound() {
   return (
@@ -28,21 +51,82 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const notify = useCallback((m: string) => setToast(m), []);
   const clearToast = useCallback(() => setToast(null), []);
+  const install = useInstall();
+  const [welcomeOpen, setWelcomeOpen] = useState(() => !readFlag(WELCOMED_KEY));
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const closeWelcome = useCallback(() => {
+    setFlag(WELCOMED_KEY);
+    setWelcomeOpen(false);
+  }, []);
+
+  const license = useLicense();
+  const [unlockOpen, setUnlockOpen] = useState(false);
+  const canCreate = () => {
+    if (!license.atLimit(api.plans.length)) return true;
+    setUnlockOpen(true);
+    return false;
+  };
+
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW();
 
   let page;
   if (route.name === 'library') {
-    page = <LibraryPage api={api} notify={notify} />;
+    page = (
+      <LibraryPage
+        api={api}
+        notify={notify}
+        install={install}
+        onHelp={() => setWelcomeOpen(true)}
+        pickerOpen={pickerOpen}
+        setPickerOpen={setPickerOpen}
+        canCreate={canCreate}
+        license={license}
+        onUnlock={() => setUnlockOpen(true)}
+      />
+    );
   } else {
     const plan = api.get(route.id);
     if (!plan) page = <NotFound />;
     else if (route.name === 'run') page = <RunPage plan={plan} />;
-    else page = <EditorPage key={plan.id} plan={plan} api={api} notify={notify} />;
+    else page = <EditorPage key={plan.id} plan={plan} api={api} notify={notify} canCreate={canCreate} />;
   }
 
   return (
     <>
       {page}
       {toast && <Toast message={toast} onDone={clearToast} />}
+      {needRefresh && (
+        <div className="toast update-toast" role="status">
+          A new version is ready.
+          <button type="button" className="btn btn-primary" onClick={() => updateServiceWorker(true)}>
+            Update
+          </button>
+        </div>
+      )}
+      {unlockOpen && (
+        <UnlockSheet
+          license={license}
+          onClose={() => setUnlockOpen(false)}
+          onUnlocked={() => {
+            setUnlockOpen(false);
+            notify('Unlocked. Thanks for supporting Maestranada.');
+          }}
+        />
+      )}
+      {welcomeOpen && (
+        <Welcome
+          install={install}
+          onClose={closeWelcome}
+          onStart={() => {
+            closeWelcome();
+            navigate({ name: 'library' });
+            if (canCreate()) setPickerOpen(true);
+          }}
+        />
+      )}
     </>
   );
 }
