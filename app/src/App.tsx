@@ -7,8 +7,6 @@ import { RunPage } from './pages/RunPage.tsx';
 import { Toast } from './components/feedback.tsx';
 import { Welcome } from './components/Welcome.tsx';
 import { useInstall } from './lib/pwa.ts';
-import { useLicense } from './lib/license.ts';
-import { UnlockSheet } from './components/UnlockSheet.tsx';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 const WELCOMED_KEY = 'maestranada.welcomed';
@@ -59,14 +57,6 @@ export default function App() {
     setWelcomeOpen(false);
   }, []);
 
-  const license = useLicense();
-  const [unlockOpen, setUnlockOpen] = useState(false);
-  const canCreate = () => {
-    if (!license.atLimit(api.plans.length)) return true;
-    setUnlockOpen(true);
-    return false;
-  };
-
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
@@ -82,16 +72,13 @@ export default function App() {
         onHelp={() => setWelcomeOpen(true)}
         pickerOpen={pickerOpen}
         setPickerOpen={setPickerOpen}
-        canCreate={canCreate}
-        license={license}
-        onUnlock={() => setUnlockOpen(true)}
       />
     );
   } else {
     const plan = api.get(route.id);
     if (!plan) page = <NotFound />;
     else if (route.name === 'run') page = <RunPage plan={plan} />;
-    else page = <EditorPage key={plan.id} plan={plan} api={api} notify={notify} canCreate={canCreate} />;
+    else page = <EditorPage key={plan.id} plan={plan} api={api} notify={notify} />;
   }
 
   return (
@@ -106,16 +93,6 @@ export default function App() {
           </button>
         </div>
       )}
-      {unlockOpen && (
-        <UnlockSheet
-          license={license}
-          onClose={() => setUnlockOpen(false)}
-          onUnlocked={() => {
-            setUnlockOpen(false);
-            notify('Unlocked. Thanks for supporting Maestranada.');
-          }}
-        />
-      )}
       {welcomeOpen && (
         <Welcome
           install={install}
@@ -123,7 +100,7 @@ export default function App() {
           onStart={() => {
             closeWelcome();
             navigate({ name: 'library' });
-            if (canCreate()) setPickerOpen(true);
+            setPickerOpen(true);
           }}
         />
       )}

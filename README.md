@@ -32,20 +32,17 @@ Plans are saved in the browser's local storage on the device they were made on. 
 
 The app is a Progressive Web App. After the first visit it works with no connection (app, fonts and icons are all cached). On Chrome, Edge and Android it shows an **Install app** button; on iPhone and iPad, use Share → Add to Home Screen. New versions show an **Update** prompt.
 
-## Selling it (pay once, no accounts)
+## Selling it (pay once, download, it works)
 
-The app has an optional license gate built for a one-time purchase through [Lemon Squeezy](https://www.lemonsqueezy.com/):
+There is no free tier, no account and no license key. A buyer pays once and gets the app.
 
-- Free version: up to 3 class plans. Everything else works.
-- Full version: the buyer enters the license key from their receipt. The app activates it once against Lemon Squeezy's public license API and remembers it on that device. No account, no sign-in, no data collected.
+1. Create a $10 product in Lemon Squeezy or Gumroad.
+2. Set the purchase to deliver the app link (the Railway URL) in the receipt page and email. The same link is the install for every device:
+   - **Laptop:** Chrome or Edge show an **Install app** button. Safari on a Mac uses File → Add to Dock.
+   - **iPhone / iPad:** Share → Add to Home Screen.
+   - **Android:** the **Install app** button.
+3. Once installed it opens like any other app and runs offline. Every deploy reaches every buyer as an update.
 
-It is **off by default**. To turn it on, set these Railway variables and redeploy:
+Plans stay on the buyer's device. Nothing about them is collected; the checkout keeps the buyer's email for the receipt.
 
-| Variable | Value |
-|---|---|
-| `VITE_LS_STORE_ID` | Your Lemon Squeezy store id (keys from other stores are rejected) |
-| `VITE_BUY_URL` | Your product's checkout link, shown on the unlock screen |
-
-In Lemon Squeezy, enable license keys on the product and set the activation limit to how many devices one purchase covers.
-
-The look follows the Journada design language: forest surfaces, copper borders, champagne titles, orange actions.
+The app link itself is not secret: anyone who has it can open the app. At $10 that trade-off keeps delivery simple.

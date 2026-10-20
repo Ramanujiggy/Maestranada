@@ -74,17 +74,7 @@ function SubPanel({ title, hint, children }: { title: string; hint?: string; chi
   );
 }
 
-export function EditorPage({
-  plan,
-  api,
-  notify,
-  canCreate,
-}: {
-  plan: ClassPlan;
-  api: PlansApi;
-  notify: (m: string) => void;
-  canCreate: () => boolean;
-}) {
+export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansApi; notify: (m: string) => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const set = (next: ClassPlan) => api.upsert(next);
   const { warmup, concept, game, gems, freeRoll } = plan;
@@ -451,7 +441,6 @@ export function EditorPage({
                   className="btn btn-secondary"
                   style={{ flex: 1 }}
                   onClick={() => {
-                    if (!canCreate()) return;
                     const copy = duplicatePlan(plan);
                     api.upsert(copy);
                     navigate({ name: 'edit', id: copy.id });
