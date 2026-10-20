@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pause, Play, RotateCcw, SkipForward } from 'lucide-react';
 import { formatClock, type RoundSegment } from '../lib/plan.ts';
+import { Tally } from './Tally.tsx';
 
 let audio: AudioContext | null = null;
 
@@ -27,9 +28,6 @@ function tone(freq: number, ms: number, delay = 0) {
     // No audio available; the timer still works silently.
   }
 }
-
-const RADIUS = 120;
-const CIRC = 2 * Math.PI * RADIUS;
 
 export function RoundTimer({ segments, title }: { segments: RoundSegment[]; title: string }) {
   const [index, setIndex] = useState(0);
@@ -100,7 +98,9 @@ export function RoundTimer({ segments, title }: { segments: RoundSegment[]; titl
   }
 
   const seg = segments[index];
-  const progress = finished ? 1 : 1 - Math.max(0, remaining) / seg.seconds;
+  // Tally strokes count rounds only; rests are the gaps between them.
+  const rounds = segments.filter((s) => s.kind === 'round').length;
+  const roundsDone = finished ? rounds : segments.slice(0, index).filter((s) => s.kind === 'round').length;
   const finishing = !finished && seg.kind === 'round' && remaining <= 10;
 
   const toggle = () => {
@@ -115,20 +115,13 @@ export function RoundTimer({ segments, title }: { segments: RoundSegment[]; titl
   return (
     <div className={`timer ${seg.kind === 'rest' && !finished ? 'rest' : ''} ${finishing ? 'finishing' : ''}`}>
       <div className="eyebrow">{title}</div>
-      <div className="timer-ring">
-        <svg viewBox="0 0 260 260" aria-hidden>
-          <circle className="track" cx="130" cy="130" r={RADIUS} />
-          <circle className="arc" cx="130" cy="130" r={RADIUS} strokeDasharray={CIRC} strokeDashoffset={CIRC * progress} />
-        </svg>
-        <div className="timer-center">
-          <span className={seg.kind === 'rest' && !finished ? 'sub-label sage' : 'sub-label'}>
-            {finished ? 'Done' : seg.label}
-          </span>
-          <span className="timer-clock" aria-live="off">
-            {formatClock(finished ? 0 : remaining)}
-          </span>
-        </div>
+      <div className="timer-face">
+        <span className="sub-label">{finished ? 'Done' : seg.label}</span>
+        <span className="timer-clock" aria-live="off">
+          {formatClock(finished ? 0 : remaining)}
+        </span>
       </div>
+      <Tally done={roundsDone} of={rounds} running={!finished && seg.kind === 'round'} struck={finished} />
       <div className="timer-cue">{finished ? 'Block complete' : seg.cue}</div>
       <div className="timer-controls">
         <button type="button" className="icon-btn" aria-label="Restart" onClick={reset}>
