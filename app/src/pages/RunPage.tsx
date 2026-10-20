@@ -17,6 +17,7 @@ import {
 } from '../lib/plan.ts';
 import { navigate } from '../lib/router.ts';
 import { RoundTimer } from '../components/RoundTimer.tsx';
+import { ClipView } from '../components/ClipField.tsx';
 
 const ORDER: SectionKey[] = ['warmup', 'concept', 'game', 'gems', 'freeRoll'];
 
@@ -155,7 +156,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       );
       break;
     case 'gems': {
-      const moves = gems.moves.filter((m) => m.name.trim() || m.notes.trim());
+      const moves = gems.moves.filter((m) => m.name.trim() || m.notes.trim() || m.clip);
       body = (
         <>
           {moves.length === 0 && gems.options.length === 0 && <Empty />}
@@ -167,6 +168,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
               <p className="run-big run-lead" style={{ fontSize: 'clamp(24px, 3.2vw, 32px)', marginBottom: 6 }}>
                 {m.name || 'Untitled move'}
               </p>
+              {m.clip && <ClipView clip={m.clip} label={m.name || `Move ${i + 1}`} />}
               {m.notes && <p className="run-big muted">{m.notes}</p>}
             </div>
           ))}

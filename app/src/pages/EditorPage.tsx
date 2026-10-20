@@ -2,7 +2,7 @@
 // in the order they are taught. Every change saves as you type.
 
 import { useState, type ReactNode } from 'react';
-import { ArrowLeft, Copy, Download, Play, Plus, Printer, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Copy, Download, FileText, Play, Plus, Printer, Trash2, X } from 'lucide-react';
 import {
   MOVEMENT_SUGGESTIONS,
   describeGameRounds,
@@ -23,7 +23,9 @@ import { EditableList } from '../components/EditableList.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { PrintSheet } from '../components/PrintSheet.tsx';
 import { ConfirmDialog } from '../components/feedback.tsx';
-import { downloadJson } from './LibraryPage.tsx';
+import { downloadBackup } from './LibraryPage.tsx';
+import { ClipField } from '../components/ClipField.tsx';
+import { fileSlug, saveFile } from '../lib/files.ts';
 
 function Section({
   id,
@@ -79,6 +81,19 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
   const set = (next: ClassPlan) => api.upsert(next);
   const { warmup, concept, game, gems, freeRoll } = plan;
   const rounds = game.rounds;
+  const [exporting, setExporting] = useState(false);
+
+  const exportDocument = async () => {
+    setExporting(true);
+    try {
+      const { exportClassDocument } = await import('../lib/exportDoc.ts');
+      await saveFile(await exportClassDocument(plan), `${fileSlug(plan.title)}.docx`);
+    } catch {
+      notify('The document could not be made. Try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const jump = (key: SectionKey) =>
     document.getElementById(`section-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -351,6 +366,13 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                       set({ ...plan, gems: { ...gems, moves: gems.moves.map((x) => (x.id === m.id ? { ...x, notes } : x)) } })
                     }
                   />
+                  <ClipField
+                    clip={m.clip}
+                    notify={notify}
+                    onChange={(clip) =>
+                      set({ ...plan, gems: { ...gems, moves: gems.moves.map((x) => (x.id === m.id ? { ...x, clip } : x)) } })
+                    }
+                  />
                 </div>
               ))}
               <div>
@@ -424,6 +446,9 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
               <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate({ name: 'run', id: plan.id })}>
                 <Play size={17} /> Teach this class
               </button>
+              <button type="button" className="btn btn-secondary" onClick={exportDocument} disabled={exporting}>
+                <FileText size={16} /> {exporting ? 'Making the document…' : 'Export document'}
+              </button>
               <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
                 <Printer size={16} /> Print class sheet
               </button>
@@ -432,9 +457,10 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                   type="button"
                   className="btn btn-secondary"
                   style={{ flex: 1 }}
-                  onClick={() => downloadJson(`${(plan.title || 'class').replace(/[^\w-]+/g, '-').toLowerCase()}.json`, plan)}
+                  title="A backup file you can import on another device"
+                  onClick={() => void downloadBackup(`${fileSlug(plan.title)}.json`, plan)}
                 >
-                  <Download size={16} /> Export
+                  <Download size={16} /> Backup
                 </button>
                 <button
                   type="button"

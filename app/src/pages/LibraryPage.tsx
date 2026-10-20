@@ -12,17 +12,18 @@ import { TemplatePicker } from '../components/TemplatePicker.tsx';
 import { Logo } from '../components/Tally.tsx';
 import type { Template } from '../lib/samples.ts';
 import type { InstallState } from '../lib/pwa.ts';
+import { restoreClipData, withClipData } from '../lib/clips.ts';
+import { saveFile } from '../lib/files.ts';
 
 const STRUCTURE = ['Warm-up', 'Concept', 'Positional game', 'Gems', 'Free roll'];
 
-export function downloadJson(filename: string, data: unknown) {
+/** Writes plans to a backup file, with their technique clips inside so nothing is lost. */
+export async function downloadBackup(filename: string, plans: ClassPlan | ClassPlan[]) {
+  const list = Array.isArray(plans) ? plans : [plans];
+  const withClips = await withClipData(list);
+  const data = Array.isArray(plans) ? withClips : withClips[0];
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  await saveFile(blob, filename);
 }
 
 export function LibraryPage({
@@ -55,7 +56,9 @@ export function LibraryPage({
   const onImport = async (file: File) => {
     try {
       const parsed = JSON.parse(await file.text());
-      const list = (Array.isArray(parsed) ? parsed : [parsed]).map(normalizePlan).filter((p): p is ClassPlan => p !== null);
+      const raw: unknown[] = Array.isArray(parsed) ? parsed : [parsed];
+      await restoreClipData(raw);
+      const list = raw.map(normalizePlan).filter((p): p is ClassPlan => p !== null);
       const added = api.importMany(list);
       notify(added ? `Imported ${added} class plan${added === 1 ? '' : 's'}` : 'Those plans are already here');
     } catch {
@@ -82,7 +85,7 @@ export function LibraryPage({
             <Upload size={16} /> <span className="hide-sm">Import</span>
           </button>
           {api.plans.length > 0 && (
-            <button type="button" className="btn btn-ghost" onClick={() => downloadJson('maestranada-plans.json', api.plans)}>
+            <button type="button" className="btn btn-ghost" onClick={() => void downloadBackup('maestranada-plans.json', api.plans)}>
               <Download size={16} /> <span className="hide-sm">Export all</span>
             </button>
           )}
@@ -210,7 +213,7 @@ export function LibraryPage({
         {api.plans.length > 0 && (
           <>
             <span className="sep">·</span>
-            <button type="button" className="link" onClick={() => downloadJson('maestranada-plans.json', api.plans)}>
+            <button type="button" className="link" onClick={() => void downloadBackup('maestranada-plans.json', api.plans)}>
               Back up all plans
             </button>
           </>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { loadPlans, savePlans } from './storage.ts';
+import { clipIds, pruneClips } from './clips.ts';
 import type { ClassPlan } from './plan.ts';
 
 export interface PlansApi {
@@ -18,6 +19,12 @@ export function usePlans(): PlansApi {
   useEffect(() => {
     savePlans(plans);
   }, [plans]);
+
+  // Drop stored clips once no plan uses them (replaced, removed, class deleted).
+  const clipKey = [...clipIds(plans)].sort().join(',');
+  useEffect(() => {
+    void pruneClips(plans).catch(() => {});
+  }, [clipKey]);
 
   const get = useCallback((id: string) => plans.find((p) => p.id === id), [plans]);
 
