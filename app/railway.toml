@@ -1,0 +1,8 @@
+# Set the Railway service's root directory to `app`.
+[build]
+# --include=dev: Railway sets NODE_ENV=production, which would skip Vite and TypeScript.
+buildCommand = "npm install --include=dev && npm run build"
+
+[deploy]
+startCommand = "npm run serve"
+healthcheckPath = "/"
