@@ -2,7 +2,7 @@
 // in the order they are taught. Every change saves as you type.
 
 import { useState, type ReactNode } from 'react';
-import { ArrowLeft, Copy, Download, FileText, Play, Plus, Printer, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Copy, Download, FileText, Play, Plus, Printer, Send, Trash2, X } from 'lucide-react';
 import {
   MOVEMENT_SUGGESTIONS,
   describeGameRounds,
@@ -82,17 +82,29 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
   const set = (next: ClassPlan) => api.upsert(next);
   const { warmup, concept, game, gems, freeRoll } = plan;
   const rounds = game.rounds;
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<'doc' | 'file' | null>(null);
 
   const exportDocument = async () => {
-    setExporting(true);
+    setExporting('doc');
     try {
       const { exportClassDocument } = await import('../lib/exportDoc.ts');
       await saveFile(await exportClassDocument(plan), `${fileSlug(plan.title)}.docx`);
     } catch {
       notify('The document could not be made. Try again.');
     } finally {
-      setExporting(false);
+      setExporting(null);
+    }
+  };
+
+  const sendClassFile = async () => {
+    setExporting('file');
+    try {
+      const { exportClassFile } = await import('../lib/classFile.ts');
+      await saveFile(await exportClassFile(plan), `${fileSlug(plan.title)}.html`);
+    } catch {
+      notify('The class file could not be made. Try again.');
+    } finally {
+      setExporting(null);
     }
   };
 
@@ -451,8 +463,17 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
               <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate({ name: 'run', id: plan.id })}>
                 <Play size={17} /> Teach this class
               </button>
-              <button type="button" className="btn btn-secondary" onClick={exportDocument} disabled={exporting}>
-                <FileText size={16} /> {exporting ? 'Making the document…' : 'Export document'}
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={sendClassFile}
+                disabled={exporting !== null}
+                title="One file with the whole class and its clips. It opens in any browser and imports back into the app."
+              >
+                <Send size={16} /> {exporting === 'file' ? 'Making the class file…' : 'Send class file'}
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={exportDocument} disabled={exporting !== null}>
+                <FileText size={16} /> {exporting === 'doc' ? 'Making the document…' : 'Export Word document'}
               </button>
               <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
                 <Printer size={16} /> Print class sheet

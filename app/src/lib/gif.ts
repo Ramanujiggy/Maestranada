@@ -54,7 +54,7 @@ export function clampClip(settings: ClipSettings, duration: number): ClipSetting
   return { ...settings, start, length };
 }
 
-function seek(video: HTMLVideoElement, t: number): Promise<void> {
+export function seek(video: HTMLVideoElement, t: number): Promise<void> {
   return new Promise((resolve) => {
     const done = () => {
       clearTimeout(timer);

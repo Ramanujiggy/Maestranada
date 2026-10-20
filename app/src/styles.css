@@ -1431,7 +1431,8 @@ html:has(.backdrop) body {
   gap: 8px 12px;
 }
 
-.clip-field img {
+.clip-field img,
+.clip-field video {
   display: block;
   width: auto;
   height: auto;
@@ -1525,7 +1526,8 @@ html:has(.backdrop) body {
   cursor: zoom-in;
 }
 
-.clip-view img {
+.clip-view img,
+.clip-view video {
   display: block;
   width: auto;
   height: auto;
@@ -1552,7 +1554,8 @@ html:has(.backdrop) body {
   padding: calc(12px + var(--sat)) 12px calc(12px + var(--sab));
 }
 
-.clip-lightbox img {
+.clip-lightbox img,
+.clip-lightbox video {
   max-width: 100%;
   max-height: 100%;
   width: auto;
