@@ -24,7 +24,7 @@ npm run build      # static build in app/dist
 
 ## Deploy on Railway
 
-Create a service from this repo and set its **Root Directory** to `app`. `app/railway.toml` builds with `npm run build` and serves the static build with `npm run serve`, which listens on Railway's `PORT`.
+Create a service from this repo and leave the Root Directory empty. The root `railway.toml` and `package.json` build `app/` and serve the static build on Railway's `PORT`.
 
 Plans are saved in the browser's local storage on the device they were made on. Export and import (JSON) move them between devices.
 
