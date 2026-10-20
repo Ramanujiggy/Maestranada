@@ -1,15 +1,15 @@
 // The class at a glance: total time and how it splits across the five
-// blocks. The colours walk the intensity ladder (moss → champagne → copper)
-// because the class itself builds from solo movement to live rolling.
+// blocks. The colours walk from light ink to full ink because the class
+// itself builds from solo movement to live rolling.
 
 import { formatMinutes, timeline, totalMinutes, type ClassPlan, type SectionKey } from '../lib/plan.ts';
 
 export const SECTION_COLORS: Record<SectionKey, string> = {
-  warmup: '#5E8A5C',
-  concept: '#7BA177',
-  game: '#A8B97A',
-  gems: '#D4B86A',
-  freeRoll: '#C4915F',
+  warmup: 'var(--sec-1)',
+  concept: 'var(--sec-2)',
+  game: 'var(--sec-3)',
+  gems: 'var(--sec-4)',
+  freeRoll: 'var(--sec-5)',
 };
 
 export function Timeline({ plan, onJump }: { plan: ClassPlan; onJump?: (key: SectionKey) => void }) {

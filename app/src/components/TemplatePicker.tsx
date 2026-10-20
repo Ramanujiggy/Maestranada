@@ -30,7 +30,7 @@ export function TemplatePicker({
       >
         <div className="sheet-head">
           <div>
-            <div className="eyebrow" style={{ color: 'var(--copper)' }}>
+            <div className="eyebrow-strong">
               New class
             </div>
             <h2 className="card-title" style={{ marginTop: 6 }}>
@@ -43,7 +43,7 @@ export function TemplatePicker({
         </div>
 
         <button type="button" className="template blank" onClick={onBlank} autoFocus>
-          <FilePlus2 size={22} color="var(--orange)" />
+          <FilePlus2 size={22} color="var(--ink)" />
           <span>
             <span className="template-title">Blank class</span>
             <span className="template-blurb">The five blocks, ready for your own plan.</span>

@@ -1,6 +1,8 @@
 // The paper version of a plan — hidden on screen, shown only when printing.
-// One page a coach can fold into a gi pocket.
+// One page a coach can fold into a gi pocket: a box to tick per block, the
+// times in a right-hand column, and a grid only where you write by hand.
 
+import type { ReactNode } from 'react';
 import {
   describeGameRounds,
   formatMinutes,
@@ -11,6 +13,7 @@ import {
   type ListItem,
 } from '../lib/plan.ts';
 import { formatRest } from './controls.tsx';
+import { LogoMark } from './Tally.tsx';
 
 function Bullets({ items }: { items: ListItem[] }) {
   const filled = items.filter((x) => x.text.trim());
@@ -21,6 +24,19 @@ function Bullets({ items }: { items: ListItem[] }) {
         <li key={x.id}>{x.text}</li>
       ))}
     </ul>
+  );
+}
+
+function Block({ title, time, children }: { title: string; time: string; children: ReactNode }) {
+  return (
+    <section>
+      <span className="ps-box" />
+      <div>
+        <h2>{title}</h2>
+        {children}
+      </div>
+      <span className="ps-time">{time}</span>
+    </section>
   );
 }
 
@@ -43,37 +59,32 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
   const { warmup, concept, game, gems, freeRoll } = plan;
   return (
     <div className="print-sheet">
-      <h1>{plan.title || 'Untitled class'}</h1>
-      <div className="ps-meta">
-        {formatDate(plan.date)} · {formatMinutes(totalMinutes(plan))}
+      <div className="ps-head">
+        <h1>
+          <LogoMark height={26} />
+          {plan.title || 'Untitled class'}
+        </h1>
+        <div className="ps-meta">
+          {formatDate(plan.date)}
+          <br />
+          {formatMinutes(totalMinutes(plan))}
+        </div>
       </div>
 
-      <section>
-        <h2>
-          <span>1 · Warm-up · Movement</span>
-          <span>{formatMinutes(warmup.minutes)}</span>
-        </h2>
+      <Block title="Warm-up · Movement" time={formatMinutes(warmup.minutes)}>
         <Bullets items={warmup.drills} />
-      </section>
+      </Block>
 
-      <section>
-        <h2>
-          <span>2 · Concept</span>
-          <span>{formatMinutes(concept.minutes)}</span>
-        </h2>
+      <Block title="Concept" time={formatMinutes(concept.minutes)}>
         {concept.rule && (
           <p>
             <strong>General rule:</strong> {concept.rule}
           </p>
         )}
         {concept.notes && <p>{concept.notes}</p>}
-      </section>
+      </Block>
 
-      <section>
-        <h2>
-          <span>3 · Positional game</span>
-          <span>{formatMinutes(gameSeconds(plan) / 60)}</span>
-        </h2>
+      <Block title="Positional game" time={formatMinutes(gameSeconds(plan) / 60)}>
         <p>
           <strong>
             {game.start || 'Start position'} → {game.objective || 'objective'}
@@ -86,13 +97,9 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
         <Line k="Transition" v={game.transition} />
         <Line k="Submission" v={game.submission} />
         <Line k="Rounds" v={`${describeGameRounds(game.rounds)} · rest ${formatRest(game.rounds.restSeconds)}`} />
-      </section>
+      </Block>
 
-      <section>
-        <h2>
-          <span>4 · Gems</span>
-          <span>{formatMinutes(gems.minutes)}</span>
-        </h2>
+      <Block title="Gems" time={formatMinutes(gems.minutes)}>
         {gems.moves
           .filter((m) => m.name.trim() || m.notes.trim())
           .map((m, i) => (
@@ -105,18 +112,22 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
           ))}
         {gems.options.length > 0 && <h3>Options</h3>}
         <Bullets items={gems.options} />
-      </section>
+      </Block>
 
-      <section>
-        <h2>
-          <span>5 · Free roll</span>
-          <span>{formatMinutes(freeRollSeconds(plan) / 60)}</span>
-        </h2>
+      <Block title="Free roll" time={formatMinutes(freeRollSeconds(plan) / 60)}>
         <p>
           {freeRoll.rounds} × {freeRoll.minutes} min · rest {formatRest(freeRoll.restSeconds)}
         </p>
         {freeRoll.notes && <p>{freeRoll.notes}</p>}
-      </section>
+      </Block>
+
+      <div className="ps-notes">
+        <span className="ps-k">Notes</span>
+      </div>
+      <div className="ps-foot">
+        <span>maestranada</span>
+        <span>{plan.title}</span>
+      </div>
     </div>
   );
 }

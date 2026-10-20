@@ -41,7 +41,7 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="card" id={`section-${id}`} style={{ animationDelay: `${index * 50}ms`, scrollMarginTop: 20 }}>
+    <section className="card" id={`section-${id}`} style={{ scrollMarginTop: 20 }}>
       <div className="section-head">
         <div className="section-head-text">
           <span className="section-index">{String(index).padStart(2, '0')}</span>
@@ -60,7 +60,7 @@ function Section({
 function SubPanel({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
     <div className="subpanel">
-      <div className="eyebrow" style={{ color: 'var(--copper)' }}>
+      <div className="eyebrow-strong">
         {title}
       </div>
       {hint && (

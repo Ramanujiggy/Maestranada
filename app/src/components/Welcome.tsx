@@ -4,6 +4,7 @@
 import { useEffect } from 'react';
 import { Download, Share, X } from 'lucide-react';
 import type { InstallState } from '../lib/pwa.ts';
+import { Logo } from './Tally.tsx';
 
 const BLOCKS: [string, string][] = [
   ['Warm-up · Movement', 'Solo movement to wake the body up.'],
@@ -32,7 +33,7 @@ export function Welcome({
     <div className="backdrop" onClick={onClose}>
       <div className="card sheet welcome" role="dialog" aria-modal="true" aria-label="Welcome" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
-          <span className="wordmark">Maestranada</span>
+          <Logo />
           <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
             <X size={18} />
           </button>

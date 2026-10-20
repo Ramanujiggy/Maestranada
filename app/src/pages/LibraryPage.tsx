@@ -9,6 +9,7 @@ import type { PlansApi } from '../lib/usePlans.ts';
 import { ConfirmDialog } from '../components/feedback.tsx';
 import { formatDate } from '../components/PrintSheet.tsx';
 import { TemplatePicker } from '../components/TemplatePicker.tsx';
+import { Logo } from '../components/Tally.tsx';
 import type { Template } from '../lib/samples.ts';
 import type { InstallState } from '../lib/pwa.ts';
 
@@ -66,7 +67,7 @@ export function LibraryPage({
     <div className="shell">
       <header className="topbar">
         <div className="brand">
-          <span className="wordmark">Maestranada</span>
+          <Logo />
         </div>
         <div className="topbar-actions">
           {install.kind === 'prompt' && (
@@ -100,7 +101,7 @@ export function LibraryPage({
       </header>
 
       <section className="hero-card">
-        <div className="eyebrow" style={{ color: 'var(--copper)' }}>
+        <div className="eyebrow-strong">
           Class prep
         </div>
         <h1 className="page-title" style={{ margin: '10px 0 8px' }}>
@@ -118,7 +119,7 @@ export function LibraryPage({
             </span>
           ))}
         </div>
-        <div style={{ marginTop: 24, position: 'relative', zIndex: 1 }}>
+        <div style={{ marginTop: 24 }}>
           <button type="button" className="btn btn-primary btn-lg" onClick={create}>
             <Plus size={18} /> New class plan
           </button>
@@ -146,18 +147,15 @@ export function LibraryPage({
         </div>
       ) : (
         <div className="plan-grid">
-          {sorted.map((p, i) => (
+          {sorted.map((p) => (
             <article
               key={p.id}
               className="card plan-card"
-              style={{ animationDelay: `${Math.min(i, 8) * 45}ms` }}
               onClick={() => navigate({ name: 'edit', id: p.id })}
             >
               <div className="plan-card-head">
-                <span className="sage" style={{ fontSize: 12.5, fontWeight: 600 }}>
-                  {formatDate(p.date)}
-                </span>
-                <span className="pill">{formatMinutes(totalMinutes(p))}</span>
+                <span className="plan-date">{formatDate(p.date)}</span>
+                <span className="plan-length">{formatMinutes(totalMinutes(p))}</span>
               </div>
               <h2 className="card-title">{p.title || 'Untitled class'}</h2>
               <p className="plan-card-concept">{p.concept.rule || <span className="muted">No concept yet</span>}</p>

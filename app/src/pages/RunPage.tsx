@@ -3,7 +3,7 @@
 // positional game's details stay folded until the coach chooses to show
 // them, because the class feels the game before it hears the details.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, X } from 'lucide-react';
 import {
   SECTION_LABELS,
@@ -52,7 +52,25 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [plan.id]);
 
-  useEffect(() => window.scrollTo({ top: 0, behavior: 'smooth' }), [step]);
+  useEffect(() => window.scrollTo({ top: 0 }), [step]);
+
+  // Swipe left or right between blocks, as well as the buttons. Only a
+  // mostly horizontal flick counts, so scrolling a long list never moves on.
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: TouchEvent) => {
+    const t = e.touches[0];
+    touch.current = { x: t.clientX, y: t.clientY };
+  };
+  const onTouchEnd = (e: TouchEvent) => {
+    const start = touch.current;
+    touch.current = null;
+    if (!start || (e.target as HTMLElement).closest('input, textarea, .timer-queue')) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    setStep((s) => (dx < 0 ? Math.min(ORDER.length - 1, s + 1) : Math.max(0, s - 1)));
+  };
 
   const schedules = useMemo<Partial<Record<SectionKey, RoundSegment[]>>>(
     () => ({
@@ -77,10 +95,10 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
     case 'concept':
       body = (
         <>
-          <div className="eyebrow" style={{ color: 'var(--copper)', marginBottom: 8 }}>
+          <div className="eyebrow-strong" style={{ marginBottom: 8 }}>
             General rule
           </div>
-          <p className="run-big" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)', color: 'var(--champagne)' }}>
+          <p className="run-big run-lead" style={{ fontSize: 'clamp(26px, 3.6vw, 36px)' }}>
             {concept.rule || <span className="muted">No rule set</span>}
           </p>
           {concept.notes && <p className="run-big muted">{concept.notes}</p>}
@@ -91,7 +109,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       body = (
         <>
           <div className="run-block">
-            <div className="eyebrow" style={{ color: 'var(--copper)', marginBottom: 12 }}>
+            <div className="eyebrow-strong" style={{ marginBottom: 12 }}>
               Goals and movements
             </div>
             {game.goals.length ? <BigList items={game.goals} /> : <Empty />}
@@ -101,7 +119,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
           </div>
           <div className="run-block run-reveal">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-              <div className="eyebrow" style={{ color: 'var(--copper)' }}>
+              <div className="eyebrow-strong">
                 Details: beating the position
               </div>
               <button type="button" className="btn btn-secondary" onClick={() => setShowDetails((v) => !v)}>
@@ -143,10 +161,10 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
           {moves.length === 0 && gems.options.length === 0 && <Empty />}
           {moves.map((m, i) => (
             <div className="run-block" key={m.id}>
-              <div className="eyebrow" style={{ color: 'var(--copper)', marginBottom: 6 }}>
+              <div className="eyebrow-strong" style={{ marginBottom: 6 }}>
                 Move {i + 1}
               </div>
-              <p className="run-big" style={{ fontSize: 'clamp(22px, 3vw, 30px)', color: 'var(--champagne)', marginBottom: 6 }}>
+              <p className="run-big run-lead" style={{ fontSize: 'clamp(24px, 3.2vw, 32px)', marginBottom: 6 }}>
                 {m.name || 'Untitled move'}
               </p>
               {m.notes && <p className="run-big muted">{m.notes}</p>}
@@ -154,7 +172,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
           ))}
           {gems.options.length > 0 && (
             <div className="run-block">
-              <div className="eyebrow" style={{ color: 'var(--copper)', marginBottom: 12 }}>
+              <div className="eyebrow-strong" style={{ marginBottom: 12 }}>
                 Options
               </div>
               <BigList items={gems.options} />
@@ -177,11 +195,9 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
         : SECTION_LABELS[key];
 
   return (
-    <div className="shell run">
+    <div className="shell run" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <header className="topbar" style={{ marginBottom: 18 }}>
-        <span className="wordmark" style={{ fontSize: 19 }}>
-          {plan.title || 'Untitled class'}
-        </span>
+        <span className="run-head-title">{plan.title || 'Untitled class'}</span>
         <button type="button" className="btn btn-ghost" onClick={() => navigate({ name: 'edit', id: plan.id })}>
           <X size={17} /> Exit
         </button>
