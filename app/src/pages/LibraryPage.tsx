@@ -59,8 +59,15 @@ export function LibraryPage({
     let raw: unknown[];
     let list: ClassPlan[];
     try {
-      const parsed = JSON.parse(await file.text());
-      raw = Array.isArray(parsed) ? parsed : [parsed];
+      const text = await file.text();
+      const classFile = await import('../lib/classFile.ts');
+      if (classFile.looksLikeClassFile(text)) {
+        const plan = classFile.readClassFile(text);
+        raw = plan ? [plan] : [];
+      } else {
+        const parsed = JSON.parse(text);
+        raw = Array.isArray(parsed) ? parsed : [parsed];
+      }
       list = raw.map(normalizePlan).filter((p): p is ClassPlan => p !== null);
     } catch {
       list = [];
@@ -115,7 +122,7 @@ export function LibraryPage({
           <input
             ref={fileRef}
             type="file"
-            accept="application/json,.json"
+            accept="application/json,.json,text/html,.html,.htm"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];

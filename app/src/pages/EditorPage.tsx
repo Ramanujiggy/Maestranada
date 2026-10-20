@@ -2,7 +2,7 @@
 // in the order they are taught. Every change saves as you type.
 
 import { useState, type ReactNode } from 'react';
-import { ArrowLeft, Copy, Download, FileText, Play, Plus, Printer, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Copy, Download, FileText, Play, Plus, Printer, Send, Trash2, X } from 'lucide-react';
 import {
   movementSuggestions,
   describeGameRounds,
@@ -83,17 +83,29 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
   const set = (next: ClassPlan) => api.upsert(next);
   const { warmup, concept, game, gems, freeRoll } = plan;
   const rounds = game.rounds;
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<'doc' | 'file' | null>(null);
 
   const exportDocument = async () => {
-    setExporting(true);
+    setExporting('doc');
     try {
       const { exportClassDocument } = await import('../lib/exportDoc.ts');
       await saveFile(await exportClassDocument(plan), `${fileSlug(plan.title)}.docx`);
     } catch {
       notify(t('docFailed'));
     } finally {
-      setExporting(false);
+      setExporting(null);
+    }
+  };
+
+  const sendClassFile = async () => {
+    setExporting('file');
+    try {
+      const { exportClassFile } = await import('../lib/classFile.ts');
+      await saveFile(await exportClassFile(plan), `${fileSlug(plan.title)}.html`);
+    } catch {
+      notify(t('classFileFailed'));
+    } finally {
+      setExporting(null);
     }
   };
 
@@ -452,8 +464,17 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
               <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate({ name: 'run', id: plan.id })}>
                 <Play size={17} /> {t('teachThisClass')}
               </button>
-              <button type="button" className="btn btn-secondary" onClick={exportDocument} disabled={exporting}>
-                <FileText size={16} /> {exporting ? t('makingDoc') : t('exportDoc')}
+<button
+                type="button"
+                className="btn btn-secondary"
+                onClick={sendClassFile}
+                disabled={exporting !== null}
+                title={t('classFileTitle')}
+              >
+                <Send size={16} /> {exporting === 'file' ? t('makingClassFile') : t('sendClassFile')}
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={exportDocument} disabled={exporting !== null}>
+                <FileText size={16} /> {exporting === 'doc' ? t('makingDoc') : t('exportDoc')}
               </button>
               <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
                 <Printer size={16} /> {t('printSheet')}

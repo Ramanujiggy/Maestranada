@@ -1,6 +1,7 @@
 import { DICTS, setLang, t, type Key } from './i18n.ts';
 import { describeGameRounds, gameSchedule, samplePlan } from './plan.ts';
 import { fileSlug } from './files.ts';
+import { buildClassFile } from './classFile.ts';
 
 const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
@@ -21,6 +22,14 @@ describe('languages', () => {
     expect(describeGameRounds(plan.game.rounds)).toBe('2 × 3 min, troca de parceiro, depois troca de posição');
     expect(gameSchedule(plan)[0]).toMatchObject({ label: 'Round 1 de 4', cue: 'Começa em Leg drag · Lado A' });
     expect(t('moveNamed', { n: 2, name: 'Upa' })).toBe('Técnica 2: Upa');
+  });
+
+  it('writes the class file in the language the app is in', () => {
+    setLang('pt');
+    const html = buildClassFile(samplePlan());
+    expect(html).toContain('<html lang="pt-BR">');
+    expect(html).toContain('Pulo do gato');
+    expect(html).toContain('Feito com a Prancheta');
   });
 
   it('keeps accents out of file names', () => {
