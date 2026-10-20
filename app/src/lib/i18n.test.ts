@@ -28,7 +28,7 @@ describe('languages', () => {
     setLang('pt');
     const html = buildClassFile(samplePlan());
     expect(html).toContain('<html lang="pt-BR">');
-    expect(html).toContain('Pulo do gato');
+    expect(html).toContain('Técnica');
     expect(html).toContain('Feito com a Prancheta');
   });
 
