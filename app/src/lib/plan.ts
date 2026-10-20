@@ -355,7 +355,7 @@ function samplePlanEn(now: Date): ClassPlan {
     },
     concept: {
       minutes: 5,
-      rule: 'Offensive opportunities from the leg drag.',
+      rule: 'Keep the hips pinned and the back opens up.',
       notes: 'The leg drag pins the hips to one side. Every option today comes from keeping them there.',
     },
     game: {
@@ -397,7 +397,7 @@ function samplePlanPt(now: Date): ClassPlan {
     },
     concept: {
       minutes: 5,
-      rule: 'Oportunidades de ataque a partir do leg drag.',
+      rule: 'Prenda o quadril e as costas aparecem.',
       notes: 'O leg drag prende o quadril para um lado. Toda opção de hoje vem de manter ele ali.',
     },
     game: {
@@ -414,13 +414,13 @@ function samplePlanPt(now: Date): ClassPlan {
         'Controle a manga ou o punho de longe antes de se mexer',
         'Encaixe o joelho de trás quando ele virar de costas',
       ].map(item),
-      transition: 'Leg drag → pegada nas costas quando ele vira',
+      transition: 'Leg drag → pegada de costas quando ele vira',
       submission: 'Mata-leão, ou arco e flecha de kimono',
     },
     gems: {
       minutes: 15,
       moves: [
-        move('Pegada nas costas quando ele vira', 'Primeiro a pegada de cinto, depois o gancho. Deixe ele te dar o giro.'),
+        move('Pegada de costas quando ele vira', 'Primeiro a pegada de cinto, depois o gancho. Deixe ele te dar o giro.'),
         move('Passagem de joelho do outro lado', 'Quando ele bloqueia o giro, corte de volta para a montada.'),
       ],
       options: ['Chave de braço do lado de perto se ele apoiar o braço de longe', 'Troque para o leg drag do outro lado'].map(item),

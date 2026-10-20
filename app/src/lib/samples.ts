@@ -169,12 +169,12 @@ const closedGuardPt: Spec = {
   details: [
     'Puxe com as pernas, não só com os braços',
     'Controle uma manga e a gola ou a cabeça',
-    'Saia do ângulo antes de atacar. Nunca ataque de frente',
+    'Busque o ângulo antes de atacar. Nunca ataque de frente',
   ],
   transition: 'Postura quebrada → raspagem de quadril para a montada',
   submission: 'Kimura ou guilhotina a partir da raspagem de quadril',
   moves: [
-    ['Raspagem de quadril', 'Sente em direção a ele quando ele recupera a postura. Apoie a mão, empurre com o quadril e vá para a montada.'],
+    ['Raspagem de quadril', 'Quando ele recuperar a postura, sente para cima dele. Apoie a mão, empurre com o quadril e vá para a montada.'],
     ['Kimura a partir da raspagem', 'Ele apoia o braço para segurar a raspagem. Pegue o punho, feche a figura quatro e caia em ângulo.'],
   ],
   options: ['Guilhotina se ele abaixar a cabeça', 'Raspagem pêndulo se ele empurrar para levantar'],
@@ -197,7 +197,7 @@ const halfGuardPt: Spec = {
     'Cabeça no peito dele, nunca no chão',
     'Joelho na frente como escudo até o underhook entrar',
   ],
-  transition: 'Underhook → dogfight → pegada nas costas',
+  transition: 'Underhook → dogfight → pegada de costas',
   submission: 'Mata-leão depois que os ganchos entram',
   moves: [
     ['Raspagem old school', 'Do underhook, alcance o tornozelo de longe e empurre com a cabeça.'],

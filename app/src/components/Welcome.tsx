@@ -1,4 +1,4 @@
-// First-run welcome: what the app is for, the five blocks, and that
+// First-run welcome: what the app is for, the blocks, and that
 // everything stays on this device. Reopened from "How it works".
 
 import { useEffect } from 'react';
@@ -13,6 +13,7 @@ const BLOCKS: [Key, Key][] = [
   ['sec.game', 'welcomeGame'],
   ['sec.gems', 'welcomeGems'],
   ['sec.freeRoll', 'welcomeFreeRoll'],
+  ['sec.wrapup', 'welcomeWrapup'],
 ];
 
 export function Welcome({
