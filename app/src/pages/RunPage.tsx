@@ -274,11 +274,11 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
 
       <div className="run-nav">
         <button type="button" className="btn btn-secondary" disabled={step === 0} onClick={() => setStep(step - 1)}>
-          <ArrowLeft size={16} /> {step > 0 ? sectionLabel(ORDER[step - 1]) : t('back')}
+          <ArrowLeft size={16} /> <span className="run-nav-label">{step > 0 ? sectionLabel(ORDER[step - 1]) : t('back')}</span>
         </button>
         {step < ORDER.length - 1 ? (
           <button type="button" className="btn btn-primary" onClick={() => setStep(step + 1)}>
-            {sectionLabel(ORDER[step + 1])} <ArrowRight size={16} />
+            <span className="run-nav-label">{sectionLabel(ORDER[step + 1])}</span> <ArrowRight size={16} />
           </button>
         ) : (
           <button type="button" className="btn btn-primary" onClick={() => navigate({ name: 'edit', id: plan.id })}>

@@ -294,6 +294,7 @@ a {
 @media (max-width: 960px) {
   .desk {
     flex-direction: column;
+    align-items: stretch;
   }
   .desk-margin {
     position: static;
@@ -591,7 +592,7 @@ a {
 
 @media (max-width: 620px) {
   .title-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .list-row-actions .move {
     display: none;
@@ -1175,8 +1176,12 @@ a {
 }
 
 @media (max-width: 960px) {
-  .run-stage {
-    grid-template-columns: 1fr;
+  .run-stage,
+  .run-stage.solo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .run-stage .pill {
+    white-space: normal;
   }
   /* On a phone the timer is what the coach reaches for first. */
   .run-stage > .card {
@@ -1253,6 +1258,24 @@ a {
   margin-top: 32px;
   padding-top: 18px;
   border-top: 1px solid var(--rule);
+}
+
+/* Block names can be long ("Aquecimento · Movimentação"), so on a phone each
+   button gets half the row and its name trims instead of pushing off screen. */
+.run-nav .btn {
+  min-width: 0;
+  max-width: calc(50% - 6px);
+}
+
+.run-nav .btn svg {
+  flex: none;
+}
+
+.run-nav-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Timer */
