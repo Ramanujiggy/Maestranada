@@ -10,8 +10,10 @@ import {
   gameSeconds,
   totalMinutes,
   type ClassPlan,
+  type Clip,
   type ListItem,
 } from '../lib/plan.ts';
+import { useClipUrl } from '../lib/clips.ts';
 import { formatRest } from './controls.tsx';
 import { LogoMark } from './Tally.tsx';
 
@@ -38,6 +40,12 @@ function Block({ title, time, children }: { title: string; time: string; childre
       <span className="ps-time">{time}</span>
     </section>
   );
+}
+
+// Paper can't loop, so the printed sheet shows the clip's first frame.
+function PrintClip({ clip }: { clip: Clip }) {
+  const url = useClipUrl(clip);
+  return url ? <img className="ps-clip" src={url} alt="" width={clip.width} height={clip.height} /> : null;
 }
 
 function Line({ k, v }: { k: string; v: string }) {
@@ -101,12 +109,13 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
 
       <Block title="Gems" time={formatMinutes(gems.minutes)}>
         {gems.moves
-          .filter((m) => m.name.trim() || m.notes.trim())
+          .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
           .map((m, i) => (
             <div key={m.id}>
               <h3>
                 Move {i + 1}: {m.name}
               </h3>
+              {m.clip && <PrintClip clip={m.clip} />}
               {m.notes && <p>{m.notes}</p>}
             </div>
           ))}

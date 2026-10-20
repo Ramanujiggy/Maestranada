@@ -16,10 +16,18 @@ export interface ListItem {
   text: string;
 }
 
+/** A looping GIF of the technique. The image itself lives in IndexedDB (see clips.ts). */
+export interface Clip {
+  id: string;
+  width: number;
+  height: number;
+}
+
 export interface Move {
   id: string;
   name: string;
   notes: string;
+  clip?: Clip;
 }
 
 export interface GameRounds {
@@ -319,7 +327,8 @@ export function freeRollSchedule(plan: ClassPlan): RoundSegment[] {
 /** Fills any missing fields from a blank plan, so imported JSON always renders. */
 export function normalizePlan(raw: unknown): ClassPlan | null {
   if (!raw || typeof raw !== 'object') return null;
-  const r = raw as Partial<ClassPlan>;
+  // Backups carry clip images alongside the plan; those are restored separately.
+  const { clipData: _clipData, ...r } = raw as Partial<ClassPlan> & { clipData?: unknown };
   const base = blankPlan();
   return {
     ...base,
