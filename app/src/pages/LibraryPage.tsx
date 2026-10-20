@@ -11,7 +11,6 @@ import { formatDate } from '../components/PrintSheet.tsx';
 import { TemplatePicker } from '../components/TemplatePicker.tsx';
 import type { Template } from '../lib/samples.ts';
 import type { InstallState } from '../lib/pwa.ts';
-import { FREE_PLAN_LIMIT, type LicenseApi } from '../lib/license.ts';
 
 const STRUCTURE = ['Warm-up', 'Concept', 'Positional game', 'Gems', 'Free roll'];
 
@@ -32,9 +31,6 @@ export function LibraryPage({
   onHelp,
   pickerOpen,
   setPickerOpen,
-  canCreate,
-  license,
-  onUnlock,
 }: {
   api: PlansApi;
   notify: (m: string) => void;
@@ -42,10 +38,6 @@ export function LibraryPage({
   onHelp: () => void;
   pickerOpen: boolean;
   setPickerOpen: (open: boolean) => void;
-  /** False (and shows the unlock sheet) when the free plan limit is reached. */
-  canCreate: () => boolean;
-  license: LicenseApi;
-  onUnlock: () => void;
 }) {
   const [pendingDelete, setPendingDelete] = useState<ClassPlan | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -57,9 +49,7 @@ export function LibraryPage({
     setPickerOpen(false);
     navigate({ name: 'edit', id: plan.id });
   };
-  const create = () => {
-    if (canCreate()) setPickerOpen(true);
-  };
+  const create = () => setPickerOpen(true);
 
   const onImport = async (file: File) => {
     try {
@@ -193,7 +183,6 @@ export function LibraryPage({
                     aria-label="Duplicate"
                     title="Duplicate"
                     onClick={() => {
-                      if (!canCreate()) return;
                       api.upsert(duplicatePlan(p));
                       notify('Plan duplicated');
                     }}
@@ -220,18 +209,6 @@ export function LibraryPage({
         <span>Works offline</span>
         <span className="sep">·</span>
         <span>Your plans stay on this device</span>
-        {license.enabled && (
-          <>
-            <span className="sep">·</span>
-            {license.unlocked ? (
-              <span>Full version</span>
-            ) : (
-              <button type="button" className="link" onClick={onUnlock}>
-                Free version: {Math.min(api.plans.length, FREE_PLAN_LIMIT)} of {FREE_PLAN_LIMIT} plans. Unlock
-              </button>
-            )}
-          </>
-        )}
         {api.plans.length > 0 && (
           <>
             <span className="sep">·</span>
