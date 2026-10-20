@@ -80,7 +80,7 @@ export function LibraryPage({
 
   const exportAll = async () => {
     try {
-      await downloadBackup(`maestranada-backup-${todayISO()}.json`, api.plans);
+      await downloadBackup(`prancheta-backup-${todayISO()}.json`, api.plans);
     } catch {
       notify('The backup could not be made. Try again.');
     }
@@ -233,7 +233,7 @@ export function LibraryPage({
       {install.kind === 'ios' && (
         <div className="subpanel ios-keep">
           <strong>Keep your plans safe on iPhone.</strong> Safari can clear a website's data when it goes unused for a
-          week. Add Maestranada to your Home Screen (tap <Share size={13} /> Share, then Add to Home Screen) and it keeps
+          week. Add Prancheta to your Home Screen (tap <Share size={13} /> Share, then Add to Home Screen) and it keeps
           your plans and works offline.
         </div>
       )}

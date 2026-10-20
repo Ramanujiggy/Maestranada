@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import type { ClassPlan, Clip } from './plan.ts';
 
-const DB_NAME = 'maestranada';
+const DB_NAME = 'maestranada'; // the app's first name; kept so saved clips still load
 const STORE = 'clips';
 
 let dbPromise: Promise<IDBDatabase> | null = null;

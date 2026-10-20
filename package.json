@@ -1,5 +1,5 @@
 {
-  "name": "maestranada-root",
+  "name": "prancheta-root",
   "private": true,
   "description": "Deploy wrapper: the app lives in app/.",
   "engines": {

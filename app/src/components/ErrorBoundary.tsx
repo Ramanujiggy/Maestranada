@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
       const url = URL.createObjectURL(new Blob([rawPlans()], { type: 'application/json' }));
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'maestranada-plans.json';
+      a.download = 'prancheta-plans.json';
       document.body.appendChild(a);
       a.click();
       a.remove();

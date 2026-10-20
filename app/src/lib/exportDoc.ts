@@ -101,7 +101,7 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
     });
 
   return new Document({
-    creator: 'Maestranada',
+    creator: 'Prancheta',
     title,
     styles: {
       default: {
@@ -152,7 +152,7 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
           new Paragraph({
             alignment: AlignmentType.RIGHT,
             spacing: { before: 360 },
-            children: [new TextRun({ text: 'Made with Maestranada', color: MUTED, size: 16 })],
+            children: [new TextRun({ text: 'Made with Prancheta', color: MUTED, size: 16 })],
           }),
         ],
       },

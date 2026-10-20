@@ -134,7 +134,7 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
         <span className="ps-k">Notes</span>
       </div>
       <div className="ps-foot">
-        <span>maestranada</span>
+        <span>prancheta</span>
         <span>{plan.title}</span>
       </div>
     </div>
