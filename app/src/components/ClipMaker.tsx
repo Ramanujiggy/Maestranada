@@ -74,7 +74,7 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (clip: 
   };
 
   const mb = made ? (made.clip.blob.size / 1024 / 1024).toFixed(1) : '';
-  const isVideo = made?.clip.blob.type.startsWith('video/');
+  const isVideo = !!made?.clip.blob.type.startsWith('video/');
 
   return (
     <div className="backdrop" onClick={progress === null ? onClose : undefined}>
@@ -94,11 +94,7 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (clip: 
         {made ? (
           <>
             <div className="clip-stage">
-              {isVideo ? (
-                <ClipMedia url={made.url} video label="The finished technique clip" width={made.clip.width} height={made.clip.height} />
-              ) : (
-                <img src={made.url} alt="The finished technique clip" width={made.clip.width} height={made.clip.height} />
-              )}
+              <ClipMedia url={made.url} video={isVideo} label="The finished technique clip" width={made.clip.width} height={made.clip.height} />
             </div>
             <p className="section-hint">
               {clip.length.toFixed(1)} s{clip.slowMotion ? ' at half speed' : ''} · {made.clip.width}×{made.clip.height} · {mb} MB. It loops on its own.

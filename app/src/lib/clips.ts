@@ -133,7 +133,6 @@ export function useClip(clip: Clip | undefined, load: (id: string) => Promise<Bl
       live = false;
       if (made) URL.revokeObjectURL(made);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
   return state;
 }
