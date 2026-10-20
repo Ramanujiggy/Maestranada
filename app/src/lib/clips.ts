@@ -7,7 +7,7 @@
 // iPhone has a long history of failing to store Blobs in IndexedDB.
 
 import { useEffect, useState } from 'react';
-import type { ClassPlan, Clip } from './plan.ts';
+import { allMoves, type ClassPlan, type Clip } from './plan.ts';
 import { t } from './i18n.ts';
 
 const DB_NAME = 'maestranada'; // the app's first name; kept so saved clips still load
@@ -89,7 +89,7 @@ export async function clipSaveError(e: unknown, bytes: number): Promise<string> 
 
 export function clipIds(plans: ClassPlan[]): Set<string> {
   const ids = new Set<string>();
-  for (const p of plans) for (const m of p.gems.moves) if (m.clip) ids.add(m.clip.id);
+  for (const p of plans) for (const m of allMoves(p)) if (m.clip) ids.add(m.clip.id);
   return ids;
 }
 
@@ -166,7 +166,7 @@ export async function withClipData(plans: ClassPlan[]): Promise<Array<ClassPlan 
   return Promise.all(
     plans.map(async (p) => {
       const clipData: Record<string, string> = {};
-      for (const m of p.gems.moves) {
+      for (const m of allMoves(p)) {
         if (!m.clip) continue;
         const id = m.clip.id;
         const blob = await getClip(id).catch(() => undefined);

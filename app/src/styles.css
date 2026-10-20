@@ -344,6 +344,211 @@ a {
   border-color: var(--ink);
 }
 
+/* A block's header: drag handle, the fold toggle, and the block's menu. */
+.section-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.section-head .section-toggle {
+  padding-left: 4px;
+  padding-right: 6px;
+}
+
+.drag-handle {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 2px 0 8px;
+  border: none;
+  background: transparent;
+  color: var(--hint);
+  cursor: grab;
+  touch-action: none;
+  border-radius: 12px 0 0 12px;
+}
+
+.drag-handle:hover,
+.drag-handle:focus-visible {
+  color: var(--ink);
+}
+
+.section.dragging {
+  border-color: var(--ink);
+  box-shadow: 0 8px 24px rgb(19 35 59 / 0.18);
+  position: relative;
+  z-index: 5;
+}
+
+.section.dragging .drag-handle {
+  cursor: grabbing;
+  color: var(--ink);
+}
+
+.block-menu {
+  position: relative;
+  padding-right: 8px;
+}
+
+.menu-pop {
+  position: absolute;
+  right: 8px;
+  top: calc(100% + 4px);
+  z-index: 20;
+  min-width: 190px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgb(19 35 59 / 0.18);
+}
+
+.menu-pop button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14.5px;
+  text-align: left;
+}
+
+.menu-pop button:hover:not(:disabled) {
+  background: var(--sheet);
+}
+
+.menu-pop button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.menu-pop button.danger {
+  color: var(--marker);
+}
+
+.add-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  border: 1.5px dashed var(--rule-strong);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.add-block:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.kind-list,
+.format-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.format-list .template.blank {
+  margin-top: 0;
+  align-items: flex-start;
+}
+
+.format-blocks {
+  font-family: var(--font-num);
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+/* The class strip: the five kinds, tallied. Unused kinds stay faint. */
+.class-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+
+.strip-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.strip-kind:hover {
+  border-color: var(--ink);
+}
+
+.strip-kind.unused {
+  border-style: dashed;
+  color: var(--hint);
+  font-weight: 500;
+}
+
+.strip-kind.unused:hover {
+  color: var(--ink);
+}
+
+.strip-tally {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.strip-tally i {
+  display: block;
+  width: 2px;
+  height: 12px;
+  border-radius: 1px;
+  background: var(--ink);
+}
+
+.strip-kind.live .strip-tally i {
+  background: var(--marker);
+}
+
+.strip-min {
+  font-family: var(--font-num);
+  font-size: 12px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.strip-live {
+  margin-left: auto;
+  font-family: var(--font-num);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--marker);
+  white-space: nowrap;
+}
+
+.timeline-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .section-toggle {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
@@ -2150,4 +2355,8 @@ html:has(.backdrop) body {
 
 [hidden] {
   display: none !important;
+}
+
+.template > svg {
+  flex: none;
 }

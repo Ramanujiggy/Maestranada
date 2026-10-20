@@ -1,7 +1,7 @@
 // Ready-made classes a coach can start from. Each one follows the same
 // structure and is written the way you'd brief it on the mat.
 
-import { blankPlan, item, move, samplePlan, type ClassPlan } from './plan.ts';
+import { firstOf, fromLegacy, item, legacyBlank, move, samplePlan, type ClassPlan } from './plan.ts';
 import { getLang } from './i18n.ts';
 
 export interface Template {
@@ -29,8 +29,8 @@ interface Spec {
 }
 
 function fromSpec(s: Spec, now = new Date()): ClassPlan {
-  const p = blankPlan(now);
-  return {
+  const p = legacyBlank(now);
+  return fromLegacy({
     ...p,
     title: s.title,
     warmup: { ...p.warmup, drills: s.drills.map(item) },
@@ -46,7 +46,7 @@ function fromSpec(s: Spec, now = new Date()): ClassPlan {
     },
     gems: { ...p.gems, moves: s.moves.map(([n, d]) => move(n, d)), options: s.options.map(item) },
     freeRoll: { ...p.freeRoll, notes: s.freeRollNotes ?? '' },
-  };
+  });
 }
 
 const closedGuard: Spec = {
@@ -275,7 +275,7 @@ export function templates(): Template[] {
     if (!spec) {
       // The leg drag class is the app's own example, kept in plan.ts.
       const sample = samplePlan();
-      return { key, level, title: sample.title, blurb: sample.concept.rule, build: samplePlan };
+      return { key, level, title: sample.title, blurb: firstOf(sample, 'concept')?.rule ?? '', build: samplePlan };
     }
     return { key, level, title: spec.title, blurb: spec.rule, build: (now?: Date) => fromSpec(spec, now) };
   });

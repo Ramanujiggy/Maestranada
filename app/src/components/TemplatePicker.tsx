@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { FilePlus2, X } from 'lucide-react';
 import { templates, type Template } from '../lib/samples.ts';
+import { FORMATS, FORMAT_ORDER, type FormatKey } from '../lib/plan.ts';
 import { t } from '../lib/i18n.ts';
 
 export function TemplatePicker({
@@ -10,7 +11,7 @@ export function TemplatePicker({
   onTemplate,
   onClose,
 }: {
-  onBlank: () => void;
+  onBlank: (format: FormatKey) => void;
   onTemplate: (t: Template) => void;
   onClose: () => void;
 }) {
@@ -41,13 +42,26 @@ export function TemplatePicker({
           </button>
         </div>
 
-        <button type="button" className="template blank" onClick={onBlank} autoFocus>
-          <FilePlus2 size={22} color="var(--ink)" />
-          <span>
-            <span className="template-title">{t('blankClass')}</span>
-            <span className="template-blurb">{t('blankClassBlurb')}</span>
-          </span>
-        </button>
+        <div className="eyebrow" style={{ margin: '18px 0 4px' }}>
+          {t('pickLayout')}
+        </div>
+        <p className="section-hint" style={{ margin: '0 0 10px' }}>
+          {t('pickLayoutLead')}
+        </p>
+        <div className="format-list">
+          {FORMAT_ORDER.map((f, i) => (
+            <button type="button" key={f} className="template blank" onClick={() => onBlank(f)} autoFocus={i === 0}>
+              <FilePlus2 size={20} color="var(--ink)" />
+              <span>
+                <span className="template-title">{t(`format.${f}`)}</span>
+                <span className="template-blurb">{t(`formatBlurb.${f}`)}</span>
+                <span className="format-blocks" aria-hidden>
+                  {FORMATS[f].map((k) => t(`short.${k}`)).join(' · ')}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
 
         <div className="eyebrow" style={{ margin: '20px 0 10px' }}>
           {t('orExample')}

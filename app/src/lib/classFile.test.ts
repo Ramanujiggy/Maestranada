@@ -1,12 +1,13 @@
 import { buildClassFile, looksLikeClassFile, readClassFile } from './classFile.ts';
-import { samplePlan } from './plan.ts';
+import { firstOf, samplePlan } from './plan.ts';
 
 const VIDEO = 'data:video/mp4;base64,AAAAIGZ0eXBpc29t';
 const POSTER = 'data:image/jpeg;base64,/9j/4AAQ';
 
 function planWithClip() {
   const plan = samplePlan();
-  plan.gems.moves[0] = { ...plan.gems.moves[0], clip: { id: 'clip-1', width: 640, height: 360 } };
+  const gems = firstOf(plan, 'gems')!;
+  gems.moves[0] = { ...gems.moves[0], clip: { id: 'clip-1', width: 640, height: 360 } };
   return plan;
 }
 
@@ -40,7 +41,7 @@ describe('class file', () => {
   it('survives text that looks like HTML or a closing script tag', () => {
     const plan = planWithClip();
     plan.title = 'Guard </script><script>alert(1)</script> & "pass"';
-    plan.concept.notes = '<b>not bold</b>';
+    firstOf(plan, 'concept')!.notes = '<b>not bold</b>';
     const html = buildClassFile(plan);
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.querySelectorAll('script')).toHaveLength(2);

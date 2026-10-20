@@ -3,7 +3,19 @@
 
 import { useRef, useState } from 'react';
 import { CircleHelp, Copy, Download, MonitorDown, Play, Plus, Share, Trash2, Upload } from 'lucide-react';
-import { blankPlan, duplicatePlan, formatMinutes, normalizePlan, todayISO, totalMinutes, type ClassPlan } from '../lib/plan.ts';
+import {
+  allMoves,
+  blankPlan,
+  duplicatePlan,
+  firstOf,
+  formatMinutes,
+  normalizePlan,
+  storedPlan,
+  todayISO,
+  totalMinutes,
+  type ClassPlan,
+  type FormatKey,
+} from '../lib/plan.ts';
 import { hrefFor, navigate } from '../lib/router.ts';
 import type { PlansApi } from '../lib/usePlans.ts';
 import { ConfirmDialog } from '../components/feedback.tsx';
@@ -19,10 +31,31 @@ import { LangSwitch } from '../components/LangSwitch.tsx';
 
 const STRUCTURE: Key[] = ['stripWarmup', 'sec.concept', 'sec.game', 'sec.gems', 'sec.freeRoll'];
 
+/** What a class is about, on its card: the concept, the game, how many moves. */
+function PlanCardBody({ plan }: { plan: ClassPlan }) {
+  const rule = firstOf(plan, 'concept')?.rule;
+  const game = plan.blocks.find((b) => b.kind === 'game' && b.start.trim());
+  const moves = allMoves(plan).filter((m) => m.name.trim()).length;
+  return (
+    <>
+      <p className="plan-card-concept">{rule || <span className="muted">{t('noConcept')}</span>}</p>
+      <div className="plan-card-meta">
+        {game?.kind === 'game' && (
+          <span className="pill">
+            {game.start}
+            {game.objective ? ` → ${game.objective}` : ''}
+          </span>
+        )}
+        {moves > 0 && <span className="pill">{t('gemCount', { n: moves })}</span>}
+      </div>
+    </>
+  );
+}
+
 /** Writes plans to a backup file, with their technique clips inside so nothing is lost. */
 export async function downloadBackup(filename: string, plans: ClassPlan | ClassPlan[]) {
   const list = Array.isArray(plans) ? plans : [plans];
-  const withClips = await withClipData(list);
+  const withClips = (await withClipData(list)).map(storedPlan);
   const data = Array.isArray(plans) ? withClips : withClips[0];
   const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
   await saveFile(blob, filename);
@@ -150,6 +183,9 @@ export function LibraryPage({
             </span>
           ))}
         </div>
+        <p className="section-hint" style={{ margin: '8px 0 0' }}>
+          {t('structureNote')}
+        </p>
         <div style={{ marginTop: 24 }}>
           <button type="button" className="btn btn-primary btn-lg" onClick={create}>
             <Plus size={18} /> {t('newClassPlan')}
@@ -193,18 +229,7 @@ export function LibraryPage({
                   {p.title || t('untitledClass')}
                 </a>
               </h2>
-              <p className="plan-card-concept">{p.concept.rule || <span className="muted">{t('noConcept')}</span>}</p>
-              <div className="plan-card-meta">
-                {p.game.start && (
-                  <span className="pill">
-                    {p.game.start}
-                    {p.game.objective ? ` → ${p.game.objective}` : ''}
-                  </span>
-                )}
-                {p.gems.moves.filter((m) => m.name.trim()).length > 0 && (
-                  <span className="pill">{t('gemCount', { n: p.gems.moves.filter((m) => m.name.trim()).length })}</span>
-                )}
-              </div>
+              <PlanCardBody plan={p} />
               <div className="plan-card-foot" onClick={(e) => e.stopPropagation()}>
                 <a className="btn btn-secondary" href={hrefFor({ name: 'run', id: p.id })}>
                   <Play size={15} /> {t('teach')}
@@ -261,7 +286,7 @@ export function LibraryPage({
       {pickerOpen && (
         <TemplatePicker
           onClose={() => setPickerOpen(false)}
-          onBlank={() => open(blankPlan())}
+          onBlank={(format: FormatKey) => open(blankPlan(new Date(), format))}
           onTemplate={(t: Template) => open(t.build())}
         />
       )}

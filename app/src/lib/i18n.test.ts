@@ -1,5 +1,5 @@
 import { DICTS, setLang, t, type Key } from './i18n.ts';
-import { describeGameRounds, gameSchedule, samplePlan } from './plan.ts';
+import { describeGameRounds, gameSchedule, samplePlan, firstOf } from './plan.ts';
 import { fileSlug } from './files.ts';
 import { buildClassFile } from './classFile.ts';
 
@@ -19,8 +19,8 @@ describe('languages', () => {
     setLang('pt');
     const plan = samplePlan();
     expect(plan.title).toBe('Leg drag para as costas');
-    expect(describeGameRounds(plan.game.rounds)).toBe('2 × 3 min, troca de parceiro, depois troca de posição');
-    expect(gameSchedule(plan)[0]).toMatchObject({ label: 'Round 1 de 4', cue: 'Começa em Leg drag · Lado A' });
+    expect(describeGameRounds(firstOf(plan, 'game')!.rounds)).toBe('2 × 3 min, troca de parceiro, depois troca de posição');
+    expect(gameSchedule(firstOf(plan, 'game')!)[0]).toMatchObject({ label: 'Round 1 de 4', cue: 'Começa em Leg drag · Lado A' });
     expect(t('moveNamed', { n: 2, name: 'Upa' })).toBe('Técnica 2: Upa');
   });
 
