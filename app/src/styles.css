@@ -331,17 +331,40 @@ a {
   padding: 14px;
 }
 
-/* Section card header */
-.section-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 18px;
+/* Section cards fold to one line: box, number, name, what's in it, time.
+   The box is a clipboard checkbox, inked in once the block has something
+   in it. The open block gets an ink edge; red stays for "act now". */
+.section {
+  padding: 0;
+  scroll-margin-top: 12px;
+  transition: border-color var(--fast);
+}
+
+.section.open {
+  border-color: var(--ink);
+}
+
+.section-toggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 18px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+}
+
+.section-toggle:active {
+  background: var(--sheet);
 }
 
 .section-index {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-num);
   font-size: 15px;
   font-weight: 600;
@@ -350,10 +373,128 @@ a {
   min-width: 26px;
 }
 
-.section-head-text {
+/* In a folded card the box sits over the number to leave the name room. */
+.section-toggle .section-index {
+  flex-direction: column;
+  gap: 5px;
+  line-height: 1;
+}
+
+.section-box {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--rule-strong);
+  border-radius: 2px;
+  flex: none;
+}
+
+.section-box.filled {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.section-toggle-text {
   display: flex;
-  gap: 10px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.section-toggle .card-title {
+  font-size: 21px;
+}
+
+.section-summary {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.section-summary.is-empty {
+  color: var(--muted);
+}
+
+/* Open, the hint reads under the header at full width, then the fields. */
+.section-hint.section-lead {
+  margin: -6px 0 0;
+}
+
+.section-time {
+  font-family: var(--font-num);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.section-chevron {
+  color: var(--muted);
+  transition: transform var(--fast);
+}
+
+.section.open .section-chevron {
+  transform: rotate(180deg);
+  color: var(--ink);
+}
+
+.section .section-stack {
+  padding: 2px 18px 18px;
+}
+
+@media (min-width: 521px) {
+  .section-toggle {
+    padding: 18px 22px;
+  }
+  .section .section-stack {
+    padding: 2px 22px 22px;
+  }
+}
+
+.section-next {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--rule);
+  padding-top: 14px;
+}
+
+.time-row .field {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Optional parts of a block, offered as "+ Label" chips instead of empty boxes. */
+.extras {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.extras-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* On a phone the warm-up suggestions run in one swipeable line, not five rows. */
+@media (max-width: 620px) {
+  .chips.chips-scroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 -18px;
+    padding: 0 18px 2px;
+    scrollbar-width: none;
+  }
+  .chips-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .chips-scroll .chip {
+    flex: none;
+  }
 }
 
 .section-hint {
@@ -563,6 +704,18 @@ a {
 .input[type='date'] {
   font-family: var(--font-num);
   font-size: 14px;
+  /* iOS gives date inputs a native min-width that pushes them out of the card. */
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  text-align: left;
+}
+
+.input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
 }
 
 .title-input {
@@ -770,6 +923,14 @@ a {
 .list-add .input {
   font-size: 14.5px;
   padding: 9px 12px;
+}
+
+/* On the narrowest phones the Add button keeps just its plus, so the line
+   being typed has room. */
+@media (max-width: 360px) {
+  .list-add-label {
+    display: none;
+  }
 }
 
 .list-empty {

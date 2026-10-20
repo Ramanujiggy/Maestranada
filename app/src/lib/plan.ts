@@ -300,6 +300,36 @@ export function timeline(plan: ClassPlan): TimelineSegment[] {
   ];
 }
 
+export const SECTION_ORDER: SectionKey[] = ['warmup', 'concept', 'game', 'gems', 'freeRoll'];
+
+/** One line for a folded section: what's in it so far, or an invitation when it's empty. */
+export function sectionSummary(plan: ClassPlan, key: SectionKey): { filled: boolean; text: string } {
+  const lines = (xs: string[]) => xs.map((x) => x.trim()).filter(Boolean);
+  const list = (xs: string[], empty: string) => {
+    const kept = lines(xs);
+    return { filled: kept.length > 0, text: kept.length ? kept.join(', ') : empty };
+  };
+  switch (key) {
+    case 'warmup':
+      return list(plan.warmup.drills.map((d) => d.text), t('sum.warmup'));
+    case 'concept':
+      return list([plan.concept.rule], t('sum.concept'));
+    case 'game': {
+      const g = plan.game;
+      const ends = lines([g.start, g.objective]);
+      return { filled: ends.length > 0, text: ends.length ? ends.join(' → ') : t('sum.game') };
+    }
+    case 'gems':
+      return list(plan.gems.moves.map((m) => m.name), t('sum.gems'));
+    case 'freeRoll': {
+      const f = plan.freeRoll;
+      return f.rounds > 0
+        ? { filled: true, text: t('roundsDescribe', { n: f.rounds, min: f.minutes }) }
+        : { filled: false, text: t('sum.noRoll') };
+    }
+  }
+}
+
 export function totalMinutes(plan: ClassPlan): number {
   return timeline(plan).reduce((sum, s) => sum + s.minutes, 0);
 }

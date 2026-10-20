@@ -9,6 +9,7 @@ import {
   gameSchedule,
   normalizePlan,
   samplePlan,
+  sectionSummary,
   totalMinutes,
 } from './plan.ts';
 import { parseHash, hrefFor } from './router.ts';
@@ -106,5 +107,23 @@ describe('router', () => {
       expect(parseHash(hrefFor(r))).toEqual(r);
     }
     expect(parseHash('#/garbage')).toEqual({ name: 'library' });
+  });
+});
+
+describe('folded section summaries', () => {
+  it('invites the coach in when a section is empty', () => {
+    const p = blankPlan(NOW);
+    expect(sectionSummary(p, 'warmup')).toEqual({ filled: false, text: 'Pick a few drills' });
+    expect(sectionSummary(p, 'game').filled).toBe(false);
+  });
+
+  it('shows what is planned once there is something', () => {
+    const p = samplePlan(NOW);
+    expect(sectionSummary(p, 'warmup').text.startsWith('Forward rolls, Backward rolls')).toBe(true);
+    expect(sectionSummary({ ...p, game: { ...p.game, start: 'Leg drag', objective: ' ' } }, 'game')).toEqual({
+      filled: true,
+      text: 'Leg drag',
+    });
+    expect(sectionSummary({ ...p, freeRoll: { ...p.freeRoll, rounds: 0 } }, 'freeRoll').filled).toBe(false);
   });
 });

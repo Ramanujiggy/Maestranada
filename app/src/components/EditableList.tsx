@@ -91,8 +91,8 @@ export function EditableList({
             }
           }}
         />
-        <button type="button" className="btn btn-secondary" onClick={() => add()} disabled={!draft.trim()}>
-          <Plus size={15} /> {addLabel}
+        <button type="button" className="btn btn-secondary" aria-label={addLabel} onClick={() => add()} disabled={!draft.trim()}>
+          <Plus size={15} /> <span className="list-add-label">{addLabel}</span>
         </button>
       </div>
     </div>
