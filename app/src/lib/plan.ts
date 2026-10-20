@@ -324,21 +324,75 @@ export function freeRollSchedule(plan: ClassPlan): RoundSegment[] {
 
 // ─── Normalisation (for imports and older saved data) ────────────────────────
 
-/** Fills any missing fields from a blank plan, so imported JSON always renders. */
+/** Rebuilds a plan from untrusted JSON: every field takes the stored value only
+ *  when it has the right type, otherwise the blank plan's, so a damaged or
+ *  hand-edited backup can never crash the screens that draw it. */
 export function normalizePlan(raw: unknown): ClassPlan | null {
-  if (!raw || typeof raw !== 'object') return null;
-  // Backups carry clip images alongside the plan; those are restored separately.
-  const { clipData: _clipData, ...r } = raw as Partial<ClassPlan> & { clipData?: unknown };
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const r = raw as Record<string, unknown>;
   const base = blankPlan();
+  const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
+  const str = (v: unknown, d: string) => (typeof v === 'string' ? v : d);
+  const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : d);
+  const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d);
+  const list = (v: unknown, d: ListItem[]): ListItem[] =>
+    Array.isArray(v)
+      ? v
+          .filter((x) => x && typeof x === 'object' && typeof (x as ListItem).text === 'string')
+          .map((x) => ({ id: str((x as ListItem).id, '') || uid(), text: (x as ListItem).text }))
+      : d;
+  const clip = (v: unknown): Clip | undefined => {
+    const c = obj(v);
+    return typeof c.id === 'string' && c.id ? { id: c.id, width: num(c.width, 400), height: num(c.height, 300) } : undefined;
+  };
+  const moves = (v: unknown, d: Move[]): Move[] =>
+    Array.isArray(v)
+      ? v
+          .filter((x) => x && typeof x === 'object')
+          .map((x) => {
+            const m = x as Record<string, unknown>;
+            const c = clip(m.clip);
+            return { id: str(m.id, '') || uid(), name: str(m.name, ''), notes: str(m.notes, ''), ...(c ? { clip: c } : {}) };
+          })
+      : d;
+
+  const w = obj(r.warmup);
+  const c = obj(r.concept);
+  const g = obj(r.game);
+  const gr = obj(g.rounds);
+  const ge = obj(r.gems);
+  const f = obj(r.freeRoll);
+  const date = str(r.date, '');
   return {
-    ...base,
-    ...r,
-    id: typeof r.id === 'string' && r.id ? r.id : base.id,
-    warmup: { ...base.warmup, ...r.warmup },
-    concept: { ...base.concept, ...r.concept },
-    game: { ...base.game, ...r.game, rounds: { ...base.game.rounds, ...r.game?.rounds } },
-    gems: { ...base.gems, ...r.gems },
-    freeRoll: { ...base.freeRoll, ...r.freeRoll },
+    id: str(r.id, '') || base.id,
+    title: str(r.title, base.title),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : base.date,
+    createdAt: str(r.createdAt, base.createdAt),
+    updatedAt: str(r.updatedAt, base.updatedAt),
+    warmup: { minutes: num(w.minutes, base.warmup.minutes), drills: list(w.drills, base.warmup.drills) },
+    concept: { minutes: num(c.minutes, base.concept.minutes), rule: str(c.rule, base.concept.rule), notes: str(c.notes, base.concept.notes) },
+    game: {
+      start: str(g.start, base.game.start),
+      objective: str(g.objective, base.game.objective),
+      goals: list(g.goals, base.game.goals),
+      details: list(g.details, base.game.details),
+      transition: str(g.transition, base.game.transition),
+      submission: str(g.submission, base.game.submission),
+      rounds: {
+        roundsPerSide: num(gr.roundsPerSide, base.game.rounds.roundsPerSide),
+        minutes: num(gr.minutes, base.game.rounds.minutes),
+        restSeconds: num(gr.restSeconds, base.game.rounds.restSeconds),
+        switchPartners: bool(gr.switchPartners, base.game.rounds.switchPartners),
+        switchPositions: bool(gr.switchPositions, base.game.rounds.switchPositions),
+      },
+    },
+    gems: { minutes: num(ge.minutes, base.gems.minutes), moves: moves(ge.moves, base.gems.moves), options: list(ge.options, base.gems.options) },
+    freeRoll: {
+      rounds: num(f.rounds, base.freeRoll.rounds),
+      minutes: num(f.minutes, base.freeRoll.minutes),
+      restSeconds: num(f.restSeconds, base.freeRoll.restSeconds),
+      notes: str(f.notes, base.freeRoll.notes),
+    },
   };
 }
 

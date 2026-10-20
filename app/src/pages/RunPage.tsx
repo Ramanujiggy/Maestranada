@@ -20,6 +20,37 @@ import { RoundTimer } from '../components/RoundTimer.tsx';
 import { ClipView } from '../components/ClipField.tsx';
 
 const ORDER: SectionKey[] = ['warmup', 'concept', 'game', 'gems', 'freeRoll'];
+const TIMED = ['warmup', 'game', 'freeRoll'] as const;
+const TIMER_TITLES: Record<(typeof TIMED)[number], string> = { warmup: 'Warm-up', game: 'Positional rounds', freeRoll: 'Free roll' };
+
+/** Keeps the screen on while the class is being taught, so the timer stays
+ *  visible and audible. The lock drops when the page hides, so it is taken
+ *  again each time the page comes back. */
+function useWakeLock() {
+  useEffect(() => {
+    type Sentinel = { release: () => Promise<void> };
+    const wl = (navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<Sentinel> } }).wakeLock;
+    if (!wl) return;
+    let sentinel: Sentinel | null = null;
+    let live = true;
+    const take = () => {
+      if (document.visibilityState !== 'visible') return;
+      wl.request('screen')
+        .then((s) => {
+          if (live) sentinel = s;
+          else void s.release();
+        })
+        .catch(() => {});
+    };
+    take();
+    document.addEventListener('visibilitychange', take);
+    return () => {
+      live = false;
+      document.removeEventListener('visibilitychange', take);
+      void sentinel?.release().catch(() => {});
+    };
+  }, []);
+}
 
 function BigList({ items }: { items: ListItem[] }) {
   const filled = items.filter((x) => x.text.trim());
@@ -41,6 +72,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
   const [step, setStep] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
   const key = ORDER[step];
+  useWakeLock();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -222,18 +254,22 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
         ))}
       </nav>
 
-      <div className={`run-stage ${schedule ? '' : 'solo'}`} key={key}>
-        <div>
+      <div className={`run-stage ${schedule ? '' : 'solo'}`}>
+        <div key={key}>
           <div className="eyebrow">
             {String(step + 1).padStart(2, '0')} · {SECTION_LABELS[key]}
           </div>
           <h1 className="run-title">{heading}</h1>
           {body}
         </div>
-        {schedule && (
-          <div className="card">
-            <RoundTimer segments={schedule} title={key === 'game' ? 'Positional rounds' : key === 'freeRoll' ? 'Free roll' : 'Warm-up'} />
-          </div>
+        {/* Every timer stays mounted, so stepping to another block mid-round
+            never loses the clock; only the current block's timer shows. */}
+        {TIMED.map((k) =>
+          schedules[k] ? (
+            <div className="card run-timer" key={k} hidden={k !== key}>
+              <RoundTimer segments={schedules[k]!} title={TIMER_TITLES[k]} />
+            </div>
+          ) : null,
         )}
       </div>
 

@@ -21,12 +21,12 @@ export function EditableList({
   const [draft, setDraft] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const add = () => {
+  const add = (refocus = true) => {
     const text = draft.trim();
     if (!text) return;
     onChange([...items, item(text)]);
     setDraft('');
-    inputRef.current?.focus();
+    if (refocus) inputRef.current?.focus();
   };
 
   const update = (id: string, text: string) => onChange(items.map((x) => (x.id === id ? { ...x, text } : x)));
@@ -81,6 +81,8 @@ export function EditableList({
           value={draft}
           placeholder={placeholder}
           onChange={(e) => setDraft(e.target.value)}
+          // A typed line is kept even if the coach never presses Add.
+          onBlur={() => add(false)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -88,7 +90,7 @@ export function EditableList({
             }
           }}
         />
-        <button type="button" className="btn btn-secondary" onClick={add} disabled={!draft.trim()}>
+        <button type="button" className="btn btn-secondary" onClick={() => add()} disabled={!draft.trim()}>
           <Plus size={15} /> {addLabel}
         </button>
       </div>

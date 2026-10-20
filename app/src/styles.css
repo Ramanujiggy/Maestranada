@@ -88,6 +88,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   transition: background-color var(--fast);
 }
 
@@ -1033,13 +1034,14 @@ a {
 
 .run {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
 
 /* Rest takes over the whole screen, so the coach catches it out of the
    corner of an eye. A hard cut, never a fade. */
-:root:has(.timer.rest) {
+:root:has(.run-timer:not([hidden]) .timer.rest) {
   --paper: var(--rest);
   --ink: var(--on-rest);
   --ink-2: rgba(255, 255, 255, 0.82);
@@ -1053,7 +1055,7 @@ a {
   --on-marker: #13233b;
 }
 
-:root:has(.timer.rest) body {
+:root:has(.run-timer:not([hidden]) .timer.rest) body {
   transition: none;
 }
 
@@ -1305,12 +1307,46 @@ a {
 .backdrop {
   position: fixed;
   inset: 0;
-  background: color-mix(in srgb, var(--ink) 40%, transparent);
+  /* A fixed dark scrim: tinting with --ink turned it light grey at night. */
+  background: rgba(8, 14, 24, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: calc(20px + var(--sat)) 20px calc(20px + var(--sab));
   z-index: 50;
+  overscroll-behavior: contain;
+}
+
+/* The page behind a sheet stays put while the sheet scrolls. */
+html:has(.backdrop),
+html:has(.backdrop) body {
+  overflow: hidden;
+}
+
+/* On a phone, sheets rise from the bottom edge and fit the visible screen,
+   so nothing hides behind Safari's toolbars. */
+@media (max-width: 620px) {
+  .backdrop:not(.clip-lightbox) {
+    align-items: flex-end;
+    padding: calc(12px + var(--sat)) 0 0;
+  }
+  .backdrop .sheet {
+    width: 100%;
+    max-height: calc(100vh - 12px - var(--sat));
+    max-height: calc(100dvh - 12px - var(--sat));
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+    padding-bottom: calc(18px + var(--sab));
+  }
+  .backdrop .dialog-actions .btn {
+    flex: 1;
+  }
+  .backdrop .dialog {
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+    padding-bottom: calc(18px + var(--sab));
+  }
 }
 
 .dialog {
@@ -1336,6 +1372,8 @@ a {
   font-size: 14px;
   font-weight: 500;
   z-index: 60;
+  width: max-content;
+  max-width: calc(100vw - 32px);
 }
 
 .toast .btn-secondary {
@@ -1666,6 +1704,7 @@ a {
 .sheet {
   width: min(640px, 100%);
   max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px - var(--sat) - var(--sab));
   overflow: auto;
   overscroll-behavior: contain;
 }
@@ -1675,6 +1714,24 @@ a {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
+}
+
+/* Close stays in reach however far the sheet scrolls. */
+.sheet > .sheet-head {
+  position: sticky;
+  top: -22px;
+  z-index: 2;
+  margin: -22px -22px 0;
+  padding: 22px 22px 10px;
+  background: var(--paper);
+}
+
+@media (max-width: 520px) {
+  .sheet > .sheet-head {
+    top: -18px;
+    margin: -18px -18px 0;
+    padding: 18px 18px 10px;
+  }
 }
 
 .template {
@@ -1818,4 +1875,51 @@ a {
   align-items: center;
   gap: 14px;
   padding: 8px 8px 8px 18px;
+}
+
+.save-alert {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--marker);
+  color: var(--on-marker);
+  font-size: 14px;
+  font-weight: 500;
+  padding: calc(10px + var(--sat)) 16px 10px;
+  text-align: center;
+}
+
+.ios-keep {
+  margin-top: 32px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.ios-keep svg {
+  vertical-align: -2px;
+}
+
+.clip-lightbox-close {
+  position: absolute;
+  top: calc(12px + var(--sat));
+  right: 12px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* iPhone zooms into any field with text under 16px and stays zoomed, so on
+   touch screens every field is at least 16px. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select,
+  .input:not(.title-input),
+  .list-row input,
+  .list-add .input {
+    font-size: 16px;
+  }
+}
+
+[hidden] {
+  display: none !important;
 }

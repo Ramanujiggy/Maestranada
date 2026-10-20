@@ -65,28 +65,35 @@ export async function pruneClips(plans: ClassPlan[]): Promise<void> {
 
 /** An object URL for a stored clip, revoked when the component lets go of it. */
 export function useClipUrl(clip: Clip | undefined): string | null {
-  const [url, setUrl] = useState<string | null>(null);
+  return useClip(clip).url;
+}
+
+/** The clip's object URL, and whether the plan points at a clip this device no longer has. */
+export function useClip(clip: Clip | undefined): { url: string | null; missing: boolean } {
+  const [state, setState] = useState<{ url: string | null; missing: boolean }>({ url: null, missing: false });
   const id = clip?.id;
   useEffect(() => {
-    if (!id) {
-      setUrl(null);
-      return;
-    }
+    setState({ url: null, missing: false });
+    if (!id) return;
     let live = true;
     let made: string | null = null;
     getClip(id)
       .then((blob) => {
-        if (!live || !blob) return;
+        if (!live) return;
+        if (!blob) {
+          setState({ url: null, missing: true });
+          return;
+        }
         made = URL.createObjectURL(blob);
-        setUrl(made);
+        setState({ url: made, missing: false });
       })
-      .catch(() => setUrl(null));
+      .catch(() => live && setState({ url: null, missing: true }));
     return () => {
       live = false;
       if (made) URL.revokeObjectURL(made);
     };
   }, [id]);
-  return url;
+  return state;
 }
 
 // ─── Backups: clips travel inside the exported JSON as data URLs ─────────────

@@ -78,6 +78,7 @@ function SubPanel({ title, hint, children }: { title: string; hint?: string; chi
 
 export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansApi; notify: (m: string) => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pendingMove, setPendingMove] = useState<string | null>(null);
   const set = (next: ClassPlan) => api.upsert(next);
   const { warmup, concept, game, gems, freeRoll } = plan;
   const rounds = game.rounds;
@@ -353,7 +354,11 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                       type="button"
                       className="icon-btn danger"
                       aria-label={`Remove move ${i + 1}`}
-                      onClick={() => set({ ...plan, gems: { ...gems, moves: gems.moves.filter((x) => x.id !== m.id) } })}
+                      onClick={() =>
+                        m.name.trim() || m.notes.trim() || m.clip
+                          ? setPendingMove(m.id)
+                          : set({ ...plan, gems: { ...gems, moves: gems.moves.filter((x) => x.id !== m.id) } })
+                      }
                     >
                       <X size={16} />
                     </button>
@@ -458,7 +463,7 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                   className="btn btn-secondary"
                   style={{ flex: 1 }}
                   title="A backup file you can import on another device"
-                  onClick={() => void downloadBackup(`${fileSlug(plan.title)}.json`, plan)}
+                  onClick={() => downloadBackup(`${fileSlug(plan.title)}.json`, plan).catch(() => notify('The backup could not be made. Try again.'))}
                 >
                   <Download size={16} /> Backup
                 </button>
@@ -496,6 +501,18 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             api.remove(plan.id);
             navigate({ name: 'library' });
             notify('Plan deleted');
+          }}
+        />
+      )}
+      {pendingMove && (
+        <ConfirmDialog
+          title="Remove this move?"
+          body="Its notes and technique clip are removed from this class."
+          confirmLabel="Remove move"
+          onCancel={() => setPendingMove(null)}
+          onConfirm={() => {
+            set({ ...plan, gems: { ...gems, moves: gems.moves.filter((x) => x.id !== pendingMove) } });
+            setPendingMove(null);
           }}
         />
       )}

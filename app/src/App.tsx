@@ -8,6 +8,7 @@ import { Toast } from './components/feedback.tsx';
 import { Welcome } from './components/Welcome.tsx';
 import { useInstall } from './lib/pwa.ts';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { usePendingFile } from './lib/files.ts';
 
 const WELCOMED_KEY = 'maestranada.welcomed';
 
@@ -57,6 +58,7 @@ export default function App() {
     setWelcomeOpen(false);
   }, []);
 
+  const pendingFile = usePendingFile();
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
@@ -85,7 +87,24 @@ export default function App() {
     <>
       {page}
       {toast && <Toast message={toast} onDone={clearToast} />}
-      {needRefresh && (
+      {api.saveFailed && (
+        <div className="save-alert" role="alert">
+          This device would not save your last change. Free up some space, or export a backup now so nothing is lost.
+        </div>
+      )}
+      {pendingFile.file && (
+        <div className="toast update-toast" role="status">
+          {pendingFile.file.name} is ready.
+          <button type="button" className="btn btn-primary" onClick={pendingFile.save}>
+            Save
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={pendingFile.dismiss}>
+            Not now
+          </button>
+        </div>
+      )}
+      {/* Updating reloads the page, so it waits until the coach is off the mat. */}
+      {needRefresh && route.name !== 'run' && !pendingFile.file && (
         <div className="toast update-toast" role="status">
           A new version is ready.
           <button type="button" className="btn btn-primary" onClick={() => updateServiceWorker(true)}>
