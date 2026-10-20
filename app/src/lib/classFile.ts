@@ -10,12 +10,14 @@
 // each clip is stored once, in its own tag, which the importer reads back.
 
 import {
+  blockLabel,
+  blockMinutes,
   describeGameRounds,
   formatMinutes,
-  freeRollSeconds,
-  gameSeconds,
   normalizePlan,
+  storedPlan,
   totalMinutes,
+  type Block,
   type ClassPlan,
   type ListItem,
 } from './plan.ts';
@@ -40,8 +42,8 @@ function list(items: ListItem[]): string {
 const para = (text: string, cls = '') => (text.trim() ? `<p${cls ? ` class="${cls}"` : ''}>${esc(text)}</p>` : '');
 const line = (k: string, v: string) => (v.trim() ? `<p><span class="k">${esc(k)}</span> ${esc(v)}</p>` : '');
 
-function block(n: number, title: string, time: string, body: string): string {
-  return `<section><header><span class="n">0${n}</span><h2>${esc(title)}</h2><span class="t">${esc(time)}</span></header>${body}</section>`;
+function section(n: number, title: string, time: string, body: string): string {
+  return `<section><header><span class="n">${String(n).padStart(2, '0')}</span><h2>${esc(title)}</h2><span class="t">${esc(time)}</span></header>${body}</section>`;
 }
 
 function clipTag(id: string, label: string, width: number, height: number, data: Record<string, string>): string {
@@ -99,27 +101,51 @@ document.querySelectorAll('video[data-clip]').forEach(function(v){
 });
 `;
 
+function blockBody(b: Block, clipData: Record<string, string>): string {
+  switch (b.kind) {
+    case 'warmup':
+      return list(b.drills);
+    case 'concept':
+      return para(b.rule, 'lead') + para(b.notes);
+    case 'game':
+      return (
+        `<p class="lead">${esc(b.start || t('startPosition'))} → ${esc(b.objective || t('objectiveLower'))}</p>` +
+        (b.goals.length ? `<h3>${esc(t('goalsAndMovements'))}</h3>${list(b.goals)}` : '') +
+        (b.details.length ? `<h3>${esc(t('details'))}</h3>${list(b.details)}` : '') +
+        line(t('transition'), b.transition) +
+        line(t('submission'), b.submission) +
+        line(t('rounds'), `${describeGameRounds(b.rounds)} · ${t('restLower')} ${formatRest(b.rounds.restSeconds)}`)
+      );
+    case 'gems': {
+      const moves = b.moves
+        .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
+        .map((m, i) => {
+          const name = m.name || t('untitledMove');
+          const clip = m.clip ? clipTag(m.clip.id, name, m.clip.width, m.clip.height, clipData) : '';
+          return `<div class="move"><h3>${esc(t('moveNamed', { n: i + 1, name }))}</h3>${clip}${para(m.notes)}</div>`;
+        })
+        .join('');
+      return moves + (b.options.length ? `<h3>${esc(t('options'))}</h3>${list(b.options)}` : '');
+    }
+    case 'freeRoll':
+      return `<p>${b.rounds} × ${b.minutes} min · ${esc(t('restLower'))} ${esc(formatRest(b.restSeconds))}</p>${para(b.notes)}`;
+    case 'wrapup':
+      return para(b.question, 'lead') + para(b.notes);
+  }
+}
+
 /** The whole class as one HTML page. `clipData` maps clip ids (and `<id>.poster`) to data URLs. Pure, so it can be tested. */
 export function buildClassFile(plan: ClassPlan, clipData: Record<string, string> = {}): string {
-  const { warmup, concept, game, gems, freeRoll } = plan;
   const title = plan.title || t('untitledClass');
-  const moves = gems.moves
-    .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
-    .map((m, i) => {
-      const name = m.name || t('untitledMove');
-      const clip = m.clip ? clipTag(m.clip.id, name, m.clip.width, m.clip.height, clipData) : '';
-      return `<div class="move"><h3>${esc(t('moveNamed', { n: i + 1, name }))}</h3>${clip}${para(m.notes)}</div>`;
-    })
-    .join('');
   // `<` is escaped so no text in the plan can close the script tag early.
-  const json = JSON.stringify(plan).replace(/</g, '\\u003c');
+  const json = JSON.stringify(storedPlan(plan)).replace(/</g, '\\u003c');
 
   return `<!doctype html>
 <html lang="${getLang() === 'pt' ? 'pt-BR' : 'en'}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="generator" content="${esc(APP_NAME)} class file 1">
+<meta name="generator" content="${esc(APP_NAME)} class file 2">
 <title>${esc(title)}</title>
 <style>${STYLE}</style>
 </head>
@@ -128,26 +154,7 @@ export function buildClassFile(plan: ClassPlan, clipData: Record<string, string>
 <div class="top">${LOGO}<span>${esc(t('classPlan'))}</span></div>
 <h1>${esc(title)}</h1>
 <div class="meta">${esc(formatDate(plan.date))} · ${esc(formatMinutes(totalMinutes(plan)))}</div>
-${block(1, t('sec.warmup'), formatMinutes(warmup.minutes), list(warmup.drills))}
-${block(2, t('sec.concept'), formatMinutes(concept.minutes), para(concept.rule, 'lead') + para(concept.notes))}
-${block(
-  3,
-  t('sec.game'),
-  formatMinutes(gameSeconds(plan) / 60),
-  `<p class="lead">${esc(game.start || t('startPosition'))} → ${esc(game.objective || t('objectiveLower'))}</p>` +
-    (game.goals.length ? `<h3>${esc(t('goalsAndMovements'))}</h3>${list(game.goals)}` : '') +
-    (game.details.length ? `<h3>${esc(t('details'))}</h3>${list(game.details)}` : '') +
-    line(t('transition'), game.transition) +
-    line(t('submission'), game.submission) +
-    line(t('rounds'), `${describeGameRounds(game.rounds)} · ${t('restLower')} ${formatRest(game.rounds.restSeconds)}`),
-)}
-${block(4, t('sec.gems'), formatMinutes(gems.minutes), moves + (gems.options.length ? `<h3>${esc(t('options'))}</h3>${list(gems.options)}` : ''))}
-${block(
-  5,
-  t('sec.freeRoll'),
-  formatMinutes(freeRollSeconds(plan) / 60),
-  `<p>${freeRoll.rounds} × ${freeRoll.minutes} min · ${esc(t('restLower'))} ${esc(formatRest(freeRoll.restSeconds))}</p>${para(freeRoll.notes)}`,
-)}
+${plan.blocks.map((b, i) => section(i + 1, blockLabel(b), formatMinutes(blockMinutes(b)), blockBody(b, clipData))).join('\n')}
 <footer>${esc(t('classFileFooter', { app: APP_NAME }))}</footer>
 </main>
 <script type="application/json" id="${PLAN_ID}">${json}</script>

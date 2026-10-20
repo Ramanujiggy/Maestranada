@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { normalizePlan, samplePlan } from './plan.ts';
+import { firstOf, normalizePlan, samplePlan } from './plan.ts';
 import { loadPlans, PLANS_KEY, savePlans } from './storage.ts';
 import { stepThrough } from '../components/RoundTimer.tsx';
 
@@ -12,14 +12,21 @@ describe('normalizePlan with damaged data', () => {
       gems: { moves: [null, { name: 'Knee cut', clip: { id: 'c1' } }, 'bad'], options: [{ text: 1 }] },
       game: { rounds: { minutes: -3, switchPartners: 'yes' } },
     })!;
+    const [warmup, gems, game] = [firstOf(p, 'warmup')!, firstOf(p, 'gems')!, firstOf(p, 'game')!];
     expect(p.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(p.warmup.drills).toEqual([]);
-    expect(p.warmup.minutes).toBe(10);
-    expect(p.gems.moves).toHaveLength(1);
-    expect(p.gems.moves[0]).toMatchObject({ name: 'Knee cut', notes: '', clip: { id: 'c1' } });
-    expect(p.gems.options).toEqual([]);
-    expect(p.game.rounds.minutes).toBe(3);
-    expect(p.game.rounds.switchPartners).toBe(true);
+    expect(warmup.drills).toEqual([]);
+    expect(warmup.minutes).toBe(10);
+    expect(gems.moves).toHaveLength(1);
+    expect(gems.moves[0]).toMatchObject({ name: 'Knee cut', notes: '', clip: { id: 'c1' } });
+    expect(gems.options).toEqual([]);
+    expect(game.rounds.minutes).toBe(3);
+    expect(game.rounds.switchPartners).toBe(true);
+  });
+
+  it('replaces damaged blocks inside a new-style plan', () => {
+    const p = normalizePlan({ id: 'y', blocks: [null, 'bad', { kind: 'freeRoll', rounds: 'many', notes: 3 }] })!;
+    expect(p.blocks).toHaveLength(1);
+    expect(p.blocks[0]).toMatchObject({ kind: 'freeRoll', rounds: 4, notes: '' });
   });
 
   it('keeps a good plan exactly', () => {

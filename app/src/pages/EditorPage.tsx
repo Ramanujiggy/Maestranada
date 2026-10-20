@@ -1,149 +1,198 @@
-// The class plan editor. Five numbered cards, one per block of the class,
-// in the order they are taught. One block is open at a time; the rest fold
-// to a line that says what's in them. Every change saves as you type.
+// The class plan editor. The class is a list of blocks in the order they are
+// taught. One block is open at a time; the rest fold to a line that says
+// what's in them. Blocks can be added, renamed, duplicated, removed, and
+// moved by dragging the handle (or from the block's menu, which is the sure
+// way on a phone). The strip at the top keeps the five kinds in view, so the
+// coach sees what the class is made of. Every change saves as you type.
 
-import { useState, type ReactNode } from 'react';
-import { ArrowLeft, ArrowRight, ChevronDown, Copy, Download, FileText, Play, Plus, Printer, Send, Trash2, X } from 'lucide-react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import {
-  movementSuggestions,
-  describeGameRounds,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  ChevronDown,
+  Copy,
+  CopyPlus,
+  Download,
+  FileText,
+  GripVertical,
+  MoreHorizontal,
+  PencilLine,
+  Play,
+  Plus,
+  Printer,
+  Send,
+  Trash2,
+  X,
+} from 'lucide-react';
+import {
+  BLOCK_KINDS,
+  blockLabel,
+  blockMinutes,
+  copyBlock,
   duplicatePlan,
   formatMinutes,
-  freeRollSeconds,
-  gameRoundCount,
-  gameSeconds,
-  item,
-  move,
-  sectionLabel,
+  kindLabel,
+  moveBlock,
+  newBlock,
   sectionSummary,
-  SECTION_ORDER,
+  withBlock,
+  type Block,
+  type BlockKind,
   type ClassPlan,
-  type SectionKey,
+  type GameBlock,
 } from '../lib/plan.ts';
 import { navigate } from '../lib/router.ts';
 import type { PlansApi } from '../lib/usePlans.ts';
-import { Field, Stepper, TextArea, TextInput, Toggle, formatRest } from '../components/controls.tsx';
-import { EditableList } from '../components/EditableList.tsx';
-import { Timeline } from '../components/Timeline.tsx';
+import { Field, TextInput } from '../components/controls.tsx';
+import { BlockFields, type Reveal } from '../components/BlockFields.tsx';
+import { ClassStrip, Timeline } from '../components/Timeline.tsx';
 import { PrintSheet } from '../components/PrintSheet.tsx';
 import { ConfirmDialog } from '../components/feedback.tsx';
 import { downloadBackup } from './LibraryPage.tsx';
-import { ClipField } from '../components/ClipField.tsx';
 import { fileSlug, saveFile } from '../lib/files.ts';
 import { t } from '../lib/i18n.ts';
 
-function Section({
-  id,
-  index,
-  title,
-  hint,
-  time,
-  open,
-  onToggle,
-  plan,
-  next,
-  onNext,
-  children,
-}: {
-  id: SectionKey;
-  index: number;
-  title: string;
-  hint: string;
-  time: string;
-  open: boolean;
-  onToggle: () => void;
-  plan: ClassPlan;
-  next?: SectionKey;
-  onNext?: () => void;
-  children: ReactNode;
-}) {
-  const summary = sectionSummary(plan, id);
-  return (
-    <section className={`card section${open ? ' open' : ''}`} id={`section-${id}`}>
-      <button
-        type="button"
-        className="section-toggle"
-        aria-expanded={open}
-        aria-controls={`section-body-${id}`}
-        onClick={onToggle}
-      >
-        <span className="section-index">
-          <span className={`section-box${summary.filled ? ' filled' : ''}`} aria-hidden />
-          {String(index).padStart(2, '0')}
-        </span>
-        <span className="section-toggle-text">
-          <span className="card-title">{title}</span>
-          {!open && <span className={`section-summary${summary.filled ? '' : ' is-empty'}`}>{summary.text}</span>}
-        </span>
-        <span className="section-time">{time}</span>
-        <ChevronDown size={18} className="section-chevron" aria-hidden />
-      </button>
-      {open && (
-        <div className="section-stack" id={`section-body-${id}`}>
-          <p className="section-hint section-lead">{hint}</p>
-          {children}
-          {next && onNext && (
-            <div className="section-next">
-              <button type="button" className="btn btn-secondary" onClick={onNext}>
-                {t('nextSection', { name: sectionLabel(next) })} <ArrowRight size={15} />
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </section>
-  );
-}
-
-/** The parts of a block a coach can leave out. Folded into "+ Label" chips until used. */
-function Extras({ items }: { items: { key: string; label: string; onReveal: () => void }[] }) {
-  if (items.length === 0) return null;
-  return (
-    <div className="extras">
-      <span className="extras-label">{t('addIfYouWant')}</span>
-      <div className="chips">
-        {items.map((x) => (
-          <button type="button" key={x.key} className="chip" onClick={x.onReveal}>
-            <Plus size={12} /> {x.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SubPanel({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
-  return (
-    <div className="subpanel">
-      <div className="eyebrow-strong">
-        {title}
-      </div>
-      {hint && (
-        <p className="section-hint" style={{ margin: '4px 0 12px' }}>
-          {hint}
-        </p>
-      )}
-      {!hint && <div style={{ height: 10 }} />}
-      {children}
-    </div>
-  );
-}
-
 /** The first block that still has nothing in it, so a new class opens where the work is.
     A class that's all planned opens folded, as an overview. */
-function firstOpen(plan: ClassPlan): SectionKey | null {
-  return SECTION_ORDER.find((k) => !sectionSummary(plan, k).filled) ?? null;
+function firstOpen(plan: ClassPlan): string | null {
+  return plan.blocks.find((b) => !sectionSummary(b).filled)?.id ?? null;
+}
+
+function BlockMenu({
+  name,
+  index,
+  count,
+  onRename,
+  onDuplicate,
+  onMove,
+  onRemove,
+}: {
+  name: string;
+  index: number;
+  count: number;
+  onRename: () => void;
+  onDuplicate: () => void;
+  onMove: (to: number) => void;
+  onRemove: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, [open]);
+  const act = (fn: () => void) => () => {
+    setOpen(false);
+    fn();
+  };
+  return (
+    <div className="block-menu" ref={ref}>
+      <button
+        type="button"
+        className="icon-btn"
+        aria-label={t('blockMenu', { name })}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <MoreHorizontal size={18} />
+      </button>
+      {open && (
+        <div className="menu-pop card" role="menu">
+          <button type="button" role="menuitem" onClick={act(onRename)}>
+            <PencilLine size={15} /> {t('rename')}
+          </button>
+          <button type="button" role="menuitem" onClick={act(onDuplicate)}>
+            <CopyPlus size={15} /> {t('duplicate')}
+          </button>
+          <button type="button" role="menuitem" disabled={index === 0} onClick={act(() => onMove(index - 1))}>
+            <ArrowUp size={15} /> {t('moveUp')}
+          </button>
+          <button type="button" role="menuitem" disabled={index === count - 1} onClick={act(() => onMove(index + 1))}>
+            <ArrowDown size={15} /> {t('moveDown')}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="danger"
+            disabled={count === 1}
+            title={count === 1 ? t('lastBlock') : undefined}
+            onClick={act(onRemove)}
+          >
+            <Trash2 size={15} /> {t('removeBlock')}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddBlockSheet({ onPick, onClose }: { onPick: (kind: BlockKind) => void; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return (
+    <div className="backdrop" onClick={onClose}>
+      <div className="card sheet" role="dialog" aria-modal="true" aria-label={t('addBlockTitle')} onClick={(e) => e.stopPropagation()}>
+        <div className="sheet-head">
+          <div>
+            <h2 className="card-title">{t('addBlockTitle')}</h2>
+            <p className="section-hint" style={{ margin: '4px 0 0' }}>
+              {t('addBlockLead')}
+            </p>
+          </div>
+          <button type="button" className="icon-btn" aria-label={t('close')} onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+        <div className="kind-list">
+          {BLOCK_KINDS.map((kind, i) => (
+            <button type="button" key={kind} className="template" onClick={() => onPick(kind)} autoFocus={i === 0}>
+              <span>
+                <span className="template-title">{kindLabel(kind)}</span>
+                <span className="template-blurb">{t(`hint.${kind}`)}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansApi; notify: (m: string) => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [pendingMove, setPendingMove] = useState<string | null>(null);
+  const [pendingMove, setPendingMove] = useState<{ block: string; move: string } | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [removed, setRemoved] = useState<{ block: Block; index: number } | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
   const set = (next: ClassPlan) => api.upsert(next);
-  const { warmup, concept, game, gems, freeRoll } = plan;
-  const rounds = game.rounds;
+  const setBlock = (b: Block) => set(withBlock(plan, b));
   const [exporting, setExporting] = useState<'doc' | 'file' | null>(null);
-  const [open, setOpen] = useState<SectionKey | null>(() => firstOpen(plan));
+  const [open, setOpen] = useState<string | null>(() => firstOpen(plan));
   const [shown, setShown] = useState<Record<string, boolean>>({});
+
+  // Drags read the latest plan through a ref, since pointer events outlive a render.
+  const planRef = useRef(plan);
+  planRef.current = plan;
+
+  useEffect(() => {
+    if (!removed) return;
+    const timer = setTimeout(() => setRemoved(null), 6000);
+    return () => clearTimeout(timer);
+  }, [removed]);
 
   const exportDocument = async () => {
     setExporting('doc');
@@ -171,40 +220,149 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
 
   // Opening one block folds the others. If the fold moved it off screen, or it
   // opened low on the page, bring its top into view.
-  const openSection = (key: SectionKey, always = false) => {
-    setOpen(key);
+  const openBlock = (id: string, always = false) => {
+    setOpen(id);
     requestAnimationFrame(() => {
-      const el = document.getElementById(`section-${key}`);
+      const el = document.getElementById(`block-${id}`);
       if (!el) return;
       const top = el.getBoundingClientRect().top;
       if (always || top < 0 || top > window.innerHeight * 0.45) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   };
-  const toggle = (key: SectionKey) => (open === key ? setOpen(null) : openSection(key));
-  const jump = (key: SectionKey) => openSection(key, true);
-  const nextOf = (key: SectionKey) => SECTION_ORDER[SECTION_ORDER.indexOf(key) + 1];
-  const sectionProps = (key: SectionKey) => {
-    const next = nextOf(key);
-    return { id: key, plan, open: open === key, onToggle: () => toggle(key), next, onNext: next ? () => openSection(next, true) : undefined };
+  const toggle = (id: string) => (open === id ? setOpen(null) : openBlock(id));
+
+  const reveal = (blockId: string): Reveal => {
+    const k = (key: string) => `${blockId}:${key}`;
+    const extraId = (key: string) => `extra-${blockId}-${key}`;
+    const isShown = (key: string, has: boolean) => has || !!shown[k(key)];
+    return {
+      isShown,
+      extraId,
+      extra: (key, label, has) =>
+        isShown(key, has)
+          ? []
+          : [
+              {
+                key,
+                label,
+                onReveal: () => {
+                  setShown((s) => ({ ...s, [k(key)]: true }));
+                  requestAnimationFrame(() =>
+                    document.querySelector<HTMLElement>(`#${CSS.escape(extraId(key))} input, #${CSS.escape(extraId(key))} textarea`)?.focus(),
+                  );
+                },
+              },
+            ],
+    };
   };
 
-  const isShown = (key: string, has: boolean) => has || !!shown[key];
-  const reveal = (key: string) => {
-    setShown((s) => ({ ...s, [key]: true }));
-    requestAnimationFrame(() => document.querySelector<HTMLElement>(`#extra-${key} input, #extra-${key} textarea`)?.focus());
+  const addBlock = (kind: BlockKind) => {
+    const b = newBlock(kind);
+    set({ ...plan, blocks: [...plan.blocks, b] });
+    setAdding(false);
+    openBlock(b.id, true);
   };
-  const extra = (key: string, label: string, has: boolean) =>
-    isShown(key, has) ? [] : [{ key, label, onReveal: () => reveal(key) }];
 
-  const unusedSuggestions = movementSuggestions().filter(
-    (s) => !warmup.drills.some((d) => d.text.trim().toLowerCase() === s.toLowerCase()),
-  );
+  const rename = (id: string) => {
+    setShown((s) => ({ ...s, [`${id}:name`]: true }));
+    setOpen(id);
+    requestAnimationFrame(() => {
+      const input = document.querySelector<HTMLInputElement>(`#${CSS.escape(`name-${id}`)} input`);
+      input?.focus();
+      input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  };
 
-  const minutesStepper = (value: number, onChange: (v: number) => void) => (
-    <div className="time-row">
-      <Stepper label={t('time')} value={value} onChange={onChange} min={0} max={60} format={(v) => t('minutes', { n: v })} />
-    </div>
-  );
+  const duplicate = (index: number) => {
+    const copy = copyBlock(plan.blocks[index]);
+    const blocks = [...plan.blocks];
+    blocks.splice(index + 1, 0, copy);
+    set({ ...plan, blocks });
+    openBlock(copy.id, true);
+  };
+
+  const remove = (index: number) => {
+    if (plan.blocks.length < 2) return;
+    const block = plan.blocks[index];
+    set({ ...plan, blocks: plan.blocks.filter((b) => b.id !== block.id) });
+    setRemoved({ block, index });
+    if (open === block.id) setOpen(null);
+  };
+
+  const undoRemove = () => {
+    if (!removed) return;
+    const blocks = [...plan.blocks];
+    blocks.splice(Math.min(removed.index, blocks.length), 0, removed.block);
+    set({ ...plan, blocks });
+    setRemoved(null);
+  };
+
+  const reorder = (from: number, to: number) => {
+    set(moveBlock(plan, from, to));
+    const id = plan.blocks[from]?.id;
+    if (id) requestAnimationFrame(() => document.getElementById(`block-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+  };
+
+  // Dragging by the handle: the block follows the finger past the middle of
+  // each neighbour. Everything folds first, so the list is short and even.
+  const startDrag = (id: string) => (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const pointer = e.pointerId;
+    setOpen(null);
+    setDragging(id);
+    // Listen on the window: reordering moves the handle in the page, which
+    // would drop a pointer capture taken on the handle itself.
+    const onMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointer) return;
+      const current = planRef.current;
+      const from = current.blocks.findIndex((b) => b.id === id);
+      if (from < 0) return;
+      let to = from;
+      current.blocks.forEach((b, i) => {
+        const r = document.getElementById(`block-${b.id}`)?.getBoundingClientRect();
+        if (!r || i === from) return;
+        const mid = r.top + r.height / 2;
+        if (i < from && ev.clientY < mid) to = Math.min(to, i);
+        if (i > from && ev.clientY > mid) to = Math.max(to, i);
+      });
+      if (to !== from) api.upsert(moveBlock(current, from, to));
+      // Near the top or bottom edge, scroll so long classes can be dragged end to end.
+      if (ev.clientY < 60) window.scrollBy(0, -12);
+      else if (ev.clientY > window.innerHeight - 60) window.scrollBy(0, 12);
+    };
+    const end = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointer) return;
+      setDragging(null);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+  };
+
+  const handleKeys = (index: number) => (e: ReactKeyboardEvent) => {
+    if (e.key === 'ArrowUp' && index > 0) {
+      e.preventDefault();
+      reorder(index, index - 1);
+    } else if (e.key === 'ArrowDown' && index < plan.blocks.length - 1) {
+      e.preventDefault();
+      reorder(index, index + 1);
+    }
+  };
+
+  /** The nearest positional sparring block above this one, for "Same position as block 03". */
+  const earlierGame = (index: number): { n: number; game: GameBlock } | undefined => {
+    for (let i = index - 1; i >= 0; i--) {
+      const b = plan.blocks[i];
+      if (b.kind === 'game' && (b.start.trim() || b.objective.trim())) return { n: i + 1, game: b };
+    }
+    return undefined;
+  };
+
+  const pendingBlock = pendingMove ? plan.blocks.find((b) => b.id === pendingMove.block) : undefined;
 
   return (
     <>
@@ -250,348 +408,119 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                   )}
                 </Field>
               </div>
+              <ClassStrip
+                plan={plan}
+                onAdd={addBlock}
+                onJump={(kind) => {
+                  const b = plan.blocks.find((x) => x.kind === kind);
+                  if (b) openBlock(b.id, true);
+                }}
+              />
             </div>
 
-            <Section
-              {...sectionProps('warmup')}
-              index={1}
-              title={t('sec.warmup')}
-              hint={t('hint.warmup')}
-              time={formatMinutes(warmup.minutes)}
-            >
-              {minutesStepper(warmup.minutes, (minutes) => set({ ...plan, warmup: { ...warmup, minutes } }))}
-              <EditableList
-                items={warmup.drills}
-                onChange={(drills) => set({ ...plan, warmup: { ...warmup, drills } })}
-                placeholder={t('addDrill')}
-              />
-              {unusedSuggestions.length > 0 && (
-                <div className="extras">
-                  <span className="extras-label">{t('tapToAdd')}</span>
-                  <div className="chips chips-scroll">
-                    {unusedSuggestions.map((s) => (
-                      <button
-                        type="button"
-                        key={s}
-                        className="chip"
-                        onClick={() => set({ ...plan, warmup: { ...warmup, drills: [...warmup.drills, item(s)] } })}
-                      >
-                        <Plus size={12} /> {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Section>
-
-            <Section
-              {...sectionProps('concept')}
-              index={2}
-              title={t('sec.concept')}
-              hint={t('hint.concept')}
-              time={formatMinutes(concept.minutes)}
-            >
-              {minutesStepper(concept.minutes, (minutes) => set({ ...plan, concept: { ...concept, minutes } }))}
-              <Field label={t('generalRule')}>
-                {(id) => (
-                  <TextInput
-                    id={id}
-                    value={concept.rule}
-                    placeholder={t('rulePh')}
-                    onChange={(rule) => set({ ...plan, concept: { ...concept, rule } })}
-                  />
-                )}
-              </Field>
-              {isShown('explain', !!concept.notes.trim()) && (
-                <div id="extra-explain">
-                  <Field label={t('explainLabel')}>
-                    {(id) => (
-                      <TextArea
-                        id={id}
-                        value={concept.notes}
-                        placeholder={t('explainPh')}
-                        onChange={(notes) => set({ ...plan, concept: { ...concept, notes } })}
-                      />
-                    )}
-                  </Field>
-                </div>
-              )}
-              <Extras items={extra('explain', t('explainLabel'), !!concept.notes.trim())} />
-            </Section>
-
-            <Section
-              {...sectionProps('game')}
-              index={3}
-              title={t('sec.game')}
-              hint={t('hint.game')}
-              time={formatMinutes(gameSeconds(plan) / 60)}
-            >
-              <div className="grid-2">
-                <Field label={t('startPosition')}>
-                  {(id) => (
-                    <TextInput
-                      id={id}
-                      value={game.start}
-                      placeholder={t('startPh')}
-                      onChange={(start) => set({ ...plan, game: { ...game, start } })}
-                    />
-                  )}
-                </Field>
-                <Field label={t('objective')}>
-                  {(id) => (
-                    <TextInput
-                      id={id}
-                      value={game.objective}
-                      placeholder={t('objectivePh')}
-                      onChange={(objective) => set({ ...plan, game: { ...game, objective } })}
-                    />
-                  )}
-                </Field>
-              </div>
-
-              <SubPanel
-                title={t('goalsTitle')}
-                hint={t('goalsHint')}
-              >
-                <EditableList
-                  items={game.goals}
-                  onChange={(goals) => set({ ...plan, game: { ...game, goals } })}
-                  placeholder={t('goalsPh')}
-                />
-              </SubPanel>
-
-              {isShown('details', game.details.length > 0) && (
-                <div id="extra-details">
-                  <SubPanel
-                    title={t('details')}
-                    hint={t('detailsHint')}
-                  >
-                    <EditableList
-                      items={game.details}
-                      onChange={(details) => set({ ...plan, game: { ...game, details } })}
-                      placeholder={t('detailsPh')}
-                    />
-                  </SubPanel>
-                </div>
-              )}
-
-              {(isShown('transition', !!game.transition.trim()) || isShown('submission', !!game.submission.trim())) && (
-                <div className="grid-2">
-                  {isShown('transition', !!game.transition.trim()) && (
-                    <div id="extra-transition">
-                      <Field label={t('transitionLabel')}>
-                        {(id) => (
-                          <TextInput
-                            id={id}
-                            value={game.transition}
-                            placeholder={t('transitionPh')}
-                            onChange={(transition) => set({ ...plan, game: { ...game, transition } })}
-                          />
-                        )}
-                      </Field>
-                    </div>
-                  )}
-                  {isShown('submission', !!game.submission.trim()) && (
-                    <div id="extra-submission">
-                      <Field label={t('submissionLabel')}>
-                        {(id) => (
-                          <TextInput
-                            id={id}
-                            value={game.submission}
-                            placeholder={t('submissionPh')}
-                            onChange={(submission) => set({ ...plan, game: { ...game, submission } })}
-                          />
-                        )}
-                      </Field>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <Extras
-                items={[
-                  ...extra('details', t('detailsChip'), game.details.length > 0),
-                  ...extra('transition', t('transition'), !!game.transition.trim()),
-                  ...extra('submission', t('submission'), !!game.submission.trim()),
-                ]}
-              />
-
-              <SubPanel title={t('rounds')}>
-                <div className="stepper-row">
-                  <Stepper
-                    label={rounds.switchPositions ? t('roundsPerSide') : t('rounds')}
-                    value={rounds.roundsPerSide}
-                    min={1}
-                    max={12}
-                    onChange={(roundsPerSide) => set({ ...plan, game: { ...game, rounds: { ...rounds, roundsPerSide } } })}
-                  />
-                  <Stepper
-                    label={t('length')}
-                    value={rounds.minutes}
-                    min={1}
-                    max={15}
-                    format={(v) => t('minutes', { n: v })}
-                    onChange={(minutes) => set({ ...plan, game: { ...game, rounds: { ...rounds, minutes } } })}
-                  />
-                  <Stepper
-                    label={t('rest')}
-                    value={rounds.restSeconds}
-                    min={0}
-                    max={180}
-                    step={15}
-                    format={formatRest}
-                    onChange={(restSeconds) => set({ ...plan, game: { ...game, rounds: { ...rounds, restSeconds } } })}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 14 }}>
-                  <Toggle
-                    label={t('switchPartners')}
-                    checked={rounds.switchPartners}
-                    onChange={(switchPartners) => set({ ...plan, game: { ...game, rounds: { ...rounds, switchPartners } } })}
-                  />
-                  <Toggle
-                    label={t('thenSwitchPositions')}
-                    checked={rounds.switchPositions}
-                    onChange={(switchPositions) => set({ ...plan, game: { ...game, rounds: { ...rounds, switchPositions } } })}
-                  />
-                </div>
-                <p className="section-hint" style={{ marginTop: 12 }}>
-                  {describeGameRounds(rounds)} · {t('roundsInAll', { n: gameRoundCount(rounds) })}
-                </p>
-              </SubPanel>
-            </Section>
-
-            <Section
-              {...sectionProps('gems')}
-              index={4}
-              title={t('sec.gems')}
-              hint={t('hint.gems')}
-              time={formatMinutes(gems.minutes)}
-            >
-              {minutesStepper(gems.minutes, (minutes) => set({ ...plan, gems: { ...gems, minutes } }))}
-              {gems.moves.map((m, i) => (
-                <div className="move-card" key={m.id}>
-                  <div className="move-head">
-                    <span className="move-num">{t('moveN', { n: i + 1 })}</span>
-                    <TextInput
-                      value={m.name}
-                      placeholder={t('moveNamePh')}
-                      onChange={(name) =>
-                        set({ ...plan, gems: { ...gems, moves: gems.moves.map((x) => (x.id === m.id ? { ...x, name } : x)) } })
-                      }
-                    />
+            {plan.blocks.map((block, index) => {
+              const isOpen = open === block.id;
+              const summary = sectionSummary(block);
+              const name = blockLabel(block);
+              const next = plan.blocks[index + 1];
+              const showName = !!block.title.trim() || !!shown[`${block.id}:name`];
+              return (
+                <section
+                  key={block.id}
+                  className={`card section${isOpen ? ' open' : ''}${dragging === block.id ? ' dragging' : ''}`}
+                  id={`block-${block.id}`}
+                >
+                  <div className="section-head">
                     <button
                       type="button"
-                      className="icon-btn danger"
-                      aria-label={t('removeMoveN', { n: i + 1 })}
-                      onClick={() =>
-                        m.name.trim() || m.notes.trim() || m.clip
-                          ? setPendingMove(m.id)
-                          : set({ ...plan, gems: { ...gems, moves: gems.moves.filter((x) => x.id !== m.id) } })
-                      }
+                      className="drag-handle"
+                      aria-label={t('dragBlock', { name })}
+                      onPointerDown={startDrag(block.id)}
+                      onKeyDown={handleKeys(index)}
                     >
-                      <X size={16} />
+                      <GripVertical size={18} />
                     </button>
-                  </div>
-                  <TextArea
-                    value={m.notes}
-                    rows={2}
-                    placeholder={t('moveNotesPh')}
-                    onChange={(notes) =>
-                      set({ ...plan, gems: { ...gems, moves: gems.moves.map((x) => (x.id === m.id ? { ...x, notes } : x)) } })
-                    }
-                  />
-                  <ClipField
-                    clip={m.clip}
-                    notify={notify}
-                    onChange={(clip) =>
-                      set({ ...plan, gems: { ...gems, moves: gems.moves.map((x) => (x.id === m.id ? { ...x, clip } : x)) } })
-                    }
-                  />
-                </div>
-              ))}
-              <div>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => set({ ...plan, gems: { ...gems, moves: [...gems.moves, move()] } })}
-                >
-                  <Plus size={15} /> {t('addMove')}
-                </button>
-              </div>
-              {isShown('options', gems.options.length > 0) && (
-                <div id="extra-options">
-                  <SubPanel title={t('options')} hint={t('optionsHint')}>
-                    <EditableList
-                      items={gems.options}
-                      onChange={(options) => set({ ...plan, gems: { ...gems, options } })}
-                      placeholder={t('optionsPh')}
+                    <button
+                      type="button"
+                      className="section-toggle"
+                      aria-expanded={isOpen}
+                      aria-controls={`block-body-${block.id}`}
+                      onClick={() => toggle(block.id)}
+                    >
+                      <span className="section-index">
+                        <span className={`section-box${summary.filled ? ' filled' : ''}`} aria-hidden />
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <span className="section-toggle-text">
+                        <span className="card-title">{name}</span>
+                        {!isOpen && <span className={`section-summary${summary.filled ? '' : ' is-empty'}`}>{summary.text}</span>}
+                      </span>
+                      <span className="section-time">{formatMinutes(blockMinutes(block))}</span>
+                      <ChevronDown size={18} className="section-chevron" aria-hidden />
+                    </button>
+                    <BlockMenu
+                      name={name}
+                      index={index}
+                      count={plan.blocks.length}
+                      onRename={() => rename(block.id)}
+                      onDuplicate={() => duplicate(index)}
+                      onMove={(to) => reorder(index, to)}
+                      onRemove={() => remove(index)}
                     />
-                  </SubPanel>
-                </div>
-              )}
-              <Extras items={extra('options', t('optionsChip'), gems.options.length > 0)} />
-            </Section>
-
-            <Section
-              {...sectionProps('freeRoll')}
-              index={5}
-              title={t('sec.freeRoll')}
-              hint={t('hint.freeRoll')}
-              time={formatMinutes(freeRollSeconds(plan) / 60)}
-            >
-              <div className="stepper-row">
-                <Stepper
-                  label={t('rounds')}
-                  value={freeRoll.rounds}
-                  min={0}
-                  max={12}
-                  onChange={(r) => set({ ...plan, freeRoll: { ...freeRoll, rounds: r } })}
-                />
-                <Stepper
-                  label={t('length')}
-                  value={freeRoll.minutes}
-                  min={1}
-                  max={15}
-                  format={(v) => t('minutes', { n: v })}
-                  onChange={(minutes) => set({ ...plan, freeRoll: { ...freeRoll, minutes } })}
-                />
-                <Stepper
-                  label={t('rest')}
-                  value={freeRoll.restSeconds}
-                  min={0}
-                  max={180}
-                  step={15}
-                  format={formatRest}
-                  onChange={(restSeconds) => set({ ...plan, freeRoll: { ...freeRoll, restSeconds } })}
-                />
-              </div>
-              {isShown('rollNotes', !!freeRoll.notes.trim()) && (
-                <div id="extra-rollNotes">
-                  <Field label={t('notes')}>
-                    {(id) => (
-                      <TextArea
-                        id={id}
-                        value={freeRoll.notes}
-                        rows={2}
-                        placeholder={t('freeRollNotesPh')}
-                        onChange={(notes) => set({ ...plan, freeRoll: { ...freeRoll, notes } })}
+                  </div>
+                  {isOpen && (
+                    <div className="section-stack" id={`block-body-${block.id}`}>
+                      <p className="section-hint section-lead">
+                        {block.title.trim() ? `${kindLabel(block.kind)}. ` : ''}
+                        {t(`hint.${block.kind}`)}
+                      </p>
+                      {showName && (
+                        <div id={`name-${block.id}`}>
+                          <Field label={t('blockName')}>
+                            {(id) => (
+                              <TextInput
+                                id={id}
+                                value={block.title}
+                                placeholder={t('blockNamePh', { name: kindLabel(block.kind) })}
+                                onChange={(title) => setBlock({ ...block, title })}
+                              />
+                            )}
+                          </Field>
+                        </div>
+                      )}
+                      <BlockFields
+                        block={block}
+                        set={setBlock}
+                        reveal={reveal(block.id)}
+                        notify={notify}
+                        askRemoveMove={(move) => setPendingMove({ block: block.id, move })}
+                        earlierGame={block.kind === 'game' ? earlierGame(index) : undefined}
                       />
-                    )}
-                  </Field>
-                </div>
-              )}
-              <Extras items={extra('rollNotes', t('notes'), !!freeRoll.notes.trim())} />
-            </Section>
+                      {next && (
+                        <div className="section-next">
+                          <button type="button" className="btn btn-secondary" onClick={() => openBlock(next.id, true)}>
+                            {t('nextSection', { name: blockLabel(next) })} <ArrowRight size={15} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
+
+            <button type="button" className="add-block" onClick={() => setAdding(true)}>
+              <Plus size={17} /> {t('addBlock')}
+            </button>
           </div>
 
           <aside className="desk-margin">
-            <Timeline plan={plan} onJump={jump} />
+            <Timeline plan={plan} onJump={(id) => openBlock(id, true)} />
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate({ name: 'run', id: plan.id })}>
                 <Play size={17} /> {t('teachThisClass')}
               </button>
-<button
+              <button
                 type="button"
                 className="btn btn-secondary"
                 onClick={sendClassFile}
@@ -640,6 +569,17 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
 
       <PrintSheet plan={plan} />
 
+      {adding && <AddBlockSheet onPick={addBlock} onClose={() => setAdding(false)} />}
+
+      {removed && (
+        <div className="toast update-toast no-print" role="status">
+          {t('blockRemoved', { name: blockLabel(removed.block) })}
+          <button type="button" className="btn btn-secondary" onClick={undoRemove}>
+            {t('undo')}
+          </button>
+        </div>
+      )}
+
       {confirmDelete && (
         <ConfirmDialog
           title={t('deleteClassTitle')}
@@ -653,14 +593,14 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
           }}
         />
       )}
-      {pendingMove && (
+      {pendingMove && pendingBlock?.kind === 'gems' && (
         <ConfirmDialog
           title={t('removeMoveTitle')}
           body={t('removeMoveBody')}
           confirmLabel={t('removeMove')}
           onCancel={() => setPendingMove(null)}
           onConfirm={() => {
-            set({ ...plan, gems: { ...gems, moves: gems.moves.filter((x) => x.id !== pendingMove) } });
+            setBlock({ ...pendingBlock, moves: pendingBlock.moves.filter((x) => x.id !== pendingMove.move) });
             setPendingMove(null);
           }}
         />

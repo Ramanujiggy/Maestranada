@@ -1,28 +1,24 @@
 // Teach mode: the plan as a coach uses it on the mat. One block at a time in
-// large type, with the round timer beside the blocks that are timed. The
-// positional game's details stay folded until the coach chooses to show
-// them, because the class feels the game before it hears the details.
+// large type, in the coach's order, with the round timer beside the blocks
+// that are timed. Positional sparring's details stay folded until the coach
+// chooses to show them, because the class feels the game before it hears the
+// details.
 
 import { useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, X } from 'lucide-react';
 import {
-  sectionLabel,
+  blockLabel,
+  blockSchedule,
   describeGameRounds,
-  freeRollSchedule,
-  gameSchedule,
+  kindLabel,
   type ClassPlan,
   type ListItem,
-  type RoundSegment,
-  type SectionKey,
 } from '../lib/plan.ts';
 import { navigate } from '../lib/router.ts';
 import { RoundTimer } from '../components/RoundTimer.tsx';
 import { ClipView } from '../components/ClipField.tsx';
-import { t, type Key } from '../lib/i18n.ts';
+import { t } from '../lib/i18n.ts';
 
-const ORDER: SectionKey[] = ['warmup', 'concept', 'game', 'gems', 'freeRoll'];
-const TIMED = ['warmup', 'game', 'freeRoll'] as const;
-const TIMER_TITLES: Record<(typeof TIMED)[number], Key> = { warmup: 'sec.warmupShort', game: 'timerGame', freeRoll: 'sec.freeRoll' };
 
 /** Keeps the screen on while the class is being taught, so the timer stays
  *  visible and audible. The lock drops when the page hides, so it is taken
@@ -70,21 +66,25 @@ function Empty() {
 }
 
 export function RunPage({ plan }: { plan: ClassPlan }) {
-  const [step, setStep] = useState(0);
-  const [showDetails, setShowDetails] = useState(false);
-  const key = ORDER[step];
+  const blocks = plan.blocks;
+  const last = blocks.length - 1;
+  const [step, setStepRaw] = useState(0);
+  const [shownDetails, setShownDetails] = useState<Record<string, boolean>>({});
+  const setStep = (s: number | ((s: number) => number)) => setStepRaw((cur) => Math.max(0, Math.min(last, typeof s === 'function' ? s(cur) : s)));
+  const block = blocks[Math.min(step, last)];
+  const showDetails = !!shownDetails[block.id];
   useWakeLock();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.closest('input, textarea')) return;
-      if (e.key === 'ArrowRight') setStep((s) => Math.min(ORDER.length - 1, s + 1));
-      if (e.key === 'ArrowLeft') setStep((s) => Math.max(0, s - 1));
+      if (e.key === 'ArrowRight') setStep((s) => s + 1);
+      if (e.key === 'ArrowLeft') setStep((s) => s - 1);
       if (e.key === 'Escape') navigate({ name: 'edit', id: plan.id });
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [plan.id]);
+  }, [plan.id, last]);
 
   useEffect(() => window.scrollTo({ top: 0 }), [step]);
 
@@ -103,28 +103,17 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
     const dx = t.clientX - start.x;
     const dy = t.clientY - start.y;
     if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    setStep((s) => (dx < 0 ? Math.min(ORDER.length - 1, s + 1) : Math.max(0, s - 1)));
+    setStep((s) => (dx < 0 ? s + 1 : s - 1));
   };
 
-  const schedules = useMemo<Partial<Record<SectionKey, RoundSegment[]>>>(
-    () => ({
-      warmup:
-        plan.warmup.minutes > 0
-          ? [{ kind: 'round', label: t('sec.warmupShort'), cue: t('cueKeepMoving'), seconds: plan.warmup.minutes * 60 }]
-          : [],
-      game: gameSchedule(plan),
-      freeRoll: freeRollSchedule(plan),
-    }),
-    [plan],
-  );
-  const schedule = schedules[key];
-
-  const { warmup, concept, game, gems, freeRoll } = plan;
+  // One schedule per timed block, by block id, so every timer can stay mounted.
+  const schedules = useMemo(() => new Map(blocks.map((b) => [b.id, blockSchedule(b)])), [blocks]);
+  const schedule = schedules.get(block.id);
 
   let body;
-  switch (key) {
+  switch (block.kind) {
     case 'warmup':
-      body = warmup.drills.some((d) => d.text.trim()) ? <BigList items={warmup.drills} /> : <Empty />;
+      body = block.drills.some((d) => d.text.trim()) ? <BigList items={block.drills} /> : <Empty />;
       break;
     case 'concept':
       body = (
@@ -133,9 +122,9 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
             {t('generalRule')}
           </div>
           <p className="run-big run-lead" style={{ fontSize: 'clamp(26px, 3.6vw, 36px)' }}>
-            {concept.rule || <span className="muted">{t('noRule')}</span>}
+            {block.rule || <span className="muted">{t('noRule')}</span>}
           </p>
-          {concept.notes && <p className="run-big muted">{concept.notes}</p>}
+          {block.notes && <p className="run-big muted">{block.notes}</p>}
         </>
       );
       break;
@@ -146,34 +135,34 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
             <div className="eyebrow-strong" style={{ marginBottom: 12 }}>
               {t('goalsAndMovements')}
             </div>
-            {game.goals.length ? <BigList items={game.goals} /> : <Empty />}
+            {block.goals.length ? <BigList items={block.goals} /> : <Empty />}
           </div>
           <div className="run-block">
-            <span className="pill">{describeGameRounds(game.rounds)}</span>
+            <span className="pill">{describeGameRounds(block.rounds)}</span>
           </div>
           <div className="run-block run-reveal">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
               <div className="eyebrow-strong">{t('details')}</div>
-              <button type="button" className="btn btn-secondary" onClick={() => setShowDetails((v) => !v)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setShownDetails((d) => ({ ...d, [block.id]: !d[block.id] }))}>
                 {showDetails ? <EyeOff size={15} /> : <Eye size={15} />}
                 {showDetails ? t('hide') : t('showDetails')}
               </button>
             </div>
             {showDetails ? (
               <div style={{ marginTop: 16 }}>
-                <BigList items={game.details} />
-                {game.transition && (
+                <BigList items={block.details} />
+                {block.transition && (
                   <p className="run-big">
                     <span className="sub-label">{t('transition')}</span>
                     <br />
-                    {game.transition}
+                    {block.transition}
                   </p>
                 )}
-                {game.submission && (
+                {block.submission && (
                   <p className="run-big" style={{ marginBottom: 0 }}>
                     <span className="sub-label">{t('submission')}</span>
                     <br />
-                    {game.submission}
+                    {block.submission}
                   </p>
                 )}
               </div>
@@ -187,10 +176,10 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       );
       break;
     case 'gems': {
-      const moves = gems.moves.filter((m) => m.name.trim() || m.notes.trim() || m.clip);
+      const moves = block.moves.filter((m) => m.name.trim() || m.notes.trim() || m.clip);
       body = (
         <>
-          {moves.length === 0 && gems.options.length === 0 && <Empty />}
+          {moves.length === 0 && block.options.length === 0 && <Empty />}
           {moves.map((m, i) => (
             <div className="run-block" key={m.id}>
               <div className="eyebrow-strong" style={{ marginBottom: 6 }}>
@@ -203,12 +192,12 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
               {m.notes && <p className="run-big muted">{m.notes}</p>}
             </div>
           ))}
-          {gems.options.length > 0 && (
+          {block.options.length > 0 && (
             <div className="run-block">
               <div className="eyebrow-strong" style={{ marginBottom: 12 }}>
                 {t('options')}
               </div>
-              <BigList items={gems.options} />
+              <BigList items={block.options} />
             </div>
           )}
         </>
@@ -216,16 +205,30 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       break;
     }
     case 'freeRoll':
-      body = freeRoll.notes ? <p className="run-big">{freeRoll.notes}</p> : <p className="run-big muted">{t('rollItOut')}</p>;
+      body = block.notes ? <p className="run-big">{block.notes}</p> : <p className="run-big muted">{t('rollItOut')}</p>;
+      break;
+    case 'wrapup':
+      body = (
+        <>
+          {block.question ? (
+            <p className="run-big run-lead" style={{ fontSize: 'clamp(26px, 3.6vw, 36px)' }}>
+              {block.question}
+            </p>
+          ) : (
+            <Empty />
+          )}
+          {block.notes && <p className="run-big muted">{block.notes}</p>}
+        </>
+      );
       break;
   }
 
   const heading =
-    key === 'game'
-      ? `${game.start || sectionLabel('game')}${game.objective ? ` → ${game.objective}` : ''}`
-      : key === 'warmup'
+    block.kind === 'game'
+      ? `${block.start || blockLabel(block)}${block.objective ? ` → ${block.objective}` : ''}`
+      : block.kind === 'warmup' && !block.title.trim()
         ? t('sec.movement')
-        : sectionLabel(key);
+        : blockLabel(block);
 
   return (
     <div className="shell run" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
@@ -237,48 +240,49 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       </header>
 
       <nav className="run-progress" aria-label={t('classBlocks')}>
-        {ORDER.map((k, i) => (
+        {blocks.map((b, i) => (
           <button
             type="button"
-            key={k}
+            key={b.id}
             className={i === step ? 'active' : i < step ? 'done' : ''}
             onClick={() => setStep(i)}
             aria-current={i === step ? 'step' : undefined}
           >
             <span className="bar" />
             <span className="label">
-              {i + 1} · {sectionLabel(k)}
+              {i + 1} · {blockLabel(b)}
             </span>
           </button>
         ))}
       </nav>
 
       <div className={`run-stage ${schedule ? '' : 'solo'}`}>
-        <div key={key}>
+        <div key={block.id}>
           <div className="eyebrow">
-            {String(step + 1).padStart(2, '0')} · {sectionLabel(key)}
+            {String(step + 1).padStart(2, '0')} · {kindLabel(block.kind)}
           </div>
           <h1 className="run-title">{heading}</h1>
           {body}
         </div>
         {/* Every timer stays mounted, so stepping to another block mid-round
             never loses the clock; only the current block's timer shows. */}
-        {TIMED.map((k) =>
-          schedules[k] ? (
-            <div className="card run-timer" key={k} hidden={k !== key}>
-              <RoundTimer segments={schedules[k]!} title={t(TIMER_TITLES[k])} />
+        {blocks.map((b) => {
+          const segments = schedules.get(b.id);
+          return segments ? (
+            <div className="card run-timer" key={b.id} hidden={b.id !== block.id}>
+              <RoundTimer segments={segments} title={b.kind === 'game' && !b.title.trim() ? t('timerGame') : blockLabel(b)} />
             </div>
-          ) : null,
-        )}
+          ) : null;
+        })}
       </div>
 
       <div className="run-nav">
         <button type="button" className="btn btn-secondary" disabled={step === 0} onClick={() => setStep(step - 1)}>
-          <ArrowLeft size={16} /> <span className="run-nav-label">{step > 0 ? sectionLabel(ORDER[step - 1]) : t('back')}</span>
+          <ArrowLeft size={16} /> <span className="run-nav-label">{step > 0 ? blockLabel(blocks[step - 1]) : t('back')}</span>
         </button>
-        {step < ORDER.length - 1 ? (
+        {step < last ? (
           <button type="button" className="btn btn-primary" onClick={() => setStep(step + 1)}>
-            <span className="run-nav-label">{sectionLabel(ORDER[step + 1])}</span> <ArrowRight size={16} />
+            <span className="run-nav-label">{blockLabel(blocks[step + 1])}</span> <ArrowRight size={16} />
           </button>
         ) : (
           <button type="button" className="btn btn-primary" onClick={() => navigate({ name: 'edit', id: plan.id })}>

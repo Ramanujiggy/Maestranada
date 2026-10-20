@@ -1,7 +1,7 @@
 // Local persistence. Plans live in this browser's localStorage as one JSON
 // array; the first visit seeds the example class so the app is never empty.
 
-import { normalizePlan, samplePlan, type ClassPlan } from './plan.ts';
+import { normalizePlan, samplePlan, storedPlan, type ClassPlan } from './plan.ts';
 
 // Keys keep the app's first name so plans saved before the rename still load.
 export const PLANS_KEY = 'maestranada.plans.v1';
@@ -53,7 +53,7 @@ export function parsePlans(raw: string): Loaded {
 
 /** Returns false when the browser refused to store the plans. */
 export function savePlans(plans: ClassPlan[]): boolean {
-  return safeSet(PLANS_KEY, JSON.stringify(plans));
+  return safeSet(PLANS_KEY, JSON.stringify(plans.map(storedPlan)));
 }
 
 /** Plans as they are stored right now, which another tab may have changed. */

@@ -1,7 +1,7 @@
 import { GIFEncoder } from 'gifenc';
 import { Packer } from 'docx';
 import { buildClassDocument } from './exportDoc.ts';
-import { normalizePlan, samplePlan } from './plan.ts';
+import { firstOf, normalizePlan, samplePlan } from './plan.ts';
 import { dataUrlToBlob } from './clips.ts';
 
 function tinyGif(): Uint8Array {
@@ -19,7 +19,7 @@ function tinyGif(): Uint8Array {
 describe('class document export', () => {
   it('embeds each technique clip as a GIF in the .docx', async () => {
     const plan = samplePlan();
-    plan.gems.moves[0] = { ...plan.gems.moves[0], clip: { id: 'clip-1', width: 400, height: 226 } };
+    firstOf(plan, 'gems')!.moves[0] = { ...firstOf(plan, 'gems')!.moves[0], clip: { id: 'clip-1', width: 400, height: 226 } };
     const buf = await Packer.toBuffer(buildClassDocument(plan, new Map([['clip-1', { data: tinyGif(), type: 'gif' as const, still: false }]])));
     const zip = buf.toString('latin1');
     expect(zip).toMatch(/word\/media\/[^"]+\.gif/);
@@ -28,7 +28,7 @@ describe('class document export', () => {
 
   it('still exports when a clip is missing from storage', async () => {
     const plan = samplePlan();
-    plan.gems.moves[0] = { ...plan.gems.moves[0], clip: { id: 'gone', width: 400, height: 226 } };
+    firstOf(plan, 'gems')!.moves[0] = { ...firstOf(plan, 'gems')!.moves[0], clip: { id: 'gone', width: 400, height: 226 } };
     const buf = await Packer.toBuffer(buildClassDocument(plan, new Map()));
     expect(buf.toString('latin1')).not.toMatch(/word\/media\//);
   });
@@ -50,7 +50,7 @@ describe('backups with clips', () => {
 describe('video clips in the document', () => {
   it('places a still frame and says the clip plays in the class file', async () => {
     const plan = samplePlan();
-    plan.gems.moves[0] = { ...plan.gems.moves[0], clip: { id: 'clip-1', width: 640, height: 360 } };
+    firstOf(plan, 'gems')!.moves[0] = { ...firstOf(plan, 'gems')!.moves[0], clip: { id: 'clip-1', width: 640, height: 360 } };
     // A 1×1 JPEG.
     const jpeg = Uint8Array.from(
       atob(

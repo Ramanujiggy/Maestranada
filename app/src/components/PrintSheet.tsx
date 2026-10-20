@@ -4,11 +4,12 @@
 
 import type { ReactNode } from 'react';
 import {
+  blockLabel,
+  blockMinutes,
   describeGameRounds,
   formatMinutes,
-  freeRollSeconds,
-  gameSeconds,
   totalMinutes,
+  type Block,
   type ClassPlan,
   type Clip,
   type ListItem,
@@ -30,7 +31,7 @@ function Bullets({ items }: { items: ListItem[] }) {
   );
 }
 
-function Block({ title, time, children }: { title: string; time: string; children: ReactNode }) {
+function BlockBox({ title, time, children }: { title: string; time: string; children: ReactNode }) {
   return (
     <section>
       <span className="ps-box" />
@@ -64,8 +65,78 @@ export function formatDate(iso: string): string {
   return d.toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function BlockBody({ block }: { block: Block }) {
+  switch (block.kind) {
+    case 'warmup':
+      return <Bullets items={block.drills} />;
+    case 'concept':
+      return (
+        <>
+          {block.rule && (
+            <p>
+              <strong>{t('generalRule')}:</strong> {block.rule}
+            </p>
+          )}
+          {block.notes && <p>{block.notes}</p>}
+        </>
+      );
+    case 'game':
+      return (
+        <>
+          <p>
+            <strong>
+              {block.start || t('startPosition')} → {block.objective || t('objectiveLower')}
+            </strong>
+          </p>
+          {block.goals.length > 0 && <h3>{t('goalsAndMovements')}</h3>}
+          <Bullets items={block.goals} />
+          {block.details.length > 0 && <h3>{t('details')}</h3>}
+          <Bullets items={block.details} />
+          <Line k={t('transition')} v={block.transition} />
+          <Line k={t('submission')} v={block.submission} />
+          <Line k={t('rounds')} v={`${describeGameRounds(block.rounds)} · ${t('restLower')} ${formatRest(block.rounds.restSeconds)}`} />
+        </>
+      );
+    case 'gems':
+      return (
+        <>
+          {block.moves
+            .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
+            .map((m, i) => (
+              <div key={m.id}>
+                <h3>{t('moveNamed', { n: i + 1, name: m.name })}</h3>
+                {m.clip && <PrintClip clip={m.clip} />}
+                {m.notes && <p>{m.notes}</p>}
+              </div>
+            ))}
+          {block.options.length > 0 && <h3>{t('options')}</h3>}
+          <Bullets items={block.options} />
+        </>
+      );
+    case 'freeRoll':
+      return (
+        <>
+          <p>
+            {block.rounds} × {block.minutes} min · {t('restLower')} {formatRest(block.restSeconds)}
+          </p>
+          {block.notes && <p>{block.notes}</p>}
+        </>
+      );
+    case 'wrapup':
+      return (
+        <>
+          {block.question && (
+            <p>
+              <strong>{block.question}</strong>
+            </p>
+          )}
+          {block.notes && <p>{block.notes}</p>}
+        </>
+      );
+  }
+}
+
 export function PrintSheet({ plan }: { plan: ClassPlan }) {
-  const { warmup, concept, game, gems, freeRoll } = plan;
   return (
     <div className="print-sheet">
       <div className="ps-head">
@@ -80,56 +151,11 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
         </div>
       </div>
 
-      <Block title={t('sec.warmup')} time={formatMinutes(warmup.minutes)}>
-        <Bullets items={warmup.drills} />
-      </Block>
-
-      <Block title={t('sec.concept')} time={formatMinutes(concept.minutes)}>
-        {concept.rule && (
-          <p>
-            <strong>{t('generalRule')}:</strong> {concept.rule}
-          </p>
-        )}
-        {concept.notes && <p>{concept.notes}</p>}
-      </Block>
-
-      <Block title={t('sec.game')} time={formatMinutes(gameSeconds(plan) / 60)}>
-        <p>
-          <strong>
-            {game.start || t('startPosition')} → {game.objective || t('objectiveLower')}
-          </strong>
-        </p>
-        {game.goals.length > 0 && <h3>{t('goalsAndMovements')}</h3>}
-        <Bullets items={game.goals} />
-        {game.details.length > 0 && <h3>{t('details')}</h3>}
-        <Bullets items={game.details} />
-        <Line k={t('transition')} v={game.transition} />
-        <Line k={t('submission')} v={game.submission} />
-        <Line k={t('rounds')} v={`${describeGameRounds(game.rounds)} · ${t('restLower')} ${formatRest(game.rounds.restSeconds)}`} />
-      </Block>
-
-      <Block title={t('sec.gems')} time={formatMinutes(gems.minutes)}>
-        {gems.moves
-          .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
-          .map((m, i) => (
-            <div key={m.id}>
-              <h3>
-                {t('moveNamed', { n: i + 1, name: m.name })}
-              </h3>
-              {m.clip && <PrintClip clip={m.clip} />}
-              {m.notes && <p>{m.notes}</p>}
-            </div>
-          ))}
-        {gems.options.length > 0 && <h3>{t('options')}</h3>}
-        <Bullets items={gems.options} />
-      </Block>
-
-      <Block title={t('sec.freeRoll')} time={formatMinutes(freeRollSeconds(plan) / 60)}>
-        <p>
-          {freeRoll.rounds} × {freeRoll.minutes} min · {t('restLower')} {formatRest(freeRoll.restSeconds)}
-        </p>
-        {freeRoll.notes && <p>{freeRoll.notes}</p>}
-      </Block>
+      {plan.blocks.map((b) => (
+        <BlockBox key={b.id} title={blockLabel(b)} time={formatMinutes(blockMinutes(b))}>
+          <BlockBody block={b} />
+        </BlockBox>
+      ))}
 
       <div className="ps-notes">
         <span className="ps-k">{t('notes')}</span>

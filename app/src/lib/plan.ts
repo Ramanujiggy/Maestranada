@@ -1,12 +1,17 @@
-// The class plan model — one shape for every class, built around the
-// structure a good BJJ class follows:
+// The class plan model. Every class is made of the same five kinds of block:
 //
-//   1. Warm-up · Movement  — solo movement drills
-//   2. Concept             — the general rule the class is about
-//   3. Positional game     — a spar from a position toward a goal, taught as
-//                            goals and movements first, details after
-//   4. Gems                — the specific moves and their options
-//   5. Free roll
+//   Warm-up              — movement, ending close to the real thing
+//   Concept              — the one rule the class is about
+//   Positional sparring  — a game from a position toward a goal, taught as
+//                          goals and movements first, details after
+//   Technique            — the specific moves, their gems, and their options
+//   Rolling              — live rounds
+//
+// plus an optional Wrap-up. A plan is an ordered list of blocks: the coach
+// picks which kinds, how many of each and in what order (fixed vocabulary,
+// free arrangement). Internally the kinds keep the keys they had when the
+// class was five fixed sections ('game' is positional sparring, 'gems' is
+// technique, 'freeRoll' is rolling), so older plans and files map straight on.
 //
 // Everything here is pure data + pure functions so it can be tested without
 // a browser and stored as plain JSON.
@@ -18,7 +23,7 @@ export interface ListItem {
   text: string;
 }
 
-/** A looping GIF of the technique. The image itself lives in IndexedDB (see clips.ts). */
+/** A short looping video of the technique. The video itself lives in IndexedDB (see clips.ts). */
 export interface Clip {
   id: string;
   width: number;
@@ -44,12 +49,70 @@ export interface GameRounds {
   switchPositions: boolean;
 }
 
-export interface FreeRoll {
+export type BlockKind = 'warmup' | 'concept' | 'game' | 'gems' | 'freeRoll' | 'wrapup';
+
+/** The five kinds every class is made of, in the order the class strip shows them. */
+export const CORE_KINDS = ['warmup', 'concept', 'game', 'gems', 'freeRoll'] as const;
+/** Every kind a coach can add, in the order the Add block sheet lists them. */
+export const BLOCK_KINDS: BlockKind[] = [...CORE_KINDS, 'wrapup'];
+
+interface BlockBase {
+  id: string;
+  /** The coach's own name for the block ("Takedown game"). Empty means the kind's name. */
+  title: string;
+}
+
+export interface WarmupBlock extends BlockBase {
+  kind: 'warmup';
+  minutes: number;
+  drills: ListItem[];
+}
+
+export interface ConceptBlock extends BlockBase {
+  kind: 'concept';
+  minutes: number;
+  rule: string;
+  notes: string;
+}
+
+export interface GameBlock extends BlockBase {
+  kind: 'game';
+  start: string;
+  objective: string;
+  /** General goals and movements toward the objective — no technique yet. */
+  goals: ListItem[];
+  /** General guidelines for beating the position, shown after the first rounds. */
+  details: ListItem[];
+  transition: string;
+  submission: string;
+  rounds: GameRounds;
+}
+
+export interface TechniqueBlock extends BlockBase {
+  kind: 'gems';
+  minutes: number;
+  moves: Move[];
+  options: ListItem[];
+}
+
+export interface RollingBlock extends BlockBase {
+  kind: 'freeRoll';
   rounds: number;
   minutes: number;
   restSeconds: number;
   notes: string;
 }
+
+export interface WrapupBlock extends BlockBase {
+  kind: 'wrapup';
+  minutes: number;
+  /** One question back to the class. */
+  question: string;
+  notes: string;
+}
+
+export type Block = WarmupBlock | ConceptBlock | GameBlock | TechniqueBlock | RollingBlock | WrapupBlock;
+export type BlockOf<K extends BlockKind> = Extract<Block, { kind: K }>;
 
 export interface ClassPlan {
   id: string;
@@ -58,32 +121,8 @@ export interface ClassPlan {
   date: string;
   createdAt: string;
   updatedAt: string;
-  warmup: {
-    minutes: number;
-    drills: ListItem[];
-  };
-  concept: {
-    minutes: number;
-    rule: string;
-    notes: string;
-  };
-  game: {
-    start: string;
-    objective: string;
-    /** General goals and movements toward the objective — no technique yet. */
-    goals: ListItem[];
-    /** General guidelines for beating the position, shown after the first rounds. */
-    details: ListItem[];
-    transition: string;
-    submission: string;
-    rounds: GameRounds;
-  };
-  gems: {
-    minutes: number;
-    moves: Move[];
-    options: ListItem[];
-  };
-  freeRoll: FreeRoll;
+  /** The class in teaching order. Never empty. */
+  blocks: Block[];
 }
 
 const MOVEMENTS_EN = [
@@ -149,30 +188,155 @@ export function todayISO(now = new Date()): string {
   const d = String(now.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+// ─── Blocks ──────────────────────────────────────────────────────────────────
 
-/** A blank plan that already carries the class structure. */
-export function blankPlan(now = new Date()): ClassPlan {
+export function defaultRounds(): GameRounds {
+  return { roundsPerSide: 2, minutes: 3, restSeconds: 30, switchPartners: true, switchPositions: true };
+}
+
+/** A fresh, empty block of a kind. */
+export function newBlock<K extends BlockKind>(kind: K): BlockOf<K>;
+export function newBlock(kind: BlockKind): Block {
+  const base = { id: uid(), title: '' };
+  switch (kind) {
+    case 'warmup':
+      return { ...base, kind, minutes: 10, drills: [] };
+    case 'concept':
+      return { ...base, kind, minutes: 5, rule: '', notes: '' };
+    case 'game':
+      return { ...base, kind, start: '', objective: '', goals: [], details: [], transition: '', submission: '', rounds: defaultRounds() };
+    case 'gems':
+      return { ...base, kind, minutes: 15, moves: [move(), move()], options: [] };
+    case 'freeRoll':
+      return { ...base, kind, rounds: 4, minutes: 5, restSeconds: 60, notes: '' };
+    case 'wrapup':
+      return { ...base, kind, minutes: 3, question: '', notes: '' };
+  }
+}
+
+/** A copy of a block with fresh ids all the way down. Clips are shared, not copied. */
+export function copyBlock(block: Block): Block {
+  const reid = <T extends { id: string }>(xs: T[]) => xs.map((x) => ({ ...x, id: uid() }));
+  const b = { ...block, id: uid() };
+  switch (b.kind) {
+    case 'warmup':
+      return { ...b, drills: reid(b.drills) };
+    case 'game':
+      return { ...b, goals: reid(b.goals), details: reid(b.details), rounds: { ...b.rounds } };
+    case 'gems':
+      return { ...b, moves: reid(b.moves), options: reid(b.options) };
+    default:
+      return b;
+  }
+}
+
+export type FormatKey = 'gameFirst' | 'techniqueFirst' | 'openMat' | 'drillingDay' | 'compPrep';
+
+/** Ways to lay out a new class. Game first is the default: play, teach the fix, play again. */
+export const FORMATS: Record<FormatKey, BlockKind[]> = {
+  gameFirst: ['warmup', 'concept', 'game', 'gems', 'game', 'freeRoll'],
+  techniqueFirst: ['warmup', 'concept', 'gems', 'game', 'freeRoll'],
+  openMat: ['warmup', 'freeRoll'],
+  drillingDay: ['warmup', 'gems', 'gems', 'freeRoll'],
+  compPrep: ['warmup', 'game', 'game', 'game', 'freeRoll'],
+};
+export const FORMAT_ORDER = Object.keys(FORMATS) as FormatKey[];
+
+export function formatBlocks(format: FormatKey): Block[] {
+  const blocks = FORMATS[format].map((k) => newBlock(k));
+  if (format === 'gameFirst') {
+    // The second round of the game checks the fix, so it can be shorter.
+    const second = blocks.filter((b): b is GameBlock => b.kind === 'game')[1];
+    if (second) second.rounds.roundsPerSide = 1;
+  }
+  if (format === 'openMat') {
+    const roll = blocks.find((b): b is RollingBlock => b.kind === 'freeRoll');
+    if (roll) roll.rounds = 8;
+  }
+  return blocks;
+}
+
+/** A blank plan laid out in one of the formats. */
+export function blankPlan(now = new Date(), format: FormatKey = 'gameFirst'): ClassPlan {
   const stamp = now.toISOString();
+  return { id: uid(), title: '', date: todayISO(now), createdAt: stamp, updatedAt: stamp, blocks: formatBlocks(format) };
+}
+
+export function blocksOf<K extends BlockKind>(plan: ClassPlan, kind: K): BlockOf<K>[] {
+  return plan.blocks.filter((b): b is BlockOf<K> => b.kind === kind);
+}
+
+export function firstOf<K extends BlockKind>(plan: ClassPlan, kind: K): BlockOf<K> | undefined {
+  return blocksOf(plan, kind)[0];
+}
+
+/** Every technique move in the class, in order. */
+export function allMoves(plan: ClassPlan): Move[] {
+  return blocksOf(plan, 'gems').flatMap((b) => b.moves);
+}
+
+/** Replaces one block, matched by id. */
+export function withBlock(plan: ClassPlan, block: Block): ClassPlan {
+  return { ...plan, blocks: plan.blocks.map((b) => (b.id === block.id ? block : b)) };
+}
+
+/** Moves a block from one place in the class to another. */
+export function moveBlock(plan: ClassPlan, from: number, to: number): ClassPlan {
+  if (from === to || from < 0 || to < 0 || from >= plan.blocks.length || to >= plan.blocks.length) return plan;
+  const blocks = [...plan.blocks];
+  const [b] = blocks.splice(from, 1);
+  blocks.splice(to, 0, b);
+  return { ...plan, blocks };
+}
+
+// ─── Older plans: the five fixed sections ────────────────────────────────────
+
+/** How a plan was stored before blocks could be added and moved: one of each, in a fixed order. */
+export interface LegacySections {
+  warmup: { minutes: number; drills: ListItem[] };
+  concept: { minutes: number; rule: string; notes: string };
+  game: Omit<GameBlock, 'id' | 'title' | 'kind'>;
+  gems: { minutes: number; moves: Move[]; options: ListItem[] };
+  freeRoll: { rounds: number; minutes: number; restSeconds: number; notes: string };
+}
+export type LegacyPlan = Omit<ClassPlan, 'blocks'> & LegacySections;
+
+const strip = <B extends Block>(b: B): Omit<B, 'id' | 'title' | 'kind'> => {
+  const { id: _id, title: _title, kind: _kind, ...rest } = b;
+  return rest;
+};
+
+export function legacyBlank(now: Date): LegacyPlan {
+  const { blocks: _, ...meta } = blankPlan(now);
+  return { ...meta, ...legacySections(blankPlan(now, 'techniqueFirst')) };
+}
+
+/** Turns the five fixed sections into blocks, in the order they were always taught. */
+export function fromLegacy(p: LegacyPlan): ClassPlan {
+  const { warmup, concept, game, gems, freeRoll, ...meta } = p;
+  const base = () => ({ id: uid(), title: '' });
   return {
-    id: uid(),
-    title: '',
-    date: todayISO(now),
-    createdAt: stamp,
-    updatedAt: stamp,
-    warmup: { minutes: 10, drills: [] },
-    concept: { minutes: 5, rule: '', notes: '' },
-    game: {
-      start: '',
-      objective: '',
-      goals: [],
-      details: [],
-      transition: '',
-      submission: '',
-      rounds: { roundsPerSide: 2, minutes: 3, restSeconds: 30, switchPartners: true, switchPositions: true },
-    },
-    gems: { minutes: 15, moves: [move(), move()], options: [] },
-    freeRoll: { rounds: 4, minutes: 5, restSeconds: 60, notes: '' },
+    ...meta,
+    blocks: [
+      { ...base(), kind: 'warmup', ...warmup },
+      { ...base(), kind: 'concept', ...concept },
+      { ...base(), kind: 'game', ...game },
+      { ...base(), kind: 'gems', ...gems },
+      { ...base(), kind: 'freeRoll', ...freeRoll },
+    ],
   };
+}
+
+/** The first block of each kind in the old fixed shape. Written next to the blocks for a
+ *  while, so a copy of the app that hasn't updated yet can still open a class file. */
+export function legacySections(plan: ClassPlan): LegacySections {
+  const pick = <K extends (typeof CORE_KINDS)[number]>(kind: K) => strip(firstOf(plan, kind) ?? newBlock(kind));
+  return { warmup: pick('warmup'), concept: pick('concept'), game: pick('game'), gems: pick('gems'), freeRoll: pick('freeRoll') };
+}
+
+/** A plan as it is written to storage and files. */
+export function storedPlan(plan: ClassPlan): ClassPlan & LegacySections {
+  return { ...plan, ...legacySections(plan) };
 }
 
 /** The example class: offensive opportunities from the leg drag. */
@@ -181,8 +345,8 @@ export function samplePlan(now = new Date()): ClassPlan {
 }
 
 function samplePlanEn(now: Date): ClassPlan {
-  const plan = blankPlan(now);
-  return {
+  const plan = legacyBlank(now);
+  return fromLegacy({
     ...plan,
     title: 'Leg drag to the back',
     warmup: {
@@ -219,12 +383,12 @@ function samplePlanEn(now: Date): ClassPlan {
       ],
       options: ['Near side armbar if the far arm posts', 'Switch to the opposite leg drag'].map(item),
     },
-  };
+  });
 }
 
 function samplePlanPt(now: Date): ClassPlan {
-  const plan = blankPlan(now);
-  return {
+  const plan = legacyBlank(now);
+  return fromLegacy({
     ...plan,
     title: 'Leg drag para as costas',
     warmup: {
@@ -261,9 +425,8 @@ function samplePlanPt(now: Date): ClassPlan {
       ],
       options: ['Chave de braço do lado de perto se ele apoiar o braço de longe', 'Troque para o leg drag do outro lado'].map(item),
     },
-  };
+  });
 }
-
 // ─── Time ────────────────────────────────────────────────────────────────────
 
 export function gameRoundCount(r: GameRounds): number {
@@ -271,76 +434,93 @@ export function gameRoundCount(r: GameRounds): number {
 }
 
 /** Total seconds for a block of rounds with rest between (not after the last). */
-function blockSeconds(rounds: number, minutes: number, restSeconds: number): number {
+function roundsSeconds(rounds: number, minutes: number, restSeconds: number): number {
   if (rounds <= 0) return 0;
   return rounds * minutes * 60 + (rounds - 1) * restSeconds;
 }
 
-export function gameSeconds(plan: ClassPlan): number {
-  const r = plan.game.rounds;
-  return blockSeconds(gameRoundCount(r), r.minutes, r.restSeconds);
+export function blockMinutes(b: Block): number {
+  switch (b.kind) {
+    case 'game':
+      return roundsSeconds(gameRoundCount(b.rounds), b.rounds.minutes, b.rounds.restSeconds) / 60;
+    case 'freeRoll':
+      return roundsSeconds(b.rounds, b.minutes, b.restSeconds) / 60;
+    default:
+      return b.minutes;
+  }
 }
 
-export function freeRollSeconds(plan: ClassPlan): number {
-  const f = plan.freeRoll;
-  return blockSeconds(f.rounds, f.minutes, f.restSeconds);
+/** A kind's name in the app's language. */
+export function kindLabel(kind: BlockKind): string {
+  return t(`sec.${kind}`);
+}
+
+/** What the block is called: the coach's own name, or its kind's. */
+export function blockLabel(b: Block): string {
+  return b.title.trim() || kindLabel(b.kind);
+}
+
+/** Positional sparring and rolling: the minutes against a resisting partner. */
+export function isLive(kind: BlockKind): boolean {
+  return kind === 'game' || kind === 'freeRoll';
 }
 
 export interface TimelineSegment {
-  key: SectionKey;
+  id: string;
+  kind: BlockKind;
   label: string;
   minutes: number;
 }
 
-export type SectionKey = 'warmup' | 'concept' | 'game' | 'gems' | 'freeRoll';
-
-/** The block's name in the app's language. */
-export function sectionLabel(key: SectionKey): string {
-  return t(`sec.${key}`);
-}
-
 export function timeline(plan: ClassPlan): TimelineSegment[] {
-  return [
-    { key: 'warmup', label: sectionLabel('warmup'), minutes: plan.warmup.minutes },
-    { key: 'concept', label: sectionLabel('concept'), minutes: plan.concept.minutes },
-    { key: 'game', label: sectionLabel('game'), minutes: gameSeconds(plan) / 60 },
-    { key: 'gems', label: sectionLabel('gems'), minutes: plan.gems.minutes },
-    { key: 'freeRoll', label: sectionLabel('freeRoll'), minutes: freeRollSeconds(plan) / 60 },
-  ];
+  return plan.blocks.map((b) => ({ id: b.id, kind: b.kind, label: blockLabel(b), minutes: blockMinutes(b) }));
 }
 
-export const SECTION_ORDER: SectionKey[] = ['warmup', 'concept', 'game', 'gems', 'freeRoll'];
+export function totalMinutes(plan: ClassPlan): number {
+  return plan.blocks.reduce((sum, b) => sum + blockMinutes(b), 0);
+}
 
-/** One line for a folded section: what's in it so far, or an invitation when it's empty. */
-export function sectionSummary(plan: ClassPlan, key: SectionKey): { filled: boolean; text: string } {
+export interface KindShare {
+  kind: BlockKind;
+  /** How many blocks of this kind the class has. */
+  count: number;
+  minutes: number;
+}
+
+/** What the class is made of: the five kinds always, wrap-up only when used. */
+export function composition(plan: ClassPlan): KindShare[] {
+  const kinds: BlockKind[] = [...CORE_KINDS, ...(plan.blocks.some((b) => b.kind === 'wrapup') ? (['wrapup'] as const) : [])];
+  return kinds.map((kind) => {
+    const of = plan.blocks.filter((b) => b.kind === kind);
+    return { kind, count: of.length, minutes: of.reduce((s, b) => s + blockMinutes(b), 0) };
+  });
+}
+
+/** One line for a folded block: what's in it so far, or an invitation when it's empty. */
+export function sectionSummary(b: Block): { filled: boolean; text: string } {
   const lines = (xs: string[]) => xs.map((x) => x.trim()).filter(Boolean);
   const list = (xs: string[], empty: string) => {
     const kept = lines(xs);
     return { filled: kept.length > 0, text: kept.length ? kept.join(', ') : empty };
   };
-  switch (key) {
+  switch (b.kind) {
     case 'warmup':
-      return list(plan.warmup.drills.map((d) => d.text), t('sum.warmup'));
+      return list(b.drills.map((d) => d.text), t('sum.warmup'));
     case 'concept':
-      return list([plan.concept.rule], t('sum.concept'));
+      return list([b.rule], t('sum.concept'));
     case 'game': {
-      const g = plan.game;
-      const ends = lines([g.start, g.objective]);
+      const ends = lines([b.start, b.objective]);
       return { filled: ends.length > 0, text: ends.length ? ends.join(' → ') : t('sum.game') };
     }
     case 'gems':
-      return list(plan.gems.moves.map((m) => m.name), t('sum.gems'));
-    case 'freeRoll': {
-      const f = plan.freeRoll;
-      return f.rounds > 0
-        ? { filled: true, text: t('roundsDescribe', { n: f.rounds, min: f.minutes }) }
+      return list(b.moves.map((m) => m.name), t('sum.gems'));
+    case 'freeRoll':
+      return b.rounds > 0
+        ? { filled: true, text: t('roundsDescribe', { n: b.rounds, min: b.minutes }) }
         : { filled: false, text: t('sum.noRoll') };
-    }
+    case 'wrapup':
+      return list([b.question], t('sum.wrapup'));
   }
-}
-
-export function totalMinutes(plan: ClassPlan): number {
-  return timeline(plan).reduce((sum, s) => sum + s.minutes, 0);
 }
 
 export function formatMinutes(minutes: number): string {
@@ -378,11 +558,11 @@ export interface RoundSegment {
   seconds: number;
 }
 
-export function gameSchedule(plan: ClassPlan): RoundSegment[] {
-  const r = plan.game.rounds;
+export function gameSchedule(game: GameBlock): RoundSegment[] {
+  const r = game.rounds;
   const sides = r.switchPositions ? 2 : 1;
   const total = gameRoundCount(r);
-  const position = plan.game.start || t('thePosition');
+  const position = game.start || t('thePosition');
   const out: RoundSegment[] = [];
   let n = 0;
   for (let side = 0; side < sides; side++) {
@@ -414,8 +594,7 @@ export function gameSchedule(plan: ClassPlan): RoundSegment[] {
   return out;
 }
 
-export function freeRollSchedule(plan: ClassPlan): RoundSegment[] {
-  const f = plan.freeRoll;
+export function freeRollSchedule(f: RollingBlock): RoundSegment[] {
   const out: RoundSegment[] = [];
   for (let i = 1; i <= f.rounds; i++) {
     out.push({
@@ -431,91 +610,131 @@ export function freeRollSchedule(plan: ClassPlan): RoundSegment[] {
   return out;
 }
 
+/** The mat timer for a block, or null for the blocks that are talked through rather than timed. */
+export function blockSchedule(b: Block): RoundSegment[] | null {
+  switch (b.kind) {
+    case 'warmup':
+      return b.minutes > 0 ? [{ kind: 'round', label: kindLabel('warmup'), cue: t('cueKeepMoving'), seconds: b.minutes * 60 }] : [];
+    case 'game':
+      return gameSchedule(b);
+    case 'freeRoll':
+      return freeRollSchedule(b);
+    default:
+      return null;
+  }
+}
+
 // ─── Normalisation (for imports and older saved data) ────────────────────────
 
+type Obj = Record<string, unknown>;
+const obj = (v: unknown): Obj => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Obj) : {});
+const str = (v: unknown, d: string) => (typeof v === 'string' ? v : d);
+const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : d);
+const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d);
+const list = (v: unknown, d: ListItem[]): ListItem[] =>
+  Array.isArray(v)
+    ? v
+        .filter((x) => x && typeof x === 'object' && typeof (x as ListItem).text === 'string')
+        .map((x) => ({ id: str((x as ListItem).id, '') || uid(), text: (x as ListItem).text }))
+    : d;
+const clip = (v: unknown): Clip | undefined => {
+  const c = obj(v);
+  return typeof c.id === 'string' && c.id ? { id: c.id, width: num(c.width, 400), height: num(c.height, 300) } : undefined;
+};
+const moves = (v: unknown, d: Move[]): Move[] =>
+  Array.isArray(v)
+    ? v
+        .filter((x) => x && typeof x === 'object')
+        .map((x) => {
+          const m = x as Obj;
+          const c = clip(m.clip);
+          return { id: str(m.id, '') || uid(), name: str(m.name, ''), notes: str(m.notes, ''), ...(c ? { clip: c } : {}) };
+        })
+    : d;
+
+/** Rebuilds one block's fields from untrusted JSON, over a fresh block of that kind. */
+function normalizeFields<K extends BlockKind>(kind: K, r: Obj, base: Block = newBlock(kind)): Block {
+  switch (base.kind) {
+    case 'warmup':
+      return { ...base, minutes: num(r.minutes, base.minutes), drills: list(r.drills, base.drills) };
+    case 'concept':
+      return { ...base, minutes: num(r.minutes, base.minutes), rule: str(r.rule, base.rule), notes: str(r.notes, base.notes) };
+    case 'game': {
+      const gr = obj(r.rounds);
+      return {
+        ...base,
+        start: str(r.start, base.start),
+        objective: str(r.objective, base.objective),
+        goals: list(r.goals, base.goals),
+        details: list(r.details, base.details),
+        transition: str(r.transition, base.transition),
+        submission: str(r.submission, base.submission),
+        rounds: {
+          roundsPerSide: num(gr.roundsPerSide, base.rounds.roundsPerSide),
+          minutes: num(gr.minutes, base.rounds.minutes),
+          restSeconds: num(gr.restSeconds, base.rounds.restSeconds),
+          switchPartners: bool(gr.switchPartners, base.rounds.switchPartners),
+          switchPositions: bool(gr.switchPositions, base.rounds.switchPositions),
+        },
+      };
+    }
+    case 'gems':
+      return { ...base, minutes: num(r.minutes, base.minutes), moves: moves(r.moves, base.moves), options: list(r.options, base.options) };
+    case 'freeRoll':
+      return {
+        ...base,
+        rounds: num(r.rounds, base.rounds),
+        minutes: num(r.minutes, base.minutes),
+        restSeconds: num(r.restSeconds, base.restSeconds),
+        notes: str(r.notes, base.notes),
+      };
+    case 'wrapup':
+      return { ...base, minutes: num(r.minutes, base.minutes), question: str(r.question, base.question), notes: str(r.notes, base.notes) };
+  }
+}
+
+function normalizeBlock(raw: unknown): Block | null {
+  const r = obj(raw);
+  const kind = r.kind as BlockKind;
+  if (!BLOCK_KINDS.includes(kind)) return null;
+  const b = normalizeFields(kind, r);
+  return { ...b, id: str(r.id, '') || b.id, title: str(r.title, '') };
+}
+
 /** Rebuilds a plan from untrusted JSON: every field takes the stored value only
- *  when it has the right type, otherwise the blank plan's, so a damaged or
- *  hand-edited backup can never crash the screens that draw it. */
+ *  when it has the right type, otherwise a blank block's, so a damaged or
+ *  hand-edited backup can never crash the screens that draw it. A plan saved
+ *  before blocks could be moved (five fixed sections) comes back as those five
+ *  blocks in their old order. */
 export function normalizePlan(raw: unknown): ClassPlan | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const r = raw as Record<string, unknown>;
+  const r = raw as Obj;
   const base = blankPlan();
-  const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
-  const str = (v: unknown, d: string) => (typeof v === 'string' ? v : d);
-  const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : d);
-  const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d);
-  const list = (v: unknown, d: ListItem[]): ListItem[] =>
-    Array.isArray(v)
-      ? v
-          .filter((x) => x && typeof x === 'object' && typeof (x as ListItem).text === 'string')
-          .map((x) => ({ id: str((x as ListItem).id, '') || uid(), text: (x as ListItem).text }))
-      : d;
-  const clip = (v: unknown): Clip | undefined => {
-    const c = obj(v);
-    return typeof c.id === 'string' && c.id ? { id: c.id, width: num(c.width, 400), height: num(c.height, 300) } : undefined;
-  };
-  const moves = (v: unknown, d: Move[]): Move[] =>
-    Array.isArray(v)
-      ? v
-          .filter((x) => x && typeof x === 'object')
-          .map((x) => {
-            const m = x as Record<string, unknown>;
-            const c = clip(m.clip);
-            return { id: str(m.id, '') || uid(), name: str(m.name, ''), notes: str(m.notes, ''), ...(c ? { clip: c } : {}) };
-          })
-      : d;
-
-  const w = obj(r.warmup);
-  const c = obj(r.concept);
-  const g = obj(r.game);
-  const gr = obj(g.rounds);
-  const ge = obj(r.gems);
-  const f = obj(r.freeRoll);
   const date = str(r.date, '');
-  return {
+  const meta = {
     id: str(r.id, '') || base.id,
     title: str(r.title, base.title),
     date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : base.date,
     createdAt: str(r.createdAt, base.createdAt),
     updatedAt: str(r.updatedAt, base.updatedAt),
-    warmup: { minutes: num(w.minutes, base.warmup.minutes), drills: list(w.drills, base.warmup.drills) },
-    concept: { minutes: num(c.minutes, base.concept.minutes), rule: str(c.rule, base.concept.rule), notes: str(c.notes, base.concept.notes) },
-    game: {
-      start: str(g.start, base.game.start),
-      objective: str(g.objective, base.game.objective),
-      goals: list(g.goals, base.game.goals),
-      details: list(g.details, base.game.details),
-      transition: str(g.transition, base.game.transition),
-      submission: str(g.submission, base.game.submission),
-      rounds: {
-        roundsPerSide: num(gr.roundsPerSide, base.game.rounds.roundsPerSide),
-        minutes: num(gr.minutes, base.game.rounds.minutes),
-        restSeconds: num(gr.restSeconds, base.game.rounds.restSeconds),
-        switchPartners: bool(gr.switchPartners, base.game.rounds.switchPartners),
-        switchPositions: bool(gr.switchPositions, base.game.rounds.switchPositions),
-      },
-    },
-    gems: { minutes: num(ge.minutes, base.gems.minutes), moves: moves(ge.moves, base.gems.moves), options: list(ge.options, base.gems.options) },
-    freeRoll: {
-      rounds: num(f.rounds, base.freeRoll.rounds),
-      minutes: num(f.minutes, base.freeRoll.minutes),
-      restSeconds: num(f.restSeconds, base.freeRoll.restSeconds),
-      notes: str(f.notes, base.freeRoll.notes),
-    },
+  };
+  const blocks = Array.isArray(r.blocks) ? r.blocks.map(normalizeBlock).filter((b): b is Block => b !== null) : [];
+  if (blocks.length) return { ...meta, blocks };
+  // The five fixed sections. Missing ones come back blank, as they always did.
+  return {
+    ...meta,
+    blocks: CORE_KINDS.map((kind) => normalizeFields(kind, obj(r[kind]))),
   };
 }
 
 export function duplicatePlan(plan: ClassPlan, now = new Date()): ClassPlan {
   const stamp = now.toISOString();
-  const reid = <T extends { id: string }>(xs: T[]) => xs.map((x) => ({ ...x, id: uid() }));
   return {
     ...plan,
     id: uid(),
     title: plan.title ? t('copyOf', { title: plan.title }) : '',
     createdAt: stamp,
     updatedAt: stamp,
-    warmup: { ...plan.warmup, drills: reid(plan.warmup.drills) },
-    game: { ...plan.game, goals: reid(plan.game.goals), details: reid(plan.game.details) },
-    gems: { ...plan.gems, moves: reid(plan.gems.moves), options: reid(plan.gems.options) },
+    blocks: plan.blocks.map(copyBlock),
   };
 }

@@ -17,13 +17,16 @@ import {
   TextRun,
 } from 'docx';
 import {
+  allMoves,
+  blockLabel,
+  blockMinutes,
   describeGameRounds,
   formatMinutes,
-  freeRollSeconds,
-  gameSeconds,
   totalMinutes,
+  type Block,
   type ClassPlan,
   type ListItem,
+  type Move,
 } from './plan.ts';
 import { getClip, getClipStill } from './clips.ts';
 import { APP_NAME } from './brand.ts';
@@ -79,20 +82,16 @@ function bullets(items: ListItem[]): Paragraph[] {
   return items.filter((x) => x.text.trim()).map((x) => new Paragraph({ text: x.text, bullet: { level: 0 } }));
 }
 
-/** Builds the document from a plan and the images of its clips. Pure, so it can be tested. */
-export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document {
-  const { warmup, concept, game, gems, freeRoll } = plan;
-  const title = plan.title || t('untitledClass');
-
-  const gemParagraphs: Paragraph[] = [];
-  gems.moves
+function moveParagraphs(moves: Move[], clips: ClipBytes): Paragraph[] {
+  const out: Paragraph[] = [];
+  moves
     .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
     .forEach((m, i) => {
-      gemParagraphs.push(sub(t('moveNamed', { n: i + 1, name: m.name || t('untitledMove') })));
+      out.push(sub(t('moveNamed', { n: i + 1, name: m.name || t('untitledMove') })));
       const image = m.clip && clips.get(m.clip.id);
       if (m.clip && image) {
         const scale = Math.min(1, CLIP_WIDTH / m.clip.width);
-        gemParagraphs.push(
+        out.push(
           new Paragraph({
             spacing: { after: 80 },
             children: [
@@ -110,7 +109,7 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
           }),
         );
         if (image.still) {
-          gemParagraphs.push(
+          out.push(
             new Paragraph({
               spacing: { after: 80 },
               children: [new TextRun({ text: t('stillCaption'), color: MUTED, size: 16, italics: true })],
@@ -118,8 +117,44 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
           );
         }
       }
-      if (m.notes.trim()) gemParagraphs.push(body(m.notes));
+      if (m.notes.trim()) out.push(body(m.notes));
     });
+  return out;
+}
+
+function blockParagraphs(b: Block, clips: ClipBytes): Paragraph[] {
+  const head = sectionHeading(blockLabel(b), formatMinutes(blockMinutes(b)));
+  switch (b.kind) {
+    case 'warmup':
+      return [head, ...bullets(b.drills)];
+    case 'concept':
+      return [head, ...(b.rule ? [body(b.rule, { bold: true })] : []), ...(b.notes ? [body(b.notes)] : [])];
+    case 'game':
+      return [
+        head,
+        body(`${b.start || t('startPosition')} → ${b.objective || t('objectiveLower')}`, { bold: true }),
+        ...(b.goals.length ? [sub(t('goalsAndMovements')), ...bullets(b.goals)] : []),
+        ...(b.details.length ? [sub(t('details')), ...bullets(b.details)] : []),
+        ...(b.transition ? [body(b.transition, { label: t('transition') })] : []),
+        ...(b.submission ? [body(b.submission, { label: t('submission') })] : []),
+        body(`${describeGameRounds(b.rounds)} · ${t('restLower')} ${formatRest(b.rounds.restSeconds)}`, { label: t('rounds') }),
+      ];
+    case 'gems':
+      return [head, ...moveParagraphs(b.moves, clips), ...(b.options.length ? [sub(t('options')), ...bullets(b.options)] : [])];
+    case 'freeRoll':
+      return [
+        head,
+        body(`${b.rounds} × ${b.minutes} min · ${t('restLower')} ${formatRest(b.restSeconds)}`),
+        ...(b.notes ? [body(b.notes)] : []),
+      ];
+    case 'wrapup':
+      return [head, ...(b.question ? [body(b.question, { bold: true })] : []), ...(b.notes ? [body(b.notes)] : [])];
+  }
+}
+
+/** Builds the document from a plan and the images of its clips. Pure, so it can be tested. */
+export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document {
+  const title = plan.title || t('untitledClass');
 
   return new Document({
     creator: APP_NAME,
@@ -147,28 +182,7 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
             ],
           }),
 
-          sectionHeading(t('sec.warmup'), formatMinutes(warmup.minutes)),
-          ...bullets(warmup.drills),
-
-          sectionHeading(t('sec.concept'), formatMinutes(concept.minutes)),
-          ...(concept.rule ? [body(concept.rule, { bold: true })] : []),
-          ...(concept.notes ? [body(concept.notes)] : []),
-
-          sectionHeading(t('sec.game'), formatMinutes(gameSeconds(plan) / 60)),
-          body(`${game.start || t('startPosition')} → ${game.objective || t('objectiveLower')}`, { bold: true }),
-          ...(game.goals.length ? [sub(t('goalsAndMovements')), ...bullets(game.goals)] : []),
-          ...(game.details.length ? [sub(t('details')), ...bullets(game.details)] : []),
-          ...(game.transition ? [body(game.transition, { label: t('transition') })] : []),
-          ...(game.submission ? [body(game.submission, { label: t('submission') })] : []),
-          body(`${describeGameRounds(game.rounds)} · ${t('restLower')} ${formatRest(game.rounds.restSeconds)}`, { label: t('rounds') }),
-
-          sectionHeading(t('sec.gems'), formatMinutes(gems.minutes)),
-          ...gemParagraphs,
-          ...(gems.options.length ? [sub(t('options')), ...bullets(gems.options)] : []),
-
-          sectionHeading(t('sec.freeRoll'), formatMinutes(freeRollSeconds(plan) / 60)),
-          body(`${freeRoll.rounds} × ${freeRoll.minutes} min · ${t('restLower')} ${formatRest(freeRoll.restSeconds)}`),
-          ...(freeRoll.notes ? [body(freeRoll.notes)] : []),
+          ...plan.blocks.flatMap((b) => blockParagraphs(b, clips)),
 
           new Paragraph({
             alignment: AlignmentType.RIGHT,
@@ -184,7 +198,7 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
 /** Loads the plan's clips and packs the .docx. */
 export async function exportClassDocument(plan: ClassPlan): Promise<Blob> {
   const clips: ClipBytes = new Map();
-  for (const m of plan.gems.moves) {
+  for (const m of allMoves(plan)) {
     if (!m.clip) continue;
     const clip = await getClip(m.clip.id).catch(() => undefined);
     const still = clip?.type.startsWith('video/');
