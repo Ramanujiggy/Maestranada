@@ -113,7 +113,7 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
           gemParagraphs.push(
             new Paragraph({
               spacing: { after: 80 },
-              children: [new TextRun({ text: 'A still from the clip. It plays in the class file.', color: MUTED, size: 16, italics: true })],
+              children: [new TextRun({ text: t('stillCaption'), color: MUTED, size: 16, italics: true })],
             }),
           );
         }

@@ -230,6 +230,7 @@ const en = {
 
   // Print sheet and Word export
   madeWith: 'Made with {app}',
+  stillCaption: 'A still from the clip. It plays in the class file.',
   clipAlt: 'Technique clip: {name}',
 
   // Technique clips
@@ -485,6 +486,7 @@ const pt: Record<Key, string> = {
   finishClass: 'Encerrar aula',
 
   madeWith: 'Feito com a {app}',
+  stillCaption: 'Um quadro do clipe. Ele roda no arquivo da aula.',
   clipAlt: 'Clipe da técnica: {name}',
 
   clipNoRoom: 'Não há espaço neste aparelho para esse clipe',
