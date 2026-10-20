@@ -2,8 +2,8 @@
 // start a new class.
 
 import { useRef, useState } from 'react';
-import { CircleHelp, Copy, Download, MonitorDown, Play, Plus, Trash2, Upload } from 'lucide-react';
-import { blankPlan, duplicatePlan, formatMinutes, normalizePlan, totalMinutes, type ClassPlan } from '../lib/plan.ts';
+import { CircleHelp, Copy, Download, MonitorDown, Play, Plus, Share, Trash2, Upload } from 'lucide-react';
+import { blankPlan, duplicatePlan, formatMinutes, normalizePlan, todayISO, totalMinutes, type ClassPlan } from '../lib/plan.ts';
 import { hrefFor, navigate } from '../lib/router.ts';
 import type { PlansApi } from '../lib/usePlans.ts';
 import { ConfirmDialog } from '../components/feedback.tsx';
@@ -22,7 +22,7 @@ export async function downloadBackup(filename: string, plans: ClassPlan | ClassP
   const list = Array.isArray(plans) ? plans : [plans];
   const withClips = await withClipData(list);
   const data = Array.isArray(plans) ? withClips : withClips[0];
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
   await saveFile(blob, filename);
 }
 
@@ -54,15 +54,35 @@ export function LibraryPage({
   const create = () => setPickerOpen(true);
 
   const onImport = async (file: File) => {
+    let raw: unknown[];
+    let list: ClassPlan[];
     try {
       const parsed = JSON.parse(await file.text());
-      const raw: unknown[] = Array.isArray(parsed) ? parsed : [parsed];
-      await restoreClipData(raw);
-      const list = raw.map(normalizePlan).filter((p): p is ClassPlan => p !== null);
-      const added = api.importMany(list);
-      notify(added ? `Imported ${added} class plan${added === 1 ? '' : 's'}` : 'Those plans are already here');
+      raw = Array.isArray(parsed) ? parsed : [parsed];
+      list = raw.map(normalizePlan).filter((p): p is ClassPlan => p !== null);
     } catch {
+      list = [];
+      raw = [];
+    }
+    if (!list.length) {
       notify('That file is not a class plan export');
+      return;
+    }
+    try {
+      await restoreClipData(raw);
+    } catch {
+      notify('Not enough space on this device for the clips in that file');
+      return;
+    }
+    const changed = api.importMany(list);
+    notify(changed ? `Imported ${changed} class plan${changed === 1 ? '' : 's'}` : 'Those plans are already up to date here');
+  };
+
+  const exportAll = async () => {
+    try {
+      await downloadBackup(`maestranada-backup-${todayISO()}.json`, api.plans);
+    } catch {
+      notify('The backup could not be made. Try again.');
     }
   };
 
@@ -85,7 +105,7 @@ export function LibraryPage({
             <Upload size={16} /> <span className="hide-sm">Import</span>
           </button>
           {api.plans.length > 0 && (
-            <button type="button" className="btn btn-ghost" onClick={() => void downloadBackup('maestranada-plans.json', api.plans)}>
+            <button type="button" className="btn btn-ghost" onClick={() => void exportAll()}>
               <Download size={16} /> <span className="hide-sm">Export all</span>
             </button>
           )}
@@ -160,7 +180,11 @@ export function LibraryPage({
                 <span className="plan-date">{formatDate(p.date)}</span>
                 <span className="plan-length">{formatMinutes(totalMinutes(p))}</span>
               </div>
-              <h2 className="card-title">{p.title || 'Untitled class'}</h2>
+              <h2 className="card-title">
+                <a href={hrefFor({ name: 'edit', id: p.id })} onClick={(e) => e.stopPropagation()}>
+                  {p.title || 'Untitled class'}
+                </a>
+              </h2>
               <p className="plan-card-concept">{p.concept.rule || <span className="muted">No concept yet</span>}</p>
               <div className="plan-card-meta">
                 {p.game.start && (
@@ -206,6 +230,14 @@ export function LibraryPage({
         </div>
       )}
 
+      {install.kind === 'ios' && (
+        <div className="subpanel ios-keep">
+          <strong>Keep your plans safe on iPhone.</strong> Safari can clear a website's data when it goes unused for a
+          week. Add Maestranada to your Home Screen (tap <Share size={13} /> Share, then Add to Home Screen) and it keeps
+          your plans and works offline.
+        </div>
+      )}
+
       <footer className="library-foot">
         <span>Works offline</span>
         <span className="sep">·</span>
@@ -213,7 +245,7 @@ export function LibraryPage({
         {api.plans.length > 0 && (
           <>
             <span className="sep">·</span>
-            <button type="button" className="link" onClick={() => void downloadBackup('maestranada-plans.json', api.plans)}>
+            <button type="button" className="link" onClick={() => void exportAll()}>
               Back up all plans
             </button>
           </>

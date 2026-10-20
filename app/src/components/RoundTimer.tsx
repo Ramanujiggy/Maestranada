@@ -9,10 +9,25 @@ import { Tally } from './Tally.tsx';
 
 let audio: AudioContext | null = null;
 
+/** Opens (or wakes) the audio output. Browsers only allow this from a tap, and
+ *  iOS suspends it again after a lock, a call or Siri. */
+function unlockAudio() {
+  try {
+    // iOS 17+: play through the ring/silent switch, like a timer app.
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session) session.type = 'playback';
+    audio ??= new AudioContext();
+    if (audio.state !== 'running') void audio.resume();
+  } catch {
+    // No audio available; the timer still works silently.
+  }
+}
+
 function tone(freq: number, ms: number, delay = 0) {
   try {
     audio ??= new AudioContext();
     const ctx = audio;
+    if (ctx.state !== 'running') void ctx.resume();
     const start = ctx.currentTime + delay / 1000;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -27,6 +42,42 @@ function tone(freq: number, ms: number, delay = 0) {
   } catch {
     // No audio available; the timer still works silently.
   }
+  try {
+    navigator.vibrate?.(Math.min(ms, 400));
+  } catch {
+    // Vibration is a bonus where the device has it.
+  }
+}
+
+function changeTone(kind: RoundSegment['kind']) {
+  if (kind === 'round') {
+    tone(880, 420);
+  } else {
+    tone(520, 300);
+    tone(520, 300, 340);
+  }
+}
+
+function finishTone() {
+  tone(660, 260);
+  tone(880, 260, 280);
+  tone(1100, 500, 560);
+}
+
+/** Where a schedule stands a number of seconds after a segment started. */
+export function stepThrough(
+  segments: RoundSegment[],
+  index: number,
+  elapsedInSegment: number,
+): { index: number; remaining: number; finished: boolean } {
+  let i = index;
+  let over = elapsedInSegment;
+  while (i < segments.length && over >= segments[i].seconds) {
+    over -= segments[i].seconds;
+    i++;
+  }
+  if (i >= segments.length) return { index: segments.length - 1, remaining: 0, finished: true };
+  return { index: i, remaining: segments[i].seconds - over, finished: false };
 }
 
 export function RoundTimer({ segments, title }: { segments: RoundSegment[]; title: string }) {
@@ -34,13 +85,17 @@ export function RoundTimer({ segments, title }: { segments: RoundSegment[]; titl
   const [remaining, setRemaining] = useState(segments[0]?.seconds ?? 0);
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(false);
-  const last = useRef<number | null>(null);
+  // While running, the wall-clock moment the current segment started. Time is
+  // read from the clock on every tick, so a locked phone or a sleeping tab
+  // catches up to the right round instead of drifting.
+  const startedAt = useRef<number | null>(null);
 
   const reset = useCallback(() => {
     setIndex(0);
     setRemaining(segments[0]?.seconds ?? 0);
     setRunning(false);
     setFinished(false);
+    startedAt.current = null;
   }, [segments]);
 
   // A new schedule (different section or edited rounds) starts fresh.
@@ -52,40 +107,49 @@ export function RoundTimer({ segments, title }: { segments: RoundSegment[]; titl
       setRunning(false);
       setFinished(true);
       setRemaining(0);
-      tone(660, 260);
-      tone(880, 260, 280);
-      tone(1100, 500, 560);
+      startedAt.current = null;
+      finishTone();
       return;
     }
     setIndex(next);
     setRemaining(segments[next].seconds);
-    if (segments[next].kind === 'round') {
-      tone(880, 420);
-    } else {
-      tone(520, 300);
-      tone(520, 300, 340);
-    }
+    if (startedAt.current !== null) startedAt.current = Date.now();
+    changeTone(segments[next].kind);
   }, [index, segments]);
 
   useEffect(() => {
-    if (!running) {
-      last.current = null;
-      return;
-    }
+    if (!running) return;
     const tick = () => {
-      const now = performance.now();
-      const dt = last.current === null ? 0 : (now - last.current) / 1000;
-      last.current = now;
-      setRemaining((r) => r - dt);
+      if (startedAt.current === null) return;
+      const elapsed = (Date.now() - startedAt.current) / 1000;
+      const seg = segments[index];
+      if (!seg) return;
+      if (elapsed < seg.seconds) {
+        setRemaining(seg.seconds - elapsed);
+        return;
+      }
+      const at = stepThrough(segments, index, elapsed);
+      if (at.finished) {
+        setRunning(false);
+        setFinished(true);
+        setRemaining(0);
+        startedAt.current = null;
+        finishTone();
+        return;
+      }
+      startedAt.current = Date.now() - (segments[at.index].seconds - at.remaining) * 1000;
+      setIndex(at.index);
+      setRemaining(at.remaining);
+      changeTone(segments[at.index].kind);
     };
     const id = setInterval(tick, 100);
+    document.addEventListener('visibilitychange', tick);
     tick();
-    return () => clearInterval(id);
-  }, [running]);
-
-  useEffect(() => {
-    if (running && remaining <= 0) advance();
-  }, [remaining, running, advance]);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', tick);
+    };
+  }, [running, index, segments]);
 
   // Three short pips over the last three seconds of every segment.
   const whole = Math.ceil(remaining);
@@ -104,19 +168,26 @@ export function RoundTimer({ segments, title }: { segments: RoundSegment[]; titl
   const finishing = !finished && seg.kind === 'round' && remaining <= 10;
 
   const toggle = () => {
+    unlockAudio();
     if (finished) {
       reset();
       return;
     }
-    if (!running && index === 0 && remaining === seg.seconds) tone(880, 420);
-    setRunning((r) => !r);
+    if (running) {
+      startedAt.current = null;
+      setRunning(false);
+      return;
+    }
+    if (index === 0 && remaining === seg.seconds) tone(880, 420);
+    startedAt.current = Date.now() - (seg.seconds - remaining) * 1000;
+    setRunning(true);
   };
 
   return (
     <div className={`timer ${seg.kind === 'rest' && !finished ? 'rest' : ''} ${finishing ? 'finishing' : ''}`}>
       <div className="eyebrow">{title}</div>
       <div className="timer-face">
-        <span className="sub-label">{finished ? 'Done' : seg.label}</span>
+        {(finished || seg.label !== title) && <span className="sub-label">{finished ? 'Done' : seg.label}</span>}
         <span className="timer-clock" aria-live="off">
           {formatClock(finished ? 0 : remaining)}
         </span>
