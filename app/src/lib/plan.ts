@@ -99,6 +99,11 @@ const MOVEMENTS_EN = [
   'Bear crawls',
   'Sit-throughs',
   'Hip switches',
+  // Partner games last, so the warm-up ends close to the real thing.
+  'Pummeling',
+  'Grip fighting',
+  'Hand fighting',
+  'Sumo pushing',
 ];
 
 const MOVEMENTS_PT = [
@@ -114,6 +119,10 @@ const MOVEMENTS_PT = [
   'Andar de urso',
   'Sit-through',
   'Troca de quadril',
+  'Pummeling',
+  'Briga de pegada',
+  'Briga de mão',
+  'Sumô',
 ];
 
 /** Movement drills to tap into the warm-up, in the app's language. */
