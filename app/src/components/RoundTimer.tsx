@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pause, Play, RotateCcw, SkipForward } from 'lucide-react';
 import { formatClock, type RoundSegment } from '../lib/plan.ts';
 import { Tally } from './Tally.tsx';
+import { t } from '../lib/i18n.ts';
 
 let audio: AudioContext | null = null;
 
@@ -158,7 +159,7 @@ export function RoundTimer({ segments, title }: { segments: RoundSegment[]; titl
   }, [whole, running]);
 
   if (segments.length === 0) {
-    return <p className="muted">No rounds set for this block.</p>;
+    return <p className="muted">{t('timerNoRounds')}</p>;
   }
 
   const seg = segments[index];
@@ -187,22 +188,22 @@ export function RoundTimer({ segments, title }: { segments: RoundSegment[]; titl
     <div className={`timer ${seg.kind === 'rest' && !finished ? 'rest' : ''} ${finishing ? 'finishing' : ''}`}>
       <div className="eyebrow">{title}</div>
       <div className="timer-face">
-        {(finished || seg.label !== title) && <span className="sub-label">{finished ? 'Done' : seg.label}</span>}
+        {(finished || seg.label !== title) && <span className="sub-label">{finished ? t('timerDone') : seg.label}</span>}
         <span className="timer-clock" aria-live="off">
           {formatClock(finished ? 0 : remaining)}
         </span>
       </div>
       <Tally done={roundsDone} of={rounds} running={!finished && seg.kind === 'round'} struck={finished} />
-      <div className="timer-cue">{finished ? 'Block complete' : seg.cue}</div>
+      <div className="timer-cue">{finished ? t('timerComplete') : seg.cue}</div>
       <div className="timer-controls">
-        <button type="button" className="icon-btn" aria-label="Restart" onClick={reset}>
+        <button type="button" className="icon-btn" aria-label={t('timerRestart')} onClick={reset}>
           <RotateCcw size={18} />
         </button>
         <button type="button" className="btn btn-primary btn-lg" onClick={toggle} style={{ minWidth: 132 }}>
           {running ? <Pause size={18} /> : <Play size={18} />}
-          {finished ? 'Again' : running ? 'Pause' : index === 0 && remaining === seg.seconds ? 'Start' : 'Resume'}
+          {finished ? t('timerAgain') : running ? t('timerPause') : index === 0 && remaining === seg.seconds ? t('timerStart') : t('timerResume')}
         </button>
-        <button type="button" className="icon-btn" aria-label="Skip to next" onClick={advance} disabled={finished}>
+        <button type="button" className="icon-btn" aria-label={t('timerSkip')} onClick={advance} disabled={finished}>
           <SkipForward size={18} />
         </button>
       </div>

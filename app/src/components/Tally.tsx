@@ -53,7 +53,7 @@ export function Logo() {
   return (
     <span className="wordmark">
       <LogoMark />
-      Maestranada
+      Prancheta
     </span>
   );
 }

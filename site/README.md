@@ -1,6 +1,6 @@
 # Sales page
 
-The one-page site for maestranada.com. Plain HTML, no build step. The app itself lives in `app/`.
+The one-page site for prancheta.app. Plain HTML, no build step. The app itself lives in `app/`.
 
 ## Before launch
 
@@ -11,7 +11,7 @@ At the bottom of `index.html`, set:
 
 ## Deploy on Railway
 
-Add a second service from this repo and set its **Root Directory** to `site`. It serves the folder as-is on Railway's `PORT`. Then add `maestranada.com` as its custom domain, and `app.maestranada.com` on the app's service.
+Add a second service from this repo and set its **Root Directory** to `site`. It serves the folder as-is on Railway's `PORT`. Then add `prancheta.app` as its custom domain, and `app.prancheta.app` on the app's service.
 
 ## Preview locally
 

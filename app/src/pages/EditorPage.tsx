@@ -4,7 +4,7 @@
 import { useState, type ReactNode } from 'react';
 import { ArrowLeft, Copy, Download, FileText, Play, Plus, Printer, Send, Trash2, X } from 'lucide-react';
 import {
-  MOVEMENT_SUGGESTIONS,
+  movementSuggestions,
   describeGameRounds,
   duplicatePlan,
   formatMinutes,
@@ -26,6 +26,7 @@ import { ConfirmDialog } from '../components/feedback.tsx';
 import { downloadBackup } from './LibraryPage.tsx';
 import { ClipField } from '../components/ClipField.tsx';
 import { fileSlug, saveFile } from '../lib/files.ts';
+import { t } from '../lib/i18n.ts';
 
 function Section({
   id,
@@ -90,7 +91,7 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
       const { exportClassDocument } = await import('../lib/exportDoc.ts');
       await saveFile(await exportClassDocument(plan), `${fileSlug(plan.title)}.docx`);
     } catch {
-      notify('The document could not be made. Try again.');
+      notify(t('docFailed'));
     } finally {
       setExporting(null);
     }
@@ -102,7 +103,7 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
       const { exportClassFile } = await import('../lib/classFile.ts');
       await saveFile(await exportClassFile(plan), `${fileSlug(plan.title)}.html`);
     } catch {
-      notify('The class file could not be made. Try again.');
+      notify(t('classFileFailed'));
     } finally {
       setExporting(null);
     }
@@ -111,12 +112,12 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
   const jump = (key: SectionKey) =>
     document.getElementById(`section-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  const unusedSuggestions = MOVEMENT_SUGGESTIONS.filter(
+  const unusedSuggestions = movementSuggestions().filter(
     (s) => !warmup.drills.some((d) => d.text.trim().toLowerCase() === s.toLowerCase()),
   );
 
   const minutesStepper = (value: number, onChange: (v: number) => void) => (
-    <Stepper label="Time" value={value} onChange={onChange} min={0} max={60} format={(v) => `${v} min`} />
+    <Stepper label={t('time')} value={value} onChange={onChange} min={0} max={60} format={(v) => t('minutes', { n: v })} />
   );
 
   return (
@@ -124,14 +125,14 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
       <div className="shell no-print">
         <header className="topbar">
           <button type="button" className="btn btn-ghost" onClick={() => navigate({ name: 'library' })}>
-            <ArrowLeft size={17} /> Classes
+            <ArrowLeft size={17} /> {t('classes')}
           </button>
           <div className="topbar-actions">
             <span className="save-state hide-sm">
-              <span className="save-dot" /> Saved on this device
+              <span className="save-dot" /> {t('savedHere')}
             </span>
             <button type="button" className="btn btn-primary" onClick={() => navigate({ name: 'run', id: plan.id })}>
-              <Play size={16} /> Teach
+              <Play size={16} /> {t('teach')}
             </button>
           </div>
         </header>
@@ -140,18 +141,18 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
           <div className="desk-main">
             <div className="card" style={{ padding: 22 }}>
               <div className="title-grid">
-                <Field label="Class title">
+                <Field label={t('classTitle')}>
                   {(id) => (
                     <TextInput
                       id={id}
                       className="title-input"
                       value={plan.title}
-                      placeholder="e.g. Leg drag to the back"
+                      placeholder={t('classTitlePh')}
                       onChange={(title) => set({ ...plan, title })}
                     />
                   )}
                 </Field>
-                <Field label="Date">
+                <Field label={t('date')}>
                   {(id) => (
                     <input
                       id={id}
@@ -169,15 +170,15 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             <Section
               id="warmup"
               index={1}
-              title="Warm-up · Movement"
-              hint="Solo movement to wake the body up."
+              title={t('sec.warmup')}
+              hint={t('hint.warmup')}
               aside={minutesStepper(warmup.minutes, (minutes) => set({ ...plan, warmup: { ...warmup, minutes } }))}
             >
               <EditableList
                 items={warmup.drills}
                 onChange={(drills) => set({ ...plan, warmup: { ...warmup, drills } })}
-                placeholder="Add a movement drill"
-                emptyText="No drills yet. Tap a suggestion or type your own."
+                placeholder={t('addDrill')}
+                emptyText={t('noDrills')}
               />
               {unusedSuggestions.length > 0 && (
                 <div className="chips">
@@ -198,26 +199,26 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             <Section
               id="concept"
               index={2}
-              title="Concept"
-              hint="The one general rule the whole class is about."
+              title={t('sec.concept')}
+              hint={t('hint.concept')}
               aside={minutesStepper(concept.minutes, (minutes) => set({ ...plan, concept: { ...concept, minutes } }))}
             >
-              <Field label="General rule">
+              <Field label={t('generalRule')}>
                 {(id) => (
                   <TextInput
                     id={id}
                     value={concept.rule}
-                    placeholder="e.g. Offensive opportunities from the leg drag"
+                    placeholder={t('rulePh')}
                     onChange={(rule) => set({ ...plan, concept: { ...concept, rule } })}
                   />
                 )}
               </Field>
-              <Field label="How you'll explain it">
+              <Field label={t('explainLabel')}>
                 {(id) => (
                   <TextArea
                     id={id}
                     value={concept.notes}
-                    placeholder="A sentence or two you'll say to the room"
+                    placeholder={t('explainPh')}
                     onChange={(notes) => set({ ...plan, concept: { ...concept, notes } })}
                   />
                 )}
@@ -227,27 +228,27 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             <Section
               id="game"
               index={3}
-              title="Positional game"
-              hint="A spar around the concept. Goals first, details once they've felt it."
+              title={t('sec.game')}
+              hint={t('hint.game')}
               aside={<span className="pill">{formatMinutes(gameSeconds(plan) / 60)}</span>}
             >
               <div className="grid-2">
-                <Field label="Start position">
+                <Field label={t('startPosition')}>
                   {(id) => (
                     <TextInput
                       id={id}
                       value={game.start}
-                      placeholder="e.g. Leg drag"
+                      placeholder={t('startPh')}
                       onChange={(start) => set({ ...plan, game: { ...game, start } })}
                     />
                   )}
                 </Field>
-                <Field label="Objective">
+                <Field label={t('objective')}>
                   {(id) => (
                     <TextInput
                       id={id}
                       value={game.objective}
-                      placeholder="e.g. Take the back"
+                      placeholder={t('objectivePh')}
                       onChange={(objective) => set({ ...plan, game: { ...game, objective } })}
                     />
                   )}
@@ -255,69 +256,69 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
               </div>
 
               <SubPanel
-                title="General goals"
-                hint="The goals and the movements toward them. No specific technique or details yet."
+                title={t('goalsTitle')}
+                hint={t('goalsHint')}
               >
                 <EditableList
                   items={game.goals}
                   onChange={(goals) => set({ ...plan, game: { ...game, goals } })}
-                  placeholder="e.g. Top: keep the hips pinned, move toward the back"
+                  placeholder={t('goalsPh')}
                 />
               </SubPanel>
 
               <SubPanel
-                title="Details: beating the position"
-                hint="General guidelines you go over after the first rounds."
+                title={t('details')}
+                hint={t('detailsHint')}
               >
                 <EditableList
                   items={game.details}
                   onChange={(details) => set({ ...plan, game: { ...game, details } })}
-                  placeholder="e.g. Chest to the far hip"
+                  placeholder={t('detailsPh')}
                 />
               </SubPanel>
 
               <div className="grid-2">
-                <Field label="Transition to the next position">
+                <Field label={t('transitionLabel')}>
                   {(id) => (
                     <TextInput
                       id={id}
                       value={game.transition}
-                      placeholder="e.g. Leg drag → back take"
+                      placeholder={t('transitionPh')}
                       onChange={(transition) => set({ ...plan, game: { ...game, transition } })}
                     />
                   )}
                 </Field>
-                <Field label="Submission option">
+                <Field label={t('submissionLabel')}>
                   {(id) => (
                     <TextInput
                       id={id}
                       value={game.submission}
-                      placeholder="e.g. Rear naked choke"
+                      placeholder={t('submissionPh')}
                       onChange={(submission) => set({ ...plan, game: { ...game, submission } })}
                     />
                   )}
                 </Field>
               </div>
 
-              <SubPanel title="Rounds">
+              <SubPanel title={t('rounds')}>
                 <div className="stepper-row">
                   <Stepper
-                    label={rounds.switchPositions ? 'Rounds per side' : 'Rounds'}
+                    label={rounds.switchPositions ? t('roundsPerSide') : t('rounds')}
                     value={rounds.roundsPerSide}
                     min={1}
                     max={12}
                     onChange={(roundsPerSide) => set({ ...plan, game: { ...game, rounds: { ...rounds, roundsPerSide } } })}
                   />
                   <Stepper
-                    label="Length"
+                    label={t('length')}
                     value={rounds.minutes}
                     min={1}
                     max={15}
-                    format={(v) => `${v} min`}
+                    format={(v) => t('minutes', { n: v })}
                     onChange={(minutes) => set({ ...plan, game: { ...game, rounds: { ...rounds, minutes } } })}
                   />
                   <Stepper
-                    label="Rest"
+                    label={t('rest')}
                     value={rounds.restSeconds}
                     min={0}
                     max={180}
@@ -328,18 +329,18 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                 </div>
                 <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 14 }}>
                   <Toggle
-                    label="Switch partners"
+                    label={t('switchPartners')}
                     checked={rounds.switchPartners}
                     onChange={(switchPartners) => set({ ...plan, game: { ...game, rounds: { ...rounds, switchPartners } } })}
                   />
                   <Toggle
-                    label="Then switch positions"
+                    label={t('thenSwitchPositions')}
                     checked={rounds.switchPositions}
                     onChange={(switchPositions) => set({ ...plan, game: { ...game, rounds: { ...rounds, switchPositions } } })}
                   />
                 </div>
                 <p className="section-hint" style={{ marginTop: 12 }}>
-                  {describeGameRounds(rounds)} · {gameRoundCount(rounds)} rounds in all
+                  {describeGameRounds(rounds)} · {t('roundsInAll', { n: gameRoundCount(rounds) })}
                 </p>
               </SubPanel>
             </Section>
@@ -347,17 +348,17 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             <Section
               id="gems"
               index={4}
-              title="Gems"
-              hint="The specific moves that win the game, and the options off them."
+              title={t('sec.gems')}
+              hint={t('hint.gems')}
               aside={minutesStepper(gems.minutes, (minutes) => set({ ...plan, gems: { ...gems, minutes } }))}
             >
               {gems.moves.map((m, i) => (
                 <div className="move-card" key={m.id}>
                   <div className="move-head">
-                    <span className="move-num">Move {i + 1}</span>
+                    <span className="move-num">{t('moveN', { n: i + 1 })}</span>
                     <TextInput
                       value={m.name}
-                      placeholder="Name the move"
+                      placeholder={t('moveNamePh')}
                       onChange={(name) =>
                         set({ ...plan, gems: { ...gems, moves: gems.moves.map((x) => (x.id === m.id ? { ...x, name } : x)) } })
                       }
@@ -365,7 +366,7 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                     <button
                       type="button"
                       className="icon-btn danger"
-                      aria-label={`Remove move ${i + 1}`}
+                      aria-label={t('removeMoveN', { n: i + 1 })}
                       onClick={() =>
                         m.name.trim() || m.notes.trim() || m.clip
                           ? setPendingMove(m.id)
@@ -378,7 +379,7 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                   <TextArea
                     value={m.notes}
                     rows={2}
-                    placeholder="Key details, cues, common mistakes"
+                    placeholder={t('moveNotesPh')}
                     onChange={(notes) =>
                       set({ ...plan, gems: { ...gems, moves: gems.moves.map((x) => (x.id === m.id ? { ...x, notes } : x)) } })
                     }
@@ -398,14 +399,14 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                   className="btn btn-secondary"
                   onClick={() => set({ ...plan, gems: { ...gems, moves: [...gems.moves, move()] } })}
                 >
-                  <Plus size={15} /> Add move
+                  <Plus size={15} /> {t('addMove')}
                 </button>
               </div>
-              <SubPanel title="Options" hint="Where to go when the move is stopped.">
+              <SubPanel title={t('options')} hint={t('optionsHint')}>
                 <EditableList
                   items={gems.options}
                   onChange={(options) => set({ ...plan, gems: { ...gems, options } })}
-                  placeholder="e.g. Switch to the opposite leg drag"
+                  placeholder={t('optionsPh')}
                 />
               </SubPanel>
             </Section>
@@ -413,28 +414,28 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             <Section
               id="freeRoll"
               index={5}
-              title="Free roll"
-              hint="Live rounds to try it all out."
+              title={t('sec.freeRoll')}
+              hint={t('hint.freeRoll')}
               aside={<span className="pill">{formatMinutes(freeRollSeconds(plan) / 60)}</span>}
             >
               <div className="stepper-row">
                 <Stepper
-                  label="Rounds"
+                  label={t('rounds')}
                   value={freeRoll.rounds}
                   min={0}
                   max={12}
                   onChange={(r) => set({ ...plan, freeRoll: { ...freeRoll, rounds: r } })}
                 />
                 <Stepper
-                  label="Length"
+                  label={t('length')}
                   value={freeRoll.minutes}
                   min={1}
                   max={15}
-                  format={(v) => `${v} min`}
+                  format={(v) => t('minutes', { n: v })}
                   onChange={(minutes) => set({ ...plan, freeRoll: { ...freeRoll, minutes } })}
                 />
                 <Stepper
-                  label="Rest"
+                  label={t('rest')}
                   value={freeRoll.restSeconds}
                   min={0}
                   max={180}
@@ -443,13 +444,13 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                   onChange={(restSeconds) => set({ ...plan, freeRoll: { ...freeRoll, restSeconds } })}
                 />
               </div>
-              <Field label="Notes">
+              <Field label={t('notes')}>
                 {(id) => (
                   <TextArea
                     id={id}
                     value={freeRoll.notes}
                     rows={2}
-                    placeholder="e.g. Start from the leg drag if you want to work it"
+                    placeholder={t('freeRollNotesPh')}
                     onChange={(notes) => set({ ...plan, freeRoll: { ...freeRoll, notes } })}
                   />
                 )}
@@ -461,32 +462,32 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             <Timeline plan={plan} onJump={jump} />
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate({ name: 'run', id: plan.id })}>
-                <Play size={17} /> Teach this class
+                <Play size={17} /> {t('teachThisClass')}
               </button>
-              <button
+<button
                 type="button"
                 className="btn btn-secondary"
                 onClick={sendClassFile}
                 disabled={exporting !== null}
-                title="One file with the whole class and its clips. It opens in any browser and imports back into the app."
+                title={t('classFileTitle')}
               >
-                <Send size={16} /> {exporting === 'file' ? 'Making the class file…' : 'Send class file'}
+                <Send size={16} /> {exporting === 'file' ? t('makingClassFile') : t('sendClassFile')}
               </button>
               <button type="button" className="btn btn-secondary" onClick={exportDocument} disabled={exporting !== null}>
-                <FileText size={16} /> {exporting === 'doc' ? 'Making the document…' : 'Export Word document'}
+                <FileText size={16} /> {exporting === 'doc' ? t('makingDoc') : t('exportDoc')}
               </button>
               <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
-                <Printer size={16} /> Print class sheet
+                <Printer size={16} /> {t('printSheet')}
               </button>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   style={{ flex: 1 }}
-                  title="A backup file you can import on another device"
-                  onClick={() => downloadBackup(`${fileSlug(plan.title)}.json`, plan).catch(() => notify('The backup could not be made. Try again.'))}
+                  title={t('backupTitle')}
+                  onClick={() => downloadBackup(`${fileSlug(plan.title)}.json`, plan).catch(() => notify(t('backupFailed')))}
                 >
-                  <Download size={16} /> Backup
+                  <Download size={16} /> {t('backup')}
                 </button>
                 <button
                   type="button"
@@ -496,14 +497,14 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                     const copy = duplicatePlan(plan);
                     api.upsert(copy);
                     navigate({ name: 'edit', id: copy.id });
-                    notify('Plan duplicated');
+                    notify(t('planDuplicated'));
                   }}
                 >
-                  <Copy size={16} /> Duplicate
+                  <Copy size={16} /> {t('duplicate')}
                 </button>
               </div>
               <button type="button" className="btn btn-ghost" onClick={() => setConfirmDelete(true)}>
-                <Trash2 size={15} /> Delete class
+                <Trash2 size={15} /> {t('deleteClass')}
               </button>
             </div>
           </aside>
@@ -514,22 +515,22 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
 
       {confirmDelete && (
         <ConfirmDialog
-          title="Delete this class?"
-          body={`“${plan.title || 'Untitled class'}” will be removed from this device.`}
-          confirmLabel="Delete"
+          title={t('deleteClassTitle')}
+          body={t('deleteClassBody', { title: plan.title || t('untitledClass') })}
+          confirmLabel={t('delete')}
           onCancel={() => setConfirmDelete(false)}
           onConfirm={() => {
             api.remove(plan.id);
             navigate({ name: 'library' });
-            notify('Plan deleted');
+            notify(t('planDeleted'));
           }}
         />
       )}
       {pendingMove && (
         <ConfirmDialog
-          title="Remove this move?"
-          body="Its notes and technique clip are removed from this class."
-          confirmLabel="Remove move"
+          title={t('removeMoveTitle')}
+          body={t('removeMoveBody')}
+          confirmLabel={t('removeMove')}
           onCancel={() => setPendingMove(null)}
           onConfirm={() => {
             set({ ...plan, gems: { ...gems, moves: gems.moves.filter((x) => x.id !== pendingMove) } });

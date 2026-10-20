@@ -1,7 +1,7 @@
 {
-  "name": "maestranada-site",
+  "name": "prancheta-site",
   "private": true,
-  "description": "The Maestranada sales page: one static page, served as-is.",
+  "description": "The Prancheta sales page: one static page, served as-is.",
   "engines": {
     "node": ">=20"
   },

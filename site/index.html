@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Maestranada · Class prep for Jiu-Jitsu coaches</title>
-    <meta name="description" content="The class-prep app for Jiu-Jitsu coaches. Five blocks, five minutes, $10 once. Works offline on phone, tablet and laptop." />
+    <title>Prancheta · Class prep for Jiu-Jitsu coaches</title>
+    <meta name="description" data-i18n-content="desc" content="The class-prep app for Jiu-Jitsu coaches. Five blocks, five minutes, $10 once. Works offline on phone, tablet and laptop." />
     <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0F1A2B" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta property="og:title" content="Maestranada · Plan the class. Teach the game." />
+    <meta property="og:title" content="Prancheta · Plan the class. Teach the game." />
     <meta property="og:description" content="The class-prep app for Jiu-Jitsu coaches. Five blocks, five minutes, $10 once." />
     <meta property="og:image" content="/img/game.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -68,6 +68,17 @@
       .fine { font-size: 14px; color: var(--muted); margin-top: 12px; }
       .link-quiet { font-size: 15px; color: var(--muted); }
 
+      .top-right { display: flex; align-items: center; gap: 18px; }
+      .lang { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+      .lang button { font: 600 13px/1 var(--num); letter-spacing: 0.06em; color: var(--muted); background: transparent; border: 0; padding: 8px 10px; min-width: 40px; min-height: 32px; cursor: pointer; transition: background-color 120ms linear, color 120ms linear; }
+      .lang button + button { border-left: 1px solid var(--rule); }
+      .lang button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+      .lang button:active { background: var(--ink); color: var(--paper); transition: none; }
+      .lang button:focus-visible { outline: 3px solid #2f6fd6; outline-offset: -3px; }
+      .name-note { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 16px; color: var(--ink-2); }
+      .name-note b { font-family: var(--head); font-size: 18px; color: var(--ink); }
+      .say { font: 500 14px/1 var(--num); color: var(--muted); margin: 0 4px; }
+
       .hero { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items: center; padding: 56px 0 64px; }
       .phone { width: 100%; max-width: 330px; justify-self: center; border: 1px solid var(--rule); border-radius: 28px; overflow: hidden; background: var(--paper); }
       .phone img { display: block; width: 100%; height: auto; }
@@ -111,122 +122,134 @@
         .shots { grid-template-columns: 1fr; max-width: 330px; margin-left: auto; margin-right: auto; }
         section { padding: 48px 0; }
       }
+      @media (max-width: 420px) {
+        .top-right { gap: 12px; }
+        .link-quiet { display: none; }
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
       <header class="top">
-        <a class="logo" href="/" aria-label="Maestranada home">
+        <a class="logo" href="/" aria-label="Prancheta home">
           <svg viewBox="0 0 54 36" aria-hidden="true"><g stroke-width="4" stroke-linecap="round"><path d="M8 4V32M18 4V32M28 4V32M38 4V32" stroke="currentColor" /><path d="M3 28L51 8" stroke="var(--marker)" /></g></svg>
-          Maestranada
+          Prancheta
         </a>
-        <a class="link-quiet" href="#buy">$10 · Get it</a>
+        <div class="top-right">
+          <div class="lang" role="group" aria-label="Language / Idioma">
+            <button type="button" data-lang="en" aria-pressed="true" lang="en">EN</button>
+            <button type="button" data-lang="pt" aria-pressed="false" lang="pt-BR">PT</button>
+          </div>
+          <a class="link-quiet" href="#buy" data-i18n="getIt">$10 · Get it</a>
+        </div>
       </header>
 
       <div class="hero">
         <div>
-          <p class="eyebrow">Class prep for Jiu-Jitsu coaches</p>
-          <h1>Plan the class.<br />Teach the game.</h1>
-          <p class="lead">Build a full class in five minutes, teach it from your phone with the round timer running, and pay once: $10, yours for good.</p>
-          <a class="btn buy" href="#buy">Get Maestranada · $10</a>
-          <p class="fine">One payment. No subscription, no account. Works offline.</p>
+          <p class="eyebrow" data-i18n="heroEyebrow">Class prep for Jiu-Jitsu coaches</p>
+          <h1 data-i18n="heroTitle">Plan the class.<br />Teach the game.</h1>
+          <p class="lead" data-i18n="heroLead">Build a full class in five minutes, teach it from your phone with the round timer running, and pay once: $10, yours for good.</p>
+          <a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a>
+          <p class="fine" data-i18n="heroFine">One payment. No subscription, no account. Works offline.</p>
         </div>
-        <div class="phone"><img src="/img/game.png" width="780" height="1688" alt="Maestranada on a phone in Teach mode: the positional game with a 3:00 round timer and the round list." /></div>
+        <div class="phone"><img src="/img/game.png" width="780" height="1688" data-i18n-alt="heroAlt" alt="Prancheta on a phone in Teach mode: the positional game with a 3:00 round timer and the round list." /></div>
       </div>
     </div>
 
     <section>
       <div class="wrap narrow">
-        <p class="eyebrow">The problem</p>
-        <h2>It's 6:55. Class starts at 7.</h2>
-        <p class="lead" style="margin-bottom:0">You know what you want to teach. But the plan is in your head, a notes app and the back of a gym flyer. Maestranada puts every class in the same proven shape, so planning takes minutes and the class runs itself.</p>
+        <p class="eyebrow" data-i18n="problemEyebrow">The problem</p>
+        <h2 data-i18n="problemTitle">It's 6:55. Class starts at 7.</h2>
+        <p class="lead" style="margin-bottom:0" data-i18n="problemLead">You know what you want to teach. But the plan is in your head, a notes app and the back of a gym flyer. Prancheta puts every class in the same proven shape, so planning takes minutes and the class runs itself.</p>
       </div>
     </section>
 
     <section>
       <div class="wrap">
-        <p class="eyebrow">Five blocks, every class</p>
-        <h2>Movement first, one idea, a game to find it, then the gems.</h2>
+        <p class="eyebrow" data-i18n="blocksEyebrow">Five blocks, every class</p>
+        <h2 data-i18n="blocksTitle">Movement first, one idea, a game to find it, then the gems.</h2>
         <ol class="blocks">
-          <li style="--b:#c9d3e0"><span class="n">01</span><strong>Warm-up · Movement</strong><span class="d">Solo drills that prepare the body for today's position.</span></li>
-          <li style="--b:#9fb0c6"><span class="n">02</span><strong>Concept</strong><span class="d">The one rule the whole class is about.</span></li>
-          <li style="--b:#6c7f99"><span class="n">03</span><strong>Positional game</strong><span class="d">Goals first, then the details, the transition and the finish. Rounds like 2 × 3 min, switch partners, switch positions.</span></li>
-          <li style="--b:#3d4c63"><span class="n">04</span><strong>Gems</strong><span class="d">The specific moves that win the game, and their options.</span></li>
-          <li style="--b:var(--ink)"><span class="n">05</span><strong>Free roll</strong><span class="d">Live rounds to try it all out.</span></li>
+          <li style="--b:#c9d3e0"><span class="n">01</span><strong data-i18n="b1">Warm-up · Movement</strong><span class="d" data-i18n="b1d">Solo drills that prepare the body for today's position.</span></li>
+          <li style="--b:#9fb0c6"><span class="n">02</span><strong data-i18n="b2">Concept</strong><span class="d" data-i18n="b2d">The one rule the whole class is about.</span></li>
+          <li style="--b:#6c7f99"><span class="n">03</span><strong data-i18n="b3">Positional game</strong><span class="d" data-i18n="b3d">Goals first, then the details, the transition and the finish. Rounds like 2 × 3 min, switch partners, switch positions.</span></li>
+          <li style="--b:#3d4c63"><span class="n">04</span><strong data-i18n="b4">Gems</strong><span class="d" data-i18n="b4d">The specific moves that win the game, and their options.</span></li>
+          <li style="--b:var(--ink)"><span class="n">05</span><strong data-i18n="b5">Free roll</strong><span class="d" data-i18n="b5d">Live rounds to try it all out.</span></li>
         </ol>
       </div>
     </section>
 
     <section>
       <div class="wrap">
-        <p class="eyebrow">What it does</p>
-        <h2>Everything a coach needs on the mat. Nothing else.</h2>
+        <p class="eyebrow" data-i18n="featEyebrow">What it does</p>
+        <h2 data-i18n="featTitle">Everything a coach needs on the mat. Nothing else.</h2>
         <div class="features">
-          <div><h3>Teach mode</h3><p>Run the class from your phone, block by block, with a round timer that calls rest and switches.</p></div>
-          <div><h3>Technique clips</h3><p>Film a move, trim it to a few seconds, and it loops in your plan. Made on your phone, nothing uploaded.</p></div>
-          <div><h3>Print or export</h3><p>A one-page class sheet, or a Word document of the whole class with the clips inside for your assistant coaches.</p></div>
-          <div><h3>Start from an example</h3><p>Ready-made classes from leg drag to mount escapes, or a blank class with the five blocks laid out.</p></div>
-          <div><h3>Works offline</h3><p>Installs on your phone, tablet or laptop and keeps working in the basement gym with no signal.</p></div>
-          <div><h3>Private by design</h3><p>Your plans stay on your device. No account, and nothing about your classes is collected.</p></div>
+          <div><h3 data-i18n="f1">Teach mode</h3><p data-i18n="f1d">Run the class from your phone, block by block, with a round timer that calls rest and switches.</p></div>
+          <div><h3 data-i18n="f2">Technique clips</h3><p data-i18n="f2d">Film a move, trim it to a few seconds, and it loops in your plan. Made on your phone, nothing uploaded.</p></div>
+          <div><h3 data-i18n="f3">Print or export</h3><p data-i18n="f3d">A one-page class sheet, or a Word document of the whole class with the clips inside for your assistant coaches.</p></div>
+          <div><h3 data-i18n="f4">Start from an example</h3><p data-i18n="f4d">Ready-made classes from leg drag to mount escapes, or a blank class with the five blocks laid out.</p></div>
+          <div><h3 data-i18n="f5">Works offline</h3><p data-i18n="f5d">Installs on your phone, tablet or laptop and keeps working in the basement gym with no signal.</p></div>
+          <div><h3 data-i18n="f6">Private by design</h3><p data-i18n="f6d">Your plans stay on your device. No account, and nothing about your classes is collected.</p></div>
         </div>
         <div class="shots">
-          <figure><div class="phone"><img src="/img/library.png" width="780" height="1688" loading="lazy" alt="The class list with a saved plan, its length and its positional game." /></div><figcaption>Your classes, with each one's length and game.</figcaption></figure>
-          <figure><div class="phone"><img src="/img/editor.png" width="780" height="1688" loading="lazy" alt="Editing the warm-up block: time and movement drills." /></div><figcaption>Plan each block with suggestions to tap in.</figcaption></figure>
-          <figure><div class="phone"><img src="/img/game.png" width="780" height="1688" loading="lazy" alt="Teach mode with the round timer." /></div><figcaption>Teach it with the rounds timed for you.</figcaption></figure>
+          <figure><div class="phone"><img src="/img/library.png" width="780" height="1688" loading="lazy" data-i18n-alt="s1Alt" alt="The class list with a saved plan, its length and its positional game." /></div><figcaption data-i18n="s1">Your classes, with each one's length and game.</figcaption></figure>
+          <figure><div class="phone"><img src="/img/editor.png" width="780" height="1688" loading="lazy" data-i18n-alt="s2Alt" alt="Editing the warm-up block: time and movement drills." /></div><figcaption data-i18n="s2">Plan each block with suggestions to tap in.</figcaption></figure>
+          <figure><div class="phone"><img src="/img/game.png" width="780" height="1688" loading="lazy" data-i18n-alt="s3Alt" alt="Teach mode with the round timer." /></div><figcaption data-i18n="s3">Teach it with the rounds timed for you.</figcaption></figure>
         </div>
       </div>
     </section>
 
     <section>
       <div class="wrap narrow">
-        <p class="eyebrow">Built by a coach</p>
-        <h2>Made on the mat, not in an office.</h2>
-        <p class="lead" style="margin-bottom:0">Maestranada is built by a working Jiu-Jitsu coach around the class structure they teach every week. Every feature exists because a real class needed it.</p>
+        <p class="eyebrow" data-i18n="coachEyebrow">Built by a coach</p>
+        <h2 data-i18n="coachTitle">Made on the mat, not in an office.</h2>
+        <p class="lead" data-i18n="coachLead">Prancheta is built by a working Jiu-Jitsu coach around the class structure they teach every week. Every feature exists because a real class needed it.</p>
+        <p class="name-note" data-i18n="nameNote"><b>Prancheta</b> <span class="say">pran‑SHET‑uh</span> is Portuguese for clipboard. The coach's clipboard, now in your pocket.</p>
       </div>
     </section>
 
     <section id="buy">
       <div class="wrap price">
         <div>
-          <p class="eyebrow">Price</p>
-          <div class="amount">$10<small>once</small></div>
-          <p class="lead" style="margin:14px 0 0">Every update included. Less than a single instructional, and less than one month of any gym software.</p>
+          <p class="eyebrow" data-i18n="priceEyebrow">Price</p>
+          <div class="amount" data-i18n="amount">$10<small>once</small></div>
+          <p class="lead" style="margin:14px 0 0" data-i18n="priceLead">Every update included. Less than a single instructional, and less than one month of any gym software.</p>
         </div>
         <div>
-          <a class="btn buy" href="#buy">Get Maestranada · $10</a>
-          <p class="fine">Secure checkout by Lemon Squeezy. Your app link arrives right away.</p>
+          <a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a>
+          <p class="fine" data-i18n="priceFine">Secure checkout by Lemon Squeezy. Your app link arrives right away.</p>
         </div>
       </div>
     </section>
 
     <section>
       <div class="wrap narrow">
-        <p class="eyebrow">Questions</p>
-        <h2>Good to know</h2>
+        <p class="eyebrow" data-i18n="faqEyebrow">Questions</p>
+        <h2 data-i18n="faqTitle">Good to know</h2>
         <div class="faq">
-          <details><summary>Is it a subscription?</summary><p>No. You pay $10 once and keep it, updates included.</p></details>
-          <details><summary>Do I need an account?</summary><p>No. You pay, you get the link, it works.</p></details>
-          <details><summary>Which devices does it work on?</summary><p>iPhone, iPad, Android, Mac, Windows and Chromebook. One purchase covers all of yours.</p></details>
-          <details><summary>How do I install it?</summary><p>Open your link. On iPhone or iPad, tap Share, then Add to Home Screen. On Android, Chrome or Edge, tap Install app. From then on it opens like any other app.</p></details>
-          <details><summary>Does it work without signal?</summary><p>Yes, once it's installed.</p></details>
-          <details><summary>Where are my plans saved?</summary><p>On your device. Export them any time to back up or move them to another device.</p></details>
-          <details><summary>Is it on the App Store?</summary><p>Not yet. It installs straight from your link, which is how it stays $10.</p></details>
-          <details><summary>What if it isn't for me?</summary><p>Email us within 30 days for a full refund.</p></details>
+          <details><summary data-i18n="q1">Is it a subscription?</summary><p data-i18n="q1a">No. You pay $10 once and keep it, updates included.</p></details>
+          <details><summary data-i18n="q2">Do I need an account?</summary><p data-i18n="q2a">No. You pay, you get the link, it works.</p></details>
+          <details><summary data-i18n="q3">Which devices does it work on?</summary><p data-i18n="q3a">iPhone, iPad, Android, Mac, Windows and Chromebook. One purchase covers all of yours.</p></details>
+          <details><summary data-i18n="q4">How do I install it?</summary><p data-i18n="q4a">Open your link. On iPhone or iPad, tap Share, then Add to Home Screen. On Android, Chrome or Edge, tap Install app. From then on it opens like any other app.</p></details>
+          <details><summary data-i18n="q5">Does it work without signal?</summary><p data-i18n="q5a">Yes, once it's installed.</p></details>
+          <details><summary data-i18n="q6">Where are my plans saved?</summary><p data-i18n="q6a">On your device. Export them any time to back up or move them to another device.</p></details>
+          <details><summary data-i18n="q7">Is it on the App Store?</summary><p data-i18n="q7a">Not yet. It installs straight from your link, which is how it stays $10.</p></details>
+          <details data-only="pt" hidden><summary data-i18n="q9">Is the app in Portuguese?</summary><p data-i18n="q9a">Yes.</p></details>
+          <details><summary data-i18n="q8">What if it isn't for me?</summary><p data-i18n="q8a">Email us within 30 days for a full refund.</p></details>
         </div>
       </div>
     </section>
 
     <div class="wrap">
       <footer>
-        <span>© <span id="year">2026</span> Maestranada</span>
-        <span><a class="support" href="mailto:help@maestranada.com">help@maestranada.com</a></span>
+        <span>© <span id="year">2026</span> Prancheta</span>
+        <span><a class="support" href="mailto:help@prancheta.app">help@prancheta.app</a></span>
       </footer>
     </div>
 
     <script>
       // The only two things to change before launch.
-      const CHECKOUT_URL = ''; // Lemon Squeezy checkout link, e.g. https://maestranada.lemonsqueezy.com/buy/...
-      const SUPPORT_EMAIL = 'help@maestranada.com';
+      const CHECKOUT_URL = ''; // Lemon Squeezy checkout link, e.g. https://prancheta.lemonsqueezy.com/buy/...
+      const SUPPORT_EMAIL = 'help@prancheta.app';
 
       if (CHECKOUT_URL) document.querySelectorAll('a.buy').forEach((a) => (a.href = CHECKOUT_URL));
       document.querySelectorAll('a.support').forEach((a) => {
@@ -234,6 +257,121 @@
         a.textContent = SUPPORT_EMAIL;
       });
       document.getElementById('year').textContent = new Date().getFullYear();
+
+      // English is the page as written; Portuguese swaps the same elements in place.
+      // ?lang=pt (or en) picks a language for a shared link; otherwise the visitor's
+      // last choice, then the browser language.
+      const PT = {
+        title: 'Prancheta · Planejamento de aula para professores de Jiu-Jitsu',
+        desc: 'O app de planejamento de aula para professores de Jiu-Jitsu. Cinco blocos, cinco minutos, US$10 uma vez. Funciona offline no celular, tablet e notebook.',
+        getIt: 'US$10 · Comprar',
+        heroEyebrow: 'Planejamento de aula para professores de Jiu-Jitsu',
+        heroTitle: 'Planeje a aula.<br />Ensine o jogo.',
+        heroLead: 'Monte uma aula completa em cinco minutos, dê a aula pelo celular com o cronômetro de rounds rodando e pague uma vez só: US$10, seu para sempre.',
+        buy: 'Quero a Prancheta · US$10',
+        heroFine: 'Um pagamento. Sem assinatura, sem cadastro. Funciona offline.',
+        heroAlt: 'A Prancheta no celular, no modo aula: o jogo posicional com um cronômetro de 3:00 e a lista de rounds.',
+        problemEyebrow: 'O problema',
+        problemTitle: 'São 18h55. A aula começa às 19h.',
+        problemLead: 'Você sabe o que quer ensinar. Mas o plano está na sua cabeça, num app de notas e no verso de um panfleto da academia. A Prancheta coloca toda aula no mesmo formato testado, então planejar leva minutos e a aula anda sozinha.',
+        blocksEyebrow: 'Cinco blocos, toda aula',
+        blocksTitle: 'Primeiro o movimento, depois uma ideia, um jogo para encontrá-la e o pulo do gato.',
+        b1: 'Aquecimento · Movimentação',
+        b1d: 'Exercícios individuais que preparam o corpo para a posição do dia.',
+        b2: 'Conceito',
+        b2d: 'A regra que guia a aula inteira.',
+        b3: 'Jogo posicional',
+        b3d: 'Primeiro os objetivos, depois os detalhes, a transição e a finalização. Rounds como 2 × 3 min, troca de parceiro, troca de posição.',
+        b4: 'Pulo do gato',
+        b4d: 'Os movimentos específicos que vencem o jogo, e suas opções.',
+        b5: 'Rola livre',
+        b5d: 'Rounds livres para testar tudo.',
+        featEyebrow: 'O que ela faz',
+        featTitle: 'Tudo o que um professor precisa no tatame. Nada além disso.',
+        f1: 'Modo aula',
+        f1d: 'Conduza a aula pelo celular, bloco a bloco, com um cronômetro de rounds que avisa o descanso e as trocas.',
+        f2: 'Clipes de técnica',
+        f2d: 'Filme uma técnica, corte para poucos segundos e ela roda em loop no seu plano. Tudo feito no seu celular, nada é enviado.',
+        f3: 'Imprima ou exporte',
+        f3d: 'Uma folha de aula de uma página, ou um documento Word da aula inteira com os clipes dentro, para os seus professores assistentes.',
+        f4: 'Comece por um exemplo',
+        f4d: 'Aulas prontas, da passagem leg drag às saídas da montada, ou uma aula em branco com os cinco blocos montados.',
+        f5: 'Funciona offline',
+        f5d: 'Instala no celular, tablet ou notebook e continua funcionando na academia do subsolo, sem sinal.',
+        f6: 'Privada por padrão',
+        f6d: 'Seus planos ficam no seu aparelho. Sem cadastro, e nada sobre as suas aulas é coletado.',
+        s1: 'Suas aulas, com a duração e o jogo de cada uma.',
+        s1Alt: 'A lista de aulas com um plano salvo, sua duração e seu jogo posicional.',
+        s2: 'Planeje cada bloco tocando nas sugestões.',
+        s2Alt: 'Editando o bloco de aquecimento: tempo e exercícios de movimentação.',
+        s3: 'Dê a aula com os rounds cronometrados para você.',
+        s3Alt: 'O modo aula com o cronômetro de rounds.',
+        coachEyebrow: 'Feita por um professor',
+        coachTitle: 'Feita no tatame, não num escritório.',
+        coachLead: 'A Prancheta é feita por um professor de Jiu-Jitsu na ativa, em torno da estrutura de aula que ensina toda semana. Cada recurso existe porque uma aula de verdade precisou dele.',
+        nameNote: '<b>Prancheta</b> é a prancheta do professor, agora no seu bolso.',
+        priceEyebrow: 'Preço',
+        amount: 'US$10<small>uma vez</small>',
+        priceLead: 'Todas as atualizações incluídas. Menos que um único instrucional, e menos que um mês de qualquer sistema de academia.',
+        priceFine: 'Pagamento seguro pela Lemon Squeezy. O link do seu app chega na hora.',
+        faqEyebrow: 'Dúvidas',
+        faqTitle: 'Bom saber',
+        q1: 'É assinatura?',
+        q1a: 'Não. Você paga US$10 uma vez e é seu, com as atualizações incluídas.',
+        q2: 'Preciso fazer cadastro?',
+        q2a: 'Não. Você paga, recebe o link e já funciona.',
+        q3: 'Em quais aparelhos funciona?',
+        q3a: 'iPhone, iPad, Android, Mac, Windows e Chromebook. Uma compra vale para todos os seus.',
+        q4: 'Como eu instalo?',
+        q4a: 'Abra o seu link. No iPhone ou iPad, toque em Compartilhar e depois em Adicionar à Tela de Início. No Android, Chrome ou Edge, toque em Instalar app. A partir daí ela abre como qualquer outro app.',
+        q5: 'Funciona sem sinal?',
+        q5a: 'Sim, depois de instalada.',
+        q6: 'Onde meus planos ficam salvos?',
+        q6a: 'No seu aparelho. Exporte quando quiser para fazer backup ou passar para outro aparelho.',
+        q7: 'Está na App Store?',
+        q7a: 'Ainda não. Ela instala direto pelo seu link, e é assim que continua custando US$10.',
+        q9: 'O app está em português?',
+        q9a: 'Sim. O app segue o idioma do seu celular, e você troca entre português e inglês quando quiser.',
+        q8: 'E se não for para mim?',
+        q8a: 'Mande um e-mail em até 30 dias e devolvemos o valor integral.',
+      };
+      const EN = { title: document.title };
+      document.querySelectorAll('[data-i18n]').forEach((el) => (EN[el.dataset.i18n] = el.innerHTML));
+      document.querySelectorAll('[data-i18n-alt]').forEach((el) => (EN[el.dataset.i18nAlt] = el.alt));
+      document.querySelectorAll('[data-i18n-content]').forEach((el) => (EN[el.dataset.i18nContent] = el.content));
+
+      function setLang(lang) {
+        const t = lang === 'pt' ? PT : EN;
+        document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
+        document.title = t.title;
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+          const v = t[el.dataset.i18n];
+          if (v !== undefined) el.innerHTML = v;
+        });
+        document.querySelectorAll('[data-i18n-alt]').forEach((el) => (el.alt = t[el.dataset.i18nAlt]));
+        document.querySelectorAll('[data-i18n-content]').forEach((el) => (el.content = t[el.dataset.i18nContent]));
+        document.querySelectorAll('[data-only]').forEach((el) => (el.hidden = el.dataset.only !== lang));
+        document.querySelectorAll('.lang button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+      }
+
+      function startLang() {
+        const asked = new URLSearchParams(location.search).get('lang');
+        if (asked === 'pt' || asked === 'en') return asked;
+        try {
+          const saved = localStorage.getItem('prancheta.lang');
+          if (saved === 'pt' || saved === 'en') return saved;
+        } catch {}
+        return (navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en';
+      }
+
+      document.querySelectorAll('.lang button').forEach((b) =>
+        b.addEventListener('click', () => {
+          setLang(b.dataset.lang);
+          try { localStorage.setItem('prancheta.lang', b.dataset.lang); } catch {}
+        }),
+      );
+      const first = startLang();
+      if (first !== 'en') setLang(first);
     </script>
   </body>
 </html>

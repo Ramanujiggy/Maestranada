@@ -1,4 +1,4 @@
-/* Maestranada: the Clipboard look. White paper, navy ink, one red marker.
+/* Prancheta: the Clipboard look. White paper, navy ink, one red marker.
    Red means "act now" and nothing else: the main button and the last ten
    seconds of a round. Lines separate things, not shadows. Everything that
    moves takes 120ms or less, and pressed states show on touch-down. */
@@ -294,6 +294,7 @@ a {
 @media (max-width: 960px) {
   .desk {
     flex-direction: column;
+    align-items: stretch;
   }
   .desk-margin {
     position: static;
@@ -442,6 +443,39 @@ a {
   font-size: 15px;
 }
 
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--rule-strong);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.lang-switch button {
+  font: 600 13px/1 var(--font-num);
+  letter-spacing: 0.06em;
+  min-width: 40px;
+  height: 36px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background-color var(--fast),
+    color var(--fast);
+}
+
+.lang-switch button + button {
+  border-left: 1px solid var(--rule-strong);
+}
+
+.lang-switch button[aria-pressed='true'],
+.lang-switch button:active {
+  background: var(--ink);
+  color: var(--paper);
+  transition: none;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -558,7 +592,7 @@ a {
 
 @media (max-width: 620px) {
   .title-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .list-row-actions .move {
     display: none;
@@ -1142,8 +1176,12 @@ a {
 }
 
 @media (max-width: 960px) {
-  .run-stage {
-    grid-template-columns: 1fr;
+  .run-stage,
+  .run-stage.solo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .run-stage .pill {
+    white-space: normal;
   }
   /* On a phone the timer is what the coach reaches for first. */
   .run-stage > .card {
@@ -1220,6 +1258,24 @@ a {
   margin-top: 32px;
   padding-top: 18px;
   border-top: 1px solid var(--rule);
+}
+
+/* Block names can be long ("Aquecimento · Movimentação"), so on a phone each
+   button gets half the row and its name trims instead of pushing off screen. */
+.run-nav .btn {
+  min-width: 0;
+  max-width: calc(50% - 6px);
+}
+
+.run-nav .btn svg {
+  flex: none;
+}
+
+.run-nav-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Timer */
@@ -1384,6 +1440,14 @@ html:has(.backdrop) body {
 
 @media (max-width: 620px) {
   .hide-sm {
+    display: none;
+  }
+}
+
+/* On a phone the footer's "Back up all plans" does this job, which leaves
+   room for the language switch in the top bar. */
+@media (max-width: 420px) {
+  .hide-xs {
     display: none;
   }
 }

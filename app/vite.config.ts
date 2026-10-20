@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Maestranada · BJJ Class Prep',
-        short_name: 'Maestranada',
+        name: 'Prancheta · BJJ Class Prep',
+        short_name: 'Prancheta',
         description: 'Plan, teach and print Jiu-Jitsu classes: warm-up, concept, positional game, gems, free roll.',
         theme_color: '#FFFFFF',
         background_color: '#FFFFFF',

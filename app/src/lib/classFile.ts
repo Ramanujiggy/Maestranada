@@ -21,6 +21,7 @@ import {
 } from './plan.ts';
 import { withClipData } from './clips.ts';
 import { APP_NAME } from './brand.ts';
+import { getLang, t } from './i18n.ts';
 import { formatDate } from '../components/PrintSheet.tsx';
 import { formatRest } from '../components/controls.tsx';
 // The title face travels inside the file (about 25 KB), so the class looks the same on any device.
@@ -101,20 +102,20 @@ document.querySelectorAll('video[data-clip]').forEach(function(v){
 /** The whole class as one HTML page. `clipData` maps clip ids (and `<id>.poster`) to data URLs. Pure, so it can be tested. */
 export function buildClassFile(plan: ClassPlan, clipData: Record<string, string> = {}): string {
   const { warmup, concept, game, gems, freeRoll } = plan;
-  const title = plan.title || 'Untitled class';
+  const title = plan.title || t('untitledClass');
   const moves = gems.moves
     .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
     .map((m, i) => {
-      const name = m.name || 'Untitled move';
+      const name = m.name || t('untitledMove');
       const clip = m.clip ? clipTag(m.clip.id, name, m.clip.width, m.clip.height, clipData) : '';
-      return `<div class="move"><h3>Move ${i + 1}: ${esc(name)}</h3>${clip}${para(m.notes)}</div>`;
+      return `<div class="move"><h3>${esc(t('moveNamed', { n: i + 1, name }))}</h3>${clip}${para(m.notes)}</div>`;
     })
     .join('');
   // `<` is escaped so no text in the plan can close the script tag early.
   const json = JSON.stringify(plan).replace(/</g, '\\u003c');
 
   return `<!doctype html>
-<html lang="en">
+<html lang="${getLang() === 'pt' ? 'pt-BR' : 'en'}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -124,30 +125,30 @@ export function buildClassFile(plan: ClassPlan, clipData: Record<string, string>
 </head>
 <body>
 <main>
-<div class="top">${LOGO}<span>Class plan</span></div>
+<div class="top">${LOGO}<span>${esc(t('classPlan'))}</span></div>
 <h1>${esc(title)}</h1>
 <div class="meta">${esc(formatDate(plan.date))} · ${esc(formatMinutes(totalMinutes(plan)))}</div>
-${block(1, 'Warm-up · Movement', formatMinutes(warmup.minutes), list(warmup.drills))}
-${block(2, 'Concept', formatMinutes(concept.minutes), para(concept.rule, 'lead') + para(concept.notes))}
+${block(1, t('sec.warmup'), formatMinutes(warmup.minutes), list(warmup.drills))}
+${block(2, t('sec.concept'), formatMinutes(concept.minutes), para(concept.rule, 'lead') + para(concept.notes))}
 ${block(
   3,
-  'Positional game',
+  t('sec.game'),
   formatMinutes(gameSeconds(plan) / 60),
-  `<p class="lead">${esc(game.start || 'Start position')} → ${esc(game.objective || 'objective')}</p>` +
-    (game.goals.length ? `<h3>Goals and movements</h3>${list(game.goals)}` : '') +
-    (game.details.length ? `<h3>Details: beating the position</h3>${list(game.details)}` : '') +
-    line('Transition', game.transition) +
-    line('Submission', game.submission) +
-    line('Rounds', `${describeGameRounds(game.rounds)} · rest ${formatRest(game.rounds.restSeconds)}`),
+  `<p class="lead">${esc(game.start || t('startPosition'))} → ${esc(game.objective || t('objectiveLower'))}</p>` +
+    (game.goals.length ? `<h3>${esc(t('goalsAndMovements'))}</h3>${list(game.goals)}` : '') +
+    (game.details.length ? `<h3>${esc(t('details'))}</h3>${list(game.details)}` : '') +
+    line(t('transition'), game.transition) +
+    line(t('submission'), game.submission) +
+    line(t('rounds'), `${describeGameRounds(game.rounds)} · ${t('restLower')} ${formatRest(game.rounds.restSeconds)}`),
 )}
-${block(4, 'Gems', formatMinutes(gems.minutes), moves + (gems.options.length ? `<h3>Options</h3>${list(gems.options)}` : ''))}
+${block(4, t('sec.gems'), formatMinutes(gems.minutes), moves + (gems.options.length ? `<h3>${esc(t('options'))}</h3>${list(gems.options)}` : ''))}
 ${block(
   5,
-  'Free roll',
+  t('sec.freeRoll'),
   formatMinutes(freeRollSeconds(plan) / 60),
-  `<p>${freeRoll.rounds} × ${freeRoll.minutes} min · rest ${esc(formatRest(freeRoll.restSeconds))}</p>${para(freeRoll.notes)}`,
+  `<p>${freeRoll.rounds} × ${freeRoll.minutes} min · ${esc(t('restLower'))} ${esc(formatRest(freeRoll.restSeconds))}</p>${para(freeRoll.notes)}`,
 )}
-<footer>Made with ${esc(APP_NAME)}. To change this class, open ${esc(APP_NAME)}, tap Import and pick this file.</footer>
+<footer>${esc(t('classFileFooter', { app: APP_NAME }))}</footer>
 </main>
 <script type="application/json" id="${PLAN_ID}">${json}</script>
 <script>${SCRIPT}</script>

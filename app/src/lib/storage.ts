@@ -3,6 +3,7 @@
 
 import { normalizePlan, samplePlan, type ClassPlan } from './plan.ts';
 
+// Keys keep the app's first name so plans saved before the rename still load.
 export const PLANS_KEY = 'maestranada.plans.v1';
 const SEEDED_KEY = 'maestranada.seeded';
 

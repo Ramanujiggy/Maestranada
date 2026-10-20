@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { t } from '../lib/i18n.ts';
 
 export function ConfirmDialog({
   title,
@@ -28,7 +29,7 @@ export function ConfirmDialog({
         </p>
         <div className="dialog-actions">
           <button type="button" className="btn btn-ghost" onClick={onCancel} autoFocus>
-            Cancel
+            {t('cancel')}
           </button>
           <button type="button" className="btn btn-danger" onClick={onConfirm}>
             {confirmLabel}

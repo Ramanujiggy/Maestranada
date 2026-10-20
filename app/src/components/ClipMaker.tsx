@@ -9,6 +9,7 @@ import { Stepper, Toggle } from './controls.tsx';
 import { CLIP_MAX_SECONDS, CLIP_MIN_SECONDS, clampClip, videoToGif, type ClipSettings } from '../lib/gif.ts';
 import type { MadeClip } from '../lib/video.ts';
 import { ClipMedia } from './ClipField.tsx';
+import { t } from '../lib/i18n.ts';
 
 function clock(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -67,7 +68,7 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (clip: 
       setMade({ clip: result, url: URL.createObjectURL(result.blob) });
     } catch (e) {
       console.error(e);
-      if ((e as Error).name !== 'AbortError') setError('That clip could not be made. Try a shorter section, or export the video as MP4.');
+      if ((e as Error).name !== 'AbortError') setError(t('clipFailed'));
     } finally {
       setProgress(null);
     }
@@ -78,15 +79,15 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (clip: 
 
   return (
     <div className="backdrop" onClick={progress === null ? onClose : undefined}>
-      <div className="card sheet clip-maker" role="dialog" aria-modal="true" aria-label="Make a technique clip" onClick={(e) => e.stopPropagation()}>
+      <div className="card sheet clip-maker" role="dialog" aria-modal="true" aria-label={t('clipMakerLabel')} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
           <div>
-            <div className="eyebrow-strong">Technique clip</div>
+            <div className="eyebrow-strong">{t('techniqueClip')}</div>
             <h2 className="card-title" style={{ marginTop: 4 }}>
-              {made ? 'Your clip' : 'Pick the moment'}
+              {made ? t('yourClip') : t('pickMoment')}
             </h2>
           </div>
-          <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
+          <button type="button" className="icon-btn" aria-label={t('close')} onClick={onClose}>
             <X size={18} />
           </button>
         </div>
@@ -94,17 +95,23 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (clip: 
         {made ? (
           <>
             <div className="clip-stage">
-              <ClipMedia url={made.url} video={isVideo} label="The finished technique clip" width={made.clip.width} height={made.clip.height} />
+              <ClipMedia url={made.url} video={isVideo} label={t('finishedClipAlt')} width={made.clip.width} height={made.clip.height} />
             </div>
             <p className="section-hint">
-              {clip.length.toFixed(1)} s{clip.slowMotion ? ' at half speed' : ''} · {made.clip.width}×{made.clip.height} · {mb} MB. It loops on its own.
+              {t('gifInfo', {
+                len: clip.length.toFixed(1),
+                speed: clip.slowMotion ? t('halfSpeed') : '',
+                w: made.clip.width,
+                h: made.clip.height,
+                mb,
+              })}
             </p>
             <div className="dialog-actions">
               <button type="button" className="btn btn-ghost" onClick={() => setMade(null)}>
-                Change it
+                {t('changeIt')}
               </button>
               <button type="button" className="btn btn-primary" onClick={() => onUse(made.clip)}>
-                Use this clip
+                {t('useClip')}
               </button>
             </div>
           </>
@@ -122,7 +129,7 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (clip: 
                   setDuration(Number.isFinite(d) ? d : 0);
                   setSettings((s) => ({ ...s, length: Math.min(s.length, Math.max(CLIP_MIN_SECONDS, Math.floor(d))) }));
                 }}
-                onError={() => setError("This video can't be read in this browser. Try exporting it as MP4.")}
+                onError={() => setError(t('videoUnreadable'))}
               />
             </div>
 
@@ -132,8 +139,11 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (clip: 
               <div className="clip-controls">
                 <div className="field">
                   <label className="field-label" htmlFor="clip-start">
-                    Starts at <span className="mono">{clock(clip.start)}</span>
-                    <span className="muted"> · ends {clock(end)}</span>
+                    {t('startsAt')} <span className="mono">{clock(clip.start)}</span>
+                    <span className="muted">
+                      {' '}
+                      · {t('endsAt')} {clock(end)}
+                    </span>
                   </label>
                   <input
                     id="clip-start"
@@ -149,14 +159,14 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (clip: 
                 </div>
                 <div className="stepper-row" style={{ alignItems: 'flex-end' }}>
                   <Stepper
-                    label="Length"
+                    label={t('length')}
                     value={clip.length}
                     min={CLIP_MIN_SECONDS}
                     max={Math.min(CLIP_MAX_SECONDS, Math.max(CLIP_MIN_SECONDS, Math.floor(duration)))}
                     onChange={(length) => setSettings({ ...settings, length })}
                     format={(v) => `${v} s`}
                   />
-                  <Toggle label="Slow motion" checked={settings.slowMotion} onChange={(slowMotion) => setSettings({ ...settings, slowMotion })} />
+                  <Toggle label={t('slowMotion')} checked={settings.slowMotion} onChange={(slowMotion) => setSettings({ ...settings, slowMotion })} />
                 </div>
               </div>
             )}
@@ -164,15 +174,15 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (clip: 
             {progress !== null ? (
               <div className="clip-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
                 <span style={{ width: `${Math.round(progress * 100)}%` }} />
-                <em>Making the clip on this device…</em>
+                <em>{t('makingClip')}</em>
               </div>
             ) : (
               <div className="dialog-actions">
                 <button type="button" className="btn btn-ghost" onClick={onClose}>
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button type="button" className="btn btn-primary" onClick={make} disabled={!duration}>
-                  <Film size={16} /> Make clip
+                  <Film size={16} /> {t('makeClip')}
                 </button>
               </div>
             )}

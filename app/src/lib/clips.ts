@@ -8,8 +8,9 @@
 
 import { useEffect, useState } from 'react';
 import type { ClassPlan, Clip } from './plan.ts';
+import { t } from './i18n.ts';
 
-const DB_NAME = 'maestranada';
+const DB_NAME = 'maestranada'; // the app's first name; kept so saved clips still load
 const STORE = 'clips';
 const POSTER = '.poster';
 
@@ -82,8 +83,8 @@ export async function clipSaveError(e: unknown, bytes: number): Promise<string> 
   const name = (e as Error | null)?.name ?? '';
   const est = await navigator.storage?.estimate?.().catch(() => undefined);
   const full = name === 'QuotaExceededError' || (est?.quota !== undefined && est.usage !== undefined && est.quota - est.usage < bytes);
-  if (full) return 'There is no room left on this device for that clip';
-  return `The clip could not be saved on this device${name ? ` (${name})` : ''}. Try again.`;
+  if (full) return t('clipNoRoom');
+  return t('clipSaveFailed', { reason: name ? ` (${name})` : '' });
 }
 
 export function clipIds(plans: ClassPlan[]): Set<string> {
