@@ -13,7 +13,7 @@ import {
   type Clip,
   type ListItem,
 } from '../lib/plan.ts';
-import { useClipUrl } from '../lib/clips.ts';
+import { useClipStill } from '../lib/clips.ts';
 import { formatRest } from './controls.tsx';
 import { LogoMark } from './Tally.tsx';
 
@@ -42,9 +42,9 @@ function Block({ title, time, children }: { title: string; time: string; childre
   );
 }
 
-// Paper can't loop, so the printed sheet shows the clip's first frame.
+// Paper can't play a clip, so the printed sheet shows a still frame of it.
 function PrintClip({ clip }: { clip: Clip }) {
-  const url = useClipUrl(clip);
+  const url = useClipStill(clip);
   return url ? <img className="ps-clip" src={url} alt="" width={clip.width} height={clip.height} /> : null;
 }
 

@@ -1,8 +1,9 @@
 // The class as a Word document (.docx): the same content as the printed
-// sheet, with each technique clip embedded as its animated GIF. Word, Google
-// Docs and Pages all open .docx, so the coach can edit it, email it, or drop
-// it into a shared drive. This module is loaded only when someone exports,
-// so the docx library never slows down opening the app.
+// sheet. Word can't play video, so a video clip goes in as a still frame (the
+// class file carries the moving version); older GIF clips go in as GIFs. Word,
+// Google Docs and Pages all open .docx, so the coach can edit it, email it, or
+// drop it into a shared drive. This module is loaded only when someone
+// exports, so the docx library never slows down opening the app.
 
 import {
   AlignmentType,
@@ -24,7 +25,8 @@ import {
   type ClassPlan,
   type ListItem,
 } from './plan.ts';
-import { getClip } from './clips.ts';
+import { getClip, getClipStill } from './clips.ts';
+import { APP_NAME } from './brand.ts';
 import { formatDate } from '../components/PrintSheet.tsx';
 import { formatRest } from '../components/controls.tsx';
 
@@ -34,7 +36,13 @@ const RULE = 'C3CBD6';
 /** Widest a clip is placed on the page, in pixels at 96 dpi (about 9 cm). */
 const CLIP_WIDTH = 340;
 
-export type ClipBytes = Map<string, Uint8Array>;
+export interface ClipImage {
+  data: Uint8Array;
+  type: 'gif' | 'jpg' | 'png';
+  /** A still of a video clip, rather than the clip itself. */
+  still: boolean;
+}
+export type ClipBytes = Map<string, ClipImage>;
 
 function sectionHeading(title: string, time: string): Paragraph {
   return new Paragraph({
@@ -70,7 +78,7 @@ function bullets(items: ListItem[]): Paragraph[] {
   return items.filter((x) => x.text.trim()).map((x) => new Paragraph({ text: x.text, bullet: { level: 0 } }));
 }
 
-/** Builds the document from a plan and the GIF bytes of its clips. Pure, so it can be tested. */
+/** Builds the document from a plan and the images of its clips. Pure, so it can be tested. */
 export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document {
   const { warmup, concept, game, gems, freeRoll } = plan;
   const title = plan.title || 'Untitled class';
@@ -80,28 +88,36 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
     .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
     .forEach((m, i) => {
       gemParagraphs.push(sub(`Move ${i + 1}: ${m.name || 'Untitled move'}`));
-      const bytes = m.clip && clips.get(m.clip.id);
-      if (m.clip && bytes) {
+      const image = m.clip && clips.get(m.clip.id);
+      if (m.clip && image) {
         const scale = Math.min(1, CLIP_WIDTH / m.clip.width);
         gemParagraphs.push(
           new Paragraph({
             spacing: { after: 80 },
             children: [
               new ImageRun({
-                type: 'gif',
-                data: bytes,
+                type: image.type,
+                data: image.data,
                 transformation: { width: Math.round(m.clip.width * scale), height: Math.round(m.clip.height * scale) },
                 altText: { name: m.name || `Move ${i + 1}`, description: `Technique clip: ${m.name}`, title: m.name || `Move ${i + 1}` },
               }),
             ],
           }),
         );
+        if (image.still) {
+          gemParagraphs.push(
+            new Paragraph({
+              spacing: { after: 80 },
+              children: [new TextRun({ text: 'A still from the clip. It plays in the class file.', color: MUTED, size: 16, italics: true })],
+            }),
+          );
+        }
       }
       if (m.notes.trim()) gemParagraphs.push(body(m.notes));
     });
 
   return new Document({
-    creator: 'Maestranada',
+    creator: APP_NAME,
     title,
     styles: {
       default: {
@@ -152,7 +168,7 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
           new Paragraph({
             alignment: AlignmentType.RIGHT,
             spacing: { before: 360 },
-            children: [new TextRun({ text: 'Made with Maestranada', color: MUTED, size: 16 })],
+            children: [new TextRun({ text: `Made with ${APP_NAME}`, color: MUTED, size: 16 })],
           }),
         ],
       },
@@ -165,8 +181,11 @@ export async function exportClassDocument(plan: ClassPlan): Promise<Blob> {
   const clips: ClipBytes = new Map();
   for (const m of plan.gems.moves) {
     if (!m.clip) continue;
-    const blob = await getClip(m.clip.id).catch(() => undefined);
-    if (blob) clips.set(m.clip.id, new Uint8Array(await blob.arrayBuffer()));
+    const clip = await getClip(m.clip.id).catch(() => undefined);
+    const still = clip?.type.startsWith('video/');
+    const blob = still ? await getClipStill(m.clip.id).catch(() => undefined) : clip;
+    const type = blob?.type === 'image/gif' ? 'gif' : blob?.type === 'image/png' ? 'png' : blob?.type === 'image/jpeg' ? 'jpg' : null;
+    if (blob && type) clips.set(m.clip.id, { data: new Uint8Array(await blob.arrayBuffer()), type, still: !!still });
   }
   return Packer.toBlob(buildClassDocument(plan, clips));
 }

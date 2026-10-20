@@ -1,11 +1,14 @@
-// Turns a technique video into a looping GIF: pick the moment, pick the
-// length, optionally slow it down, and the GIF is made on this device. The
-// video itself is never kept or uploaded anywhere; only the GIF is saved.
+// Turns a technique video into a short looping clip: pick the moment, pick
+// the length, optionally slow it down, and the clip is made on this device.
+// The original video is never kept or uploaded anywhere; only the clip is
+// saved. Browsers that can't encode video get a GIF instead.
 
 import { useEffect, useRef, useState } from 'react';
 import { Film, X } from 'lucide-react';
 import { Stepper, Toggle } from './controls.tsx';
-import { CLIP_MAX_SECONDS, CLIP_MIN_SECONDS, clampClip, videoToGif, type ClipSettings, type MadeGif } from '../lib/gif.ts';
+import { CLIP_MAX_SECONDS, CLIP_MIN_SECONDS, clampClip, videoToGif, type ClipSettings } from '../lib/gif.ts';
+import type { MadeClip } from '../lib/video.ts';
+import { ClipMedia } from './ClipField.tsx';
 
 function clock(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -13,13 +16,13 @@ function clock(seconds: number): string {
   return `${m}:${s.toFixed(1).padStart(4, '0')}`;
 }
 
-export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (gif: MadeGif) => void; onClose: () => void }) {
+export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (clip: MadeClip) => void; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [src] = useState(() => URL.createObjectURL(file));
   const [duration, setDuration] = useState(0);
   const [settings, setSettings] = useState<ClipSettings>({ start: 0, length: 4, slowMotion: false });
   const [progress, setProgress] = useState<number | null>(null);
-  const [made, setMade] = useState<{ gif: MadeGif; url: string } | null>(null);
+  const [made, setMade] = useState<{ clip: MadeClip; url: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const abort = useRef<AbortController | null>(null);
 
@@ -57,16 +60,21 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (gif: M
     setProgress(0);
     abort.current = new AbortController();
     try {
-      const gif = await videoToGif(v, clip, setProgress, abort.current.signal);
-      setMade({ gif, url: URL.createObjectURL(gif.blob) });
+      const signal = abort.current.signal;
+      // The video encoder is loaded only when a clip is made, so it never slows down opening the app.
+      const { videoToClip } = await import('../lib/video.ts');
+      const result = (await videoToClip(file, v, clip, setProgress, signal)) ?? (await videoToGif(v, clip, setProgress, signal));
+      setMade({ clip: result, url: URL.createObjectURL(result.blob) });
     } catch (e) {
-      if ((e as Error).name !== 'AbortError') setError('That clip could not be turned into a GIF. Try a shorter section.');
+      console.error(e);
+      if ((e as Error).name !== 'AbortError') setError('That clip could not be made. Try a shorter section, or export the video as MP4.');
     } finally {
       setProgress(null);
     }
   };
 
-  const mb = made ? (made.gif.blob.size / 1024 / 1024).toFixed(1) : '';
+  const mb = made ? (made.clip.blob.size / 1024 / 1024).toFixed(1) : '';
+  const isVideo = !!made?.clip.blob.type.startsWith('video/');
 
   return (
     <div className="backdrop" onClick={progress === null ? onClose : undefined}>
@@ -75,7 +83,7 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (gif: M
           <div>
             <div className="eyebrow-strong">Technique clip</div>
             <h2 className="card-title" style={{ marginTop: 4 }}>
-              {made ? 'Your GIF' : 'Pick the moment'}
+              {made ? 'Your clip' : 'Pick the moment'}
             </h2>
           </div>
           <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
@@ -86,16 +94,16 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (gif: M
         {made ? (
           <>
             <div className="clip-stage">
-              <img src={made.url} alt="The finished technique clip" width={made.gif.width} height={made.gif.height} />
+              <ClipMedia url={made.url} video={isVideo} label="The finished technique clip" width={made.clip.width} height={made.clip.height} />
             </div>
             <p className="section-hint">
-              {clip.length.toFixed(1)} s{clip.slowMotion ? ' at half speed' : ''} · {made.gif.width}×{made.gif.height} · {mb} MB. It loops on its own.
+              {clip.length.toFixed(1)} s{clip.slowMotion ? ' at half speed' : ''} · {made.clip.width}×{made.clip.height} · {mb} MB. It loops on its own.
             </p>
             <div className="dialog-actions">
               <button type="button" className="btn btn-ghost" onClick={() => setMade(null)}>
                 Change it
               </button>
-              <button type="button" className="btn btn-primary" onClick={() => onUse(made.gif)}>
+              <button type="button" className="btn btn-primary" onClick={() => onUse(made.clip)}>
                 Use this clip
               </button>
             </div>
@@ -156,7 +164,7 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (gif: M
             {progress !== null ? (
               <div className="clip-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
                 <span style={{ width: `${Math.round(progress * 100)}%` }} />
-                <em>Making the GIF on this device…</em>
+                <em>Making the clip on this device…</em>
               </div>
             ) : (
               <div className="dialog-actions">
@@ -164,7 +172,7 @@ export function ClipMaker({ file, onUse, onClose }: { file: File; onUse: (gif: M
                   Cancel
                 </button>
                 <button type="button" className="btn btn-primary" onClick={make} disabled={!duration}>
-                  <Film size={16} /> Make GIF
+                  <Film size={16} /> Make clip
                 </button>
               </div>
             )}
