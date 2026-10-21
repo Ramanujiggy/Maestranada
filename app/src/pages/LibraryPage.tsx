@@ -2,7 +2,7 @@
 // start a new class.
 
 import { useRef, useState } from 'react';
-import { CircleHelp, Copy, Download, MonitorDown, Play, Plus, Share, Trash2, Upload } from 'lucide-react';
+import { CircleHelp, Copy, Download, MonitorDown, Share, Trash2, Upload } from 'lucide-react';
 import {
   allMoves,
   blankPlan,
@@ -23,7 +23,7 @@ import { formatDate } from '../components/PrintSheet.tsx';
 import { TemplatePicker } from '../components/TemplatePicker.tsx';
 import { AiPlanner } from '../components/AiPlanner.tsx';
 import { planFromJson, readAiReply } from '../lib/aiClass.ts';
-import { Logo } from '../components/Tally.tsx';
+import { ClipboardIcon, Logo, RoundIcon } from '../components/Marks.tsx';
 import type { Template } from '../lib/samples.ts';
 import type { InstallState } from '../lib/pwa.ts';
 import { restoreClipData, withClipData } from '../lib/clips.ts';
@@ -208,7 +208,7 @@ export function LibraryPage({
         </p>
         <div style={{ marginTop: 24 }}>
           <button type="button" className="btn btn-primary btn-lg" onClick={create}>
-            <Plus size={18} /> {t('newClassPlan')}
+            <ClipboardIcon size={18} /> {t('newClassPlan')}
           </button>
         </div>
       </section>
@@ -229,7 +229,7 @@ export function LibraryPage({
             {t('noClassesBody')}
           </p>
           <button type="button" className="btn btn-primary" onClick={create}>
-            <Plus size={16} /> {t('newClassPlan')}
+            <ClipboardIcon size={16} /> {t('newClassPlan')}
           </button>
         </div>
       ) : (
@@ -252,7 +252,7 @@ export function LibraryPage({
               <PlanCardBody plan={p} />
               <div className="plan-card-foot" onClick={(e) => e.stopPropagation()}>
                 <a className="btn btn-secondary" href={hrefFor({ name: 'run', id: p.id })}>
-                  <Play size={15} /> {t('teach')}
+                  <RoundIcon size={15} /> {t('teach')}
                 </a>
                 <div className="actions">
                   <button

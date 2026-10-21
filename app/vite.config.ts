@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Prancheta · BJJ Class Prep',
+        name: 'Prancheta',
         short_name: 'Prancheta',
-        description: 'Plan, teach and print Jiu-Jitsu classes: warm-up, concept, positional game, gems, free roll.',
+        description: 'Plan your Jiu-Jitsu classes and teach them from your phone.',
         theme_color: '#FFFFFF',
         background_color: '#FFFFFF',
         display: 'standalone',
