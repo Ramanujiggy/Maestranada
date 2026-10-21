@@ -14,6 +14,7 @@
   --rule: #dfe3ea;
   --rule-strong: #c3cbd6;
   --marker: #d42a20;
+  --belt: #0d1117;
   --marker-press: #b3221a;
   --on-marker: #ffffff;
   --rest: #13233b;
@@ -53,6 +54,7 @@
     --rule: #26354d;
     --rule-strong: #34465f;
     --marker: #ff6a5c;
+    --belt: var(--ink);
     --marker-press: #ff8578;
     --on-marker: #0f1a2b;
     --rest: #24467a;
@@ -140,6 +142,17 @@ a {
   line-height: 1;
 }
 
+/* The logo: belt black by day, light by night, one red bar. */
+.rank-mark {
+  flex: none;
+}
+.rank-mark .belt {
+  fill: var(--belt);
+}
+.rank-mark .bar {
+  fill: var(--marker);
+}
+
 .page-title {
   font-family: var(--font-head);
   font-weight: 700;
@@ -217,10 +230,6 @@ a {
 
 .tally .strike {
   stroke: currentColor;
-}
-
-.logo-mark .strike {
-  stroke: var(--marker);
 }
 
 /* ─── Layout ─────────────────────────────────────────────────────────────── */
@@ -2029,11 +2038,11 @@ html:has(.backdrop) body {
     margin-bottom: 6px;
     border-bottom: 2px solid #13233b;
   }
-  .print-sheet .ps-head .tally {
-    color: #13233b;
+  .print-sheet .ps-head .rank-mark .belt {
+    fill: #0d1117;
   }
-  .print-sheet .ps-head .logo-mark .strike {
-    stroke: #d42a20;
+  .print-sheet .ps-head .rank-mark .bar {
+    fill: #d42a20;
   }
   .print-sheet h1 {
     font-family: var(--font-head);

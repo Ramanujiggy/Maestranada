@@ -16,7 +16,7 @@ import {
 } from '../lib/plan.ts';
 import { useClipStill } from '../lib/clips.ts';
 import { formatRest } from './controls.tsx';
-import { LogoMark } from './Tally.tsx';
+import { RankMark } from './Marks.tsx';
 import { dateLocale, t } from '../lib/i18n.ts';
 
 function Bullets({ items }: { items: ListItem[] }) {
@@ -141,7 +141,7 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
     <div className="print-sheet">
       <div className="ps-head">
         <h1>
-          <LogoMark height={26} />
+          <RankMark height={22} />
           {plan.title || t('untitledClass')}
         </h1>
         <div className="ps-meta">

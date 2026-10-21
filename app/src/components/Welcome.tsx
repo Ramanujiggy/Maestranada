@@ -1,10 +1,10 @@
-// First-run welcome: what the app is for, the five blocks, and that
+// First-run welcome: what the app is for, the blocks, and that
 // everything stays on this device. Reopened from "How it works".
 
 import { useEffect } from 'react';
 import { Download, Share, X } from 'lucide-react';
 import type { InstallState } from '../lib/pwa.ts';
-import { Logo } from './Tally.tsx';
+import { Logo } from './Marks.tsx';
 import { t, type Key } from '../lib/i18n.ts';
 
 const BLOCKS: [Key, Key][] = [
@@ -13,6 +13,7 @@ const BLOCKS: [Key, Key][] = [
   ['sec.game', 'welcomeGame'],
   ['sec.gems', 'welcomeGems'],
   ['sec.freeRoll', 'welcomeFreeRoll'],
+  ['sec.wrapup', 'welcomeWrapup'],
 ];
 
 export function Welcome({
