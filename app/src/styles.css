@@ -2281,6 +2281,62 @@ html:has(.backdrop) body {
   vertical-align: -2px;
 }
 
+/* Install sheet: numbered steps with the browser's own icons inline. */
+.install-steps {
+  list-style: none;
+  margin: 22px 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.install-steps li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.install-steps .section-index {
+  font-size: 24px;
+  min-width: 30px;
+  color: var(--marker);
+}
+
+.install-steps li > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.install-steps strong {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.install-glyph {
+  display: inline-block;
+  vertical-align: -3px;
+  margin-left: 4px;
+  padding: 3px;
+  box-sizing: content-box;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  color: var(--focus);
+}
+
+.install-step-action {
+  margin-top: 8px;
+}
+
+.install-foot {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
 .library-foot {
   display: flex;
   flex-wrap: wrap;

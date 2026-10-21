@@ -2,7 +2,7 @@
 // start a new class.
 
 import { useRef, useState } from 'react';
-import { CircleHelp, Copy, Download, MonitorDown, Share, Trash2, Upload } from 'lucide-react';
+import { CircleHelp, Copy, Download, MonitorDown, Trash2, Upload } from 'lucide-react';
 import {
   allMoves,
   blankPlan,
@@ -25,7 +25,7 @@ import { AiPlanner } from '../components/AiPlanner.tsx';
 import { planFromJson, readAiReply } from '../lib/aiClass.ts';
 import { ClipboardIcon, Logo, RoundIcon } from '../components/Marks.tsx';
 import type { Template } from '../lib/samples.ts';
-import type { InstallState } from '../lib/pwa.ts';
+import { canInstall, isApple, isStandalone, type InstallState } from '../lib/pwa.ts';
 import { restoreClipData, withClipData } from '../lib/clips.ts';
 import { saveFile } from '../lib/files.ts';
 import { t, type Key } from '../lib/i18n.ts';
@@ -68,6 +68,7 @@ export function LibraryPage({
   notify,
   install,
   onHelp,
+  onInstall,
   pickerOpen,
   setPickerOpen,
 }: {
@@ -75,6 +76,7 @@ export function LibraryPage({
   notify: (m: string) => void;
   install: InstallState;
   onHelp: () => void;
+  onInstall: () => void;
   pickerOpen: boolean;
   setPickerOpen: (open: boolean) => void;
 }) {
@@ -156,9 +158,14 @@ export function LibraryPage({
         </div>
         <div className="topbar-actions">
           <LangSwitch />
-          {install.kind === 'prompt' && (
-            <button type="button" className="btn btn-secondary" onClick={install.install}>
-              <MonitorDown size={16} /> {t('installApp')}
+          {canInstall(install) && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              aria-label={t('installApp')}
+              onClick={install.kind === 'prompt' ? () => void install.install() : onInstall}
+            >
+              <MonitorDown size={16} /> <span className="hide-sm">{t('installApp')}</span>
             </button>
           )}
           <button type="button" className="btn btn-ghost" onClick={onHelp}>
@@ -228,6 +235,11 @@ export function LibraryPage({
           <p className="muted" style={{ margin: 0 }}>
             {t('noClassesBody')}
           </p>
+          {isStandalone() && isApple() && (
+            <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
+              {t('emptyImportApple')}
+            </p>
+          )}
           <button type="button" className="btn btn-primary" onClick={create}>
             <ClipboardIcon size={16} /> {t('newClassPlan')}
           </button>
@@ -283,9 +295,12 @@ export function LibraryPage({
         </div>
       )}
 
-      {install.kind === 'ios' && (
+      {(install.kind === 'ios' || install.kind === 'ios-inapp') && (
         <div className="subpanel ios-keep">
-          <strong>{t('iosKeepTitle')}</strong> {t('iosKeepBefore')} <Share size={13} /> {t('iosKeepAfter')}
+          <strong>{t('iosKeepTitle')}</strong> {t('iosKeep')}{' '}
+          <button type="button" className="link" onClick={onInstall}>
+            {t('installShowMe')}
+          </button>
         </div>
       )}
 
