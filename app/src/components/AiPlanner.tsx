@@ -1,14 +1,14 @@
-// "Plan with AI" sheet. Two steps: copy a prompt with the class format and
-// the coach's idea into any AI chat, then paste the reply back. The class
-// opens in the editor like any other, ready for clips and sending.
+// "Plan with AI" sheet. Two steps: take the class format into the AI chat
+// where the class is already being talked through (copy it, or save it as a
+// file to upload), then bring the filled-in answer back, pasted or as a file.
+// The class opens in the editor like any other, ready for clips and sending.
 
-import { useEffect, useState } from 'react';
-import { ArrowLeft, Check, ClipboardPaste, Copy, ExternalLink, X } from 'lucide-react';
-import { AI_CHATS, aiPrompt, readAiReply, type ReadError } from '../lib/aiClass.ts';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, Check, ClipboardPaste, Copy, Download, Upload, X } from 'lucide-react';
+import { classFormat, readAiReply, type ReadError } from '../lib/aiClass.ts';
+import { saveFile } from '../lib/files.ts';
 import type { ClassPlan } from '../lib/plan.ts';
 import { t, type Key } from '../lib/i18n.ts';
-
-const IDEA_KEY = 'maestranada.aiIdea';
 
 const ERRORS: Record<ReadError, Key> = {
   empty: 'aiErrEmpty',
@@ -17,23 +17,6 @@ const ERRORS: Record<ReadError, Key> = {
   badJson: 'aiErrBadJson',
   noBlocks: 'aiErrNoBlocks',
 };
-
-function readIdea(): string {
-  try {
-    return localStorage.getItem(IDEA_KEY) ?? '';
-  } catch {
-    return '';
-  }
-}
-
-function keepIdea(idea: string): void {
-  try {
-    if (idea.trim()) localStorage.setItem(IDEA_KEY, idea);
-    else localStorage.removeItem(IDEA_KEY);
-  } catch {
-    // Private mode: the idea lasts while the sheet is open.
-  }
-}
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -68,7 +51,6 @@ export function AiPlanner({
   onClose: () => void;
   onPlan: (plan: ClassPlan, skipped: number) => void;
 }) {
-  const [idea, setIdea] = useState(readIdea);
   const [reply, setReply] = useState('');
   const [copied, setCopied] = useState<'ok' | 'failed' | null>(null);
   const [error, setError] = useState<ReadError | null>(null);
@@ -79,16 +61,26 @@ export function AiPlanner({
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  useEffect(() => keepIdea(idea), [idea]);
-
   useEffect(() => {
     if (!copied) return;
     const timer = setTimeout(() => setCopied(null), 2400);
     return () => clearTimeout(timer);
   }, [copied]);
 
-  const prompt = aiPrompt(idea);
-  const copy = async () => setCopied((await copyText(prompt)) ? 'ok' : 'failed');
+  const format = classFormat();
+  const copy = async () => setCopied((await copyText(format)) ? 'ok' : 'failed');
+  const saveFormat = () => void saveFile(new Blob([format], { type: 'text/plain' }), t('aiFormatFile')).catch(() => {});
+  const fileRef = useRef<HTMLInputElement>(null);
+  const openFile = async (file: File) => {
+    try {
+      const text = await file.text();
+      setReply(text);
+      setError(null);
+      submit(text);
+    } catch {
+      setError('noJson');
+    }
+  };
 
   const pasteFromClipboard = async () => {
     try {
@@ -102,13 +94,12 @@ export function AiPlanner({
     }
   };
 
-  const build = () => {
-    const result = readAiReply(reply);
+  const submit = (text: string) => {
+    const result = readAiReply(text);
     if ('error' in result) {
       setError(result.error);
       return;
     }
-    keepIdea('');
     onPlan(result.plan, result.skipped);
   };
 
@@ -142,38 +133,27 @@ export function AiPlanner({
           <li>
             <span className="ai-step-n">1</span>
             <div className="ai-step-body">
-              <label className="field">
-                <span className="field-label">{t('aiIdeaLabel')}</span>
-                <textarea
-                  className="textarea"
-                  rows={3}
-                  value={idea}
-                  placeholder={t('aiIdeaPlaceholder')}
-                  onChange={(e) => setIdea(e.target.value)}
-                />
-              </label>
+              <span className="field-label">{t('aiFormatLabel')}</span>
+              <p className="section-hint" style={{ margin: 0 }}>
+                {t('aiFormatHint')}
+              </p>
               <div className="ai-actions">
                 <button type="button" className="btn btn-primary" onClick={() => void copy()}>
                   {copied === 'ok' ? <Check size={16} /> : <Copy size={16} />}{' '}
-                  {copied === 'ok' ? t('aiCopied') : t('aiCopyPrompt')}
+                  {copied === 'ok' ? t('aiCopied') : t('aiCopyFormat')}
                 </button>
-                {AI_CHATS.map((chat) => (
-                  <a
-                    key={chat.name}
-                    className="btn btn-secondary"
-                    href={chat.url(prompt)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => void copyText(prompt)}
-                  >
-                    {t('aiOpenIn', { name: chat.name })} <ExternalLink size={14} />
-                  </a>
-                ))}
+                <button type="button" className="btn btn-secondary" onClick={saveFormat}>
+                  <Download size={16} /> {t('aiSaveFormat')}
+                </button>
               </div>
-              <p className="section-hint" style={{ margin: 0 }} role={copied === 'failed' ? 'alert' : undefined}>
-                {copied === 'failed' ? t('aiCopyFailed') : t('aiAnyChat')}
-              </p>
-              {copied === 'failed' && <textarea className="textarea ai-prompt" readOnly value={prompt} onFocus={(e) => e.target.select()} />}
+              {copied === 'failed' && (
+                <>
+                  <p className="section-hint" style={{ margin: 0 }} role="alert">
+                    {t('aiCopyFailed')}
+                  </p>
+                  <textarea className="textarea ai-prompt" readOnly value={format} onFocus={(e) => e.target.select()} />
+                </>
+              )}
             </div>
           </li>
           <li>
@@ -200,8 +180,11 @@ export function AiPlanner({
                 </p>
               )}
               <div className="ai-actions">
-                <button type="button" className="btn btn-primary" onClick={build} disabled={!reply.trim()}>
+                <button type="button" className="btn btn-primary" onClick={() => submit(reply)} disabled={!reply.trim()}>
                   {t('aiBuild')}
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
+                  <Upload size={16} /> {t('aiOpenFile')}
                 </button>
                 {'clipboard' in navigator && 'readText' in navigator.clipboard && (
                   <button type="button" className="btn btn-ghost" onClick={() => void pasteFromClipboard()}>
@@ -209,6 +192,17 @@ export function AiPlanner({
                   </button>
                 )}
               </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="application/json,.json,text/plain,.txt,.md"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void openFile(f);
+                  e.target.value = '';
+                }}
+              />
             </div>
           </li>
         </ol>

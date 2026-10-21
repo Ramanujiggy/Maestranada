@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aiPrompt, extractJson, kindFrom, planFromJson, readAiReply } from './aiClass.ts';
+import { classFormat, extractJson, kindFrom, planFromJson, readAiReply } from './aiClass.ts';
 import { blocksOf, samplePlan, storedPlan, type ClassPlan } from './plan.ts';
 
 const ok = (r: ReturnType<typeof readAiReply>): { plan: ClassPlan; skipped: number } => {
@@ -126,14 +126,20 @@ describe('class JSON in the AI format', () => {
   });
 });
 
-describe('the prompt', () => {
-  it('carries the idea and a JSON example the importer reads back', () => {
+describe('the class format', () => {
+  it('reads back as the usual class when pasted in unfilled', () => {
     for (const lang of ['en', 'pt'] as const) {
-      const prompt = aiPrompt('Half guard sweeps, 45 minutes', lang);
-      expect(prompt).toContain('Half guard sweeps, 45 minutes');
-      // The prompt's own example is a valid class: paste it straight back.
-      const { plan } = ok(readAiReply(prompt));
-      expect(plan.blocks.map((b) => b.kind)).toEqual(['warmup', 'concept', 'game', 'gems', 'freeRoll']);
+      const { plan } = ok(readAiReply(classFormat(lang)));
+      expect(plan.blocks.map((b) => b.kind)).toEqual(['warmup', 'concept', 'game', 'gems', 'game', 'freeRoll']);
     }
+  });
+
+  it('comes back filled in from a chat reply', () => {
+    const filled = classFormat('en')
+      .replace('"title": ""', '"title": "Half guard sweeps"')
+      .replace('"rule": ""', '"rule": "Underhook before you move"');
+    const { plan } = ok(readAiReply(`Here's the plan:\n${filled.slice(filled.indexOf('```json'))}\nWant changes?`));
+    expect(plan.title).toBe('Half guard sweeps');
+    expect(blocksOf(plan, 'concept')[0].rule).toBe('Underhook before you move');
   });
 });

@@ -1,7 +1,8 @@
-// Planning a class with an AI chat. The coach copies a prompt (the class
-// format, as JSON, plus their idea), pastes it into ChatGPT, Claude or any
-// other chat, and pastes the reply back. The app pulls the JSON out of the
-// reply and builds a normal plan from it, ready for clips and sharing.
+// Planning a class with an AI chat. The coach takes the class format (JSON,
+// with a line on what each block is for) into the chat where they're already
+// talking the class through, and the AI hands it back filled in. The app
+// pulls the JSON out of the reply and builds a normal plan from it, ready
+// for clips and sharing.
 //
 // AI replies are messy: code fences, a sentence before and after, trailing
 // commas, curly quotes, "3 min" where a number belongs, a list written as one
@@ -270,95 +271,90 @@ export function readAiReply(reply: string, now = new Date()): AiImport {
   return 'error' in found ? found : planFromJson(found.value, now);
 }
 
-// ─── The prompt the coach copies ─────────────────────────────────────────────
+// ─── The class format the coach hands to their AI ────────────────────────────
+//
+// The coach takes this into a chat they're already having, where the AI
+// knows the class they have in mind, and the AI hands it back filled in.
+// A bare schema fills worse than one with a line on what each block is for,
+// so the format travels with short instructions and a blank template.
 
-const EXAMPLE = {
+/** The usual class, every field empty: warm-up, concept, spar, technique, spar again, roll. */
+const TEMPLATE = {
   prancheta: 1,
-  title: 'Leg drag to the back',
+  title: '',
   blocks: [
-    { kind: 'warmup', minutes: 10, drills: ['Forward rolls', 'Shrimps', 'Technical stand-ups', 'Pummeling'] },
-    {
-      kind: 'concept',
-      minutes: 5,
-      rule: 'Pin the hips to one side before you move.',
-      notes: 'Every option today comes from keeping the hips pinned.',
-    },
+    { kind: 'warmup', title: '', minutes: 10, drills: [''] },
+    { kind: 'concept', title: '', minutes: 5, rule: '', notes: '' },
     {
       kind: 'positionalSparring',
       title: '',
-      start: 'Leg drag',
-      objective: 'Take the back',
-      goals: ['Top: keep the hips pinned and move toward the back', 'Bottom: square up or recover guard'],
-      details: ['Chest to the far hip', 'Control the far wrist before you move'],
-      transition: 'Leg drag to back take as they turn away',
-      submission: 'Rear naked choke',
+      start: '',
+      objective: '',
+      goals: [''],
+      details: [''],
+      transition: '',
+      submission: '',
       rounds: { roundsPerSide: 2, minutes: 3, restSeconds: 30, switchPartners: true, switchPositions: true },
     },
+    { kind: 'technique', title: '', minutes: 15, moves: [{ name: '', notes: '' }], options: [''] },
     {
-      kind: 'technique',
-      minutes: 15,
-      moves: [{ name: 'Back take when they turn away', notes: 'Seatbelt first, then the hook.' }],
-      options: ['Switch to the opposite leg drag'],
+      kind: 'positionalSparring',
+      title: '',
+      start: '',
+      objective: '',
+      goals: [''],
+      details: [''],
+      transition: '',
+      submission: '',
+      rounds: { roundsPerSide: 1, minutes: 3, restSeconds: 30, switchPartners: true, switchPositions: true },
     },
-    { kind: 'rolling', rounds: 4, minutes: 5, restSeconds: 60, notes: 'Start from the leg drag.' },
+    { kind: 'rolling', title: '', rounds: 4, minutes: 5, restSeconds: 60, notes: '' },
   ],
 };
 
-const PROMPT: Record<Lang, (idea: string) => string> = {
-  en: (idea) => `You are helping a Brazilian jiu-jitsu coach plan one class. Turn their idea into a class plan for the Prancheta app.
+const FORMAT: Record<Lang, string> = {
+  en: `Fill in this Prancheta class plan (Prancheta is the app I plan my jiu-jitsu classes in).
 
-Reply with ONE JSON object in a \`\`\`json code block and nothing else. No comments inside the JSON.
+Use what we've talked about in this conversation: the position, the goal, the students, the time. Where we haven't covered something, make a sensible coaching choice. If you don't know what the class is about yet, ask me first.
 
-The class is an ordered list of blocks. Use only these kinds, in any order, as many of each as the class needs:
-- "warmup": movement to wake the body up, ending close to the real thing. Fields: minutes, drills (list of short strings).
-- "concept": the one rule the whole class is about, said as what should happen. Fields: minutes, rule (one sentence), notes.
-- "positionalSparring": sparring from a position toward a goal. Goals and movements first, details once they've felt it. Fields: start (start position), objective, goals (list), details (list), transition, submission, rounds { roundsPerSide, minutes, restSeconds, switchPartners (true/false), switchPositions (true/false) }.
-- "technique": the moves that win the game. Fields: minutes, moves (list of { name, notes }; notes hold the key details), options (list: what to do when the move is stopped).
-- "rolling": live rounds. Fields: rounds, minutes (per round), restSeconds, notes.
-- "wrapup" (optional): fields minutes, question (one question back to the class), notes.
-Any block may also have a "title" (the coach's own name for it). Leave it "" to use the kind's name.
+Reply with the filled-in JSON in one \`\`\`json code block and nothing else. No comments inside the JSON.
 
-Rules: numbers are plain numbers (3, not "3 min"). Keep every line short, the way a coach writes on a clipboard. Fit the class length the coach asks for, or about 60 minutes. A good default order is warmup, concept, positionalSparring, technique, positionalSparring, rolling.
+How the format works. A class is an ordered list of blocks, each with a "kind":
+- "warmup": movement to wake the body up, ending close to the real thing. minutes, drills (short lines).
+- "concept": the one rule the whole class is about, said as what should happen. minutes, rule (one sentence), notes.
+- "positionalSparring": sparring from a position toward a goal. Goals and movements first, details once they've felt it. start (start position), objective, goals, details, transition, submission, rounds (roundsPerSide, minutes, restSeconds, switchPartners, switchPositions).
+- "technique": the moves that win the game. minutes, moves (each a name, with the key details in notes), options (what to do when the move is stopped).
+- "rolling": live rounds. rounds, minutes per round, restSeconds, notes.
+- "wrapup" (optional): minutes, question (one question back to the class), notes.
+Add, remove, repeat or reorder blocks to fit the class. "title" is my own name for a block; leave it "" to use the kind's name. Keep the keys and "kind" values exactly as written. Numbers are plain numbers (3, not "3 min"). Keep every line short, the way a coach writes on a clipboard.
 
-Example of the format:
+The template, in the usual order:
 \`\`\`json
-${JSON.stringify(EXAMPLE, null, 2)}
-\`\`\`
+${JSON.stringify(TEMPLATE, null, 2)}
+\`\`\``,
 
-The coach's idea:
-${idea.trim() || '[Describe the class here: position, goal, level, length.]'}`,
+  pt: `Preencha este plano de aula do Prancheta (o Prancheta é o app onde eu planejo minhas aulas de jiu-jitsu).
 
-  pt: (idea) => `Você está ajudando um professor de jiu-jitsu a planejar uma aula. Transforme a ideia dele num plano de aula para o app Prancheta.
+Use o que a gente conversou aqui: a posição, o objetivo, os alunos, o tempo. O que a gente não falou, decida como um bom professor decidiria. Se você ainda não sabe do que é a aula, me pergunte antes.
 
-Responda com UM objeto JSON num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva todo o texto da aula em português do Brasil, mas mantenha as chaves e os valores de "kind" em inglês, exatamente como abaixo.
+Responda com o JSON preenchido num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
 
-A aula é uma lista ordenada de blocos. Use só estes tipos ("kind"), em qualquer ordem, quantos de cada a aula precisar:
-- "warmup": aquecimento e movimentação, terminando perto da luta de verdade. Campos: minutes, drills (lista de textos curtos).
-- "concept": a regra que guia a aula inteira, dita como o que deve acontecer. Campos: minutes, rule (uma frase), notes.
-- "positionalSparring": treino específico de uma posição até um objetivo. Primeiro objetivos e movimentos, os detalhes depois que sentirem a posição. Campos: start (posição inicial), objective, goals (lista), details (lista), transition, submission, rounds { roundsPerSide, minutes, restSeconds, switchPartners (true/false), switchPositions (true/false) }.
-- "technique": as técnicas que vencem o jogo. Campos: minutes, moves (lista de { name, notes }; em notes vão os detalhes-chave, o pulo do gato), options (lista: o que fazer quando a técnica é bloqueada).
-- "rolling": rola livre. Campos: rounds, minutes (por round), restSeconds, notes.
-- "wrapup" (opcional): campos minutes, question (uma pergunta de volta para a turma), notes.
-Qualquer bloco pode ter "title" (o nome que o professor dá). Deixe "" para usar o nome do tipo.
+Como o formato funciona. A aula é uma lista ordenada de blocos, cada um com um "kind":
+- "warmup": aquecimento e movimentação, terminando perto da luta de verdade. minutes, drills (linhas curtas).
+- "concept": a regra que guia a aula inteira, dita como o que deve acontecer. minutes, rule (uma frase), notes.
+- "positionalSparring": treino específico de uma posição até um objetivo. Primeiro objetivos e movimentos, os detalhes depois que sentirem a posição. start (posição inicial), objective, goals, details, transition, submission, rounds (roundsPerSide, minutes, restSeconds, switchPartners, switchPositions).
+- "technique": as técnicas que vencem o jogo. minutes, moves (cada uma com name, e os detalhes-chave, o pulo do gato, em notes), options (o que fazer quando a técnica é bloqueada).
+- "rolling": rola livre. rounds, minutes por round, restSeconds, notes.
+- "wrapup" (opcional): minutes, question (uma pergunta de volta para a turma), notes.
+Adicione, remova, repita ou reordene blocos para caber na aula. "title" é o nome que eu dou ao bloco; deixe "" para usar o nome do tipo. Mantenha as chaves e os valores de "kind" exatamente como estão, em inglês. Números são números simples (3, e não "3 min"). Cada linha curta, como um professor escreve na prancheta.
 
-Regras: números são números simples (3, e não "3 min"). Cada linha curta, como um professor escreve na prancheta. Respeite a duração que o professor pedir, ou uns 60 minutos. Uma boa ordem padrão é warmup, concept, positionalSparring, technique, positionalSparring, rolling.
-
-Exemplo do formato:
+O modelo, na ordem de sempre:
 \`\`\`json
-${JSON.stringify(EXAMPLE, null, 2)}
-\`\`\`
-
-A ideia do professor:
-${idea.trim() || '[Descreva a aula aqui: posição, objetivo, nível, duração.]'}`,
+${JSON.stringify(TEMPLATE, null, 2)}
+\`\`\``,
 };
 
-/** The prompt to paste into an AI chat, with the coach's idea at the end. */
-export function aiPrompt(idea: string, lang: Lang = getLang()): string {
-  return PROMPT[lang](idea);
+/** The class format with its fill-in instructions, to paste or upload into an AI chat. */
+export function classFormat(lang: Lang = getLang()): string {
+  return FORMAT[lang];
 }
-
-/** Chats that take a prompt in the link, so one tap opens them ready to send. */
-export const AI_CHATS = [
-  { name: 'ChatGPT', url: (q: string) => `https://chatgpt.com/?q=${encodeURIComponent(q)}` },
-  { name: 'Claude', url: (q: string) => `https://claude.ai/new?q=${encodeURIComponent(q)}` },
-] as const;
