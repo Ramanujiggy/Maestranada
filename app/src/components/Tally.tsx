@@ -1,7 +1,6 @@
 // Tally marks: how a coach counts rounds on a clipboard. One stroke per
 // round, solid once it's done, half drawn while it's running, struck through
-// in ink when the whole block is finished. Four strokes with a red strike
-// is also the logo.
+// in ink when the whole block is finished.
 
 export function Tally({
   done,
@@ -45,15 +44,3 @@ export function Tally({
   );
 }
 
-export function LogoMark({ height = 22 }: { height?: number }) {
-  return <Tally done={4} of={4} struck height={height} className="logo-mark" />;
-}
-
-export function Logo() {
-  return (
-    <span className="wordmark">
-      <LogoMark />
-      Prancheta
-    </span>
-  );
-}

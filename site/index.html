@@ -18,7 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
       /* Same Clipboard look as the app: white paper, navy ink, one red marker.
-         Red is only for the buy button. Lines separate things, not shadows. */
+         Red is only for the buy button and the logo's rank bar. Lines separate things, not shadows. */
       :root {
         --paper: #ffffff;
         --sheet: #f5f7fa;
@@ -27,6 +27,7 @@
         --muted: #5d6b80;
         --rule: #dfe3ea;
         --marker: #d42a20;
+        --belt: #0d1117;
         --marker-press: #b3221a;
         --on-marker: #ffffff;
         --head: 'IBM Plex Sans Condensed', 'Arial Narrow', system-ui, sans-serif;
@@ -42,6 +43,7 @@
           --muted: #9fb0c6;
           --rule: #26354d;
           --marker: #ff6a5c;
+          --belt: #eef2f7;
           --marker-press: #ff8578;
           --on-marker: #0f1a2b;
         }
@@ -133,7 +135,7 @@
     <div class="wrap">
       <header class="top">
         <a class="logo" href="/" aria-label="Prancheta home">
-          <svg viewBox="0 0 54 36" aria-hidden="true"><g stroke-width="4" stroke-linecap="round"><path d="M8 4V32M18 4V32M28 4V32M38 4V32" stroke="currentColor" /><path d="M3 28L51 8" stroke="var(--marker)" /></g></svg>
+          <svg viewBox="0 0 60 40" aria-hidden="true"><rect y="4" width="60" height="32" rx="6" fill="var(--belt)" /><rect x="32" y="4" width="15" height="32" fill="var(--marker)" /></svg>
           Prancheta
         </a>
         <div class="top-right">
