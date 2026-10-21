@@ -327,6 +327,30 @@ const en = {
   'short.gems': 'Technique',
   'short.freeRoll': 'Rolling',
   'short.wrapup': 'Wrap-up',
+
+  // Plan with AI
+  aiStart: 'Plan it with AI',
+  aiStartBlurb: 'Tell ChatGPT, Claude or any AI your idea. Paste its answer back and the class is built.',
+  aiTitle: 'Plan it with AI',
+  aiLead: 'The prompt teaches the AI the five blocks. Its answer comes back here as a class you can edit, add clips to and send.',
+  aiIdeaLabel: 'Your idea',
+  aiIdeaPlaceholder: 'Half guard sweeps for white belts, 60 minutes, lots of sparring',
+  aiCopyPrompt: 'Copy prompt',
+  aiCopied: 'Copied',
+  aiOpenIn: 'Open {name}',
+  aiAnyChat: 'Any AI chat works: paste the prompt there and send it.',
+  aiCopyFailed: "This browser wouldn't copy. Select the prompt below and copy it.",
+  aiReplyLabel: "Paste the AI's answer",
+  aiReplyPlaceholder: 'Paste the whole answer, code block and all',
+  aiPaste: 'Paste',
+  aiBuild: 'Build the class',
+  aiErrEmpty: "Paste the AI's answer first.",
+  aiErrNoJson: "There's no class in that text. Paste the AI's whole answer, including the part inside { }.",
+  aiErrCutOff: 'The answer got cut off. Ask the AI: "Send the full JSON again", then paste that.',
+  aiErrBadJson: 'The JSON has a typo the app can\'t fix. Ask the AI: "Check the JSON is valid and send it again".',
+  aiErrNoBlocks: 'That JSON has no blocks the app knows. Copy the prompt again so the AI uses the right format.',
+  aiBuilt: 'Class built. Add clips, then send it.',
+  aiBuiltSkipped: 'Class built. Blocks the app didn\'t know were left out: {n}.',
 };
 
 export type Key = keyof typeof en;
@@ -635,6 +659,30 @@ const pt: Record<Key, string> = {
   'short.gems': 'Técnica',
   'short.freeRoll': 'Luta',
   'short.wrapup': 'Fechamento',
+
+  // Planejar com IA
+  aiStart: 'Planejar com IA',
+  aiStartBlurb: 'Conte sua ideia para o ChatGPT, o Claude ou qualquer IA. Cole a resposta aqui e a aula fica pronta.',
+  aiTitle: 'Planejar com IA',
+  aiLead: 'O prompt ensina os cinco blocos para a IA. A resposta volta aqui como uma aula que você edita, coloca clipes e envia.',
+  aiIdeaLabel: 'Sua ideia',
+  aiIdeaPlaceholder: 'Raspagens da meia-guarda para faixa branca, 60 minutos, bastante específico',
+  aiCopyPrompt: 'Copiar prompt',
+  aiCopied: 'Copiado',
+  aiOpenIn: 'Abrir {name}',
+  aiAnyChat: 'Funciona com qualquer chat de IA: cole o prompt lá e envie.',
+  aiCopyFailed: 'Este navegador não copiou. Selecione o prompt abaixo e copie.',
+  aiReplyLabel: 'Cole a resposta da IA',
+  aiReplyPlaceholder: 'Cole a resposta inteira, com o bloco de código',
+  aiPaste: 'Colar',
+  aiBuild: 'Montar a aula',
+  aiErrEmpty: 'Cole a resposta da IA primeiro.',
+  aiErrNoJson: 'Não tem aula nesse texto. Cole a resposta inteira da IA, incluindo a parte entre { }.',
+  aiErrCutOff: 'A resposta veio cortada. Peça para a IA: "Mande o JSON completo de novo" e cole a nova.',
+  aiErrBadJson: 'O JSON tem um erro que o app não consegue corrigir. Peça para a IA: "Confira se o JSON é válido e mande de novo".',
+  aiErrNoBlocks: 'Esse JSON não tem nenhum bloco que o app conhece. Copie o prompt de novo para a IA usar o formato certo.',
+  aiBuilt: 'Aula montada. Coloque os clipes e envie.',
+  aiBuiltSkipped: 'Aula montada. Blocos que o app não conhece ficaram de fora: {n}.',
 };
 
 export const DICTS: Record<Lang, Record<Key, string>> = { en, pt };

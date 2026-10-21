@@ -1,7 +1,7 @@
-// "New class" sheet: start blank or from one of the ready-made classes.
+// "New class" sheet: plan it with AI, start blank, or from one of the ready-made classes.
 
 import { useEffect } from 'react';
-import { FilePlus2, X } from 'lucide-react';
+import { FilePlus2, MessagesSquare, X } from 'lucide-react';
 import { templates, type Template } from '../lib/samples.ts';
 import { FORMATS, FORMAT_ORDER, type FormatKey } from '../lib/plan.ts';
 import { t } from '../lib/i18n.ts';
@@ -9,10 +9,12 @@ import { t } from '../lib/i18n.ts';
 export function TemplatePicker({
   onBlank,
   onTemplate,
+  onAi,
   onClose,
 }: {
   onBlank: (format: FormatKey) => void;
   onTemplate: (t: Template) => void;
+  onAi: () => void;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -41,6 +43,14 @@ export function TemplatePicker({
             <X size={18} />
           </button>
         </div>
+
+        <button type="button" className="template ai-start" onClick={onAi}>
+          <MessagesSquare size={20} color="var(--marker)" />
+          <span>
+            <span className="template-title">{t('aiStart')}</span>
+            <span className="template-blurb">{t('aiStartBlurb')}</span>
+          </span>
+        </button>
 
         <div className="eyebrow" style={{ margin: '18px 0 4px' }}>
           {t('pickLayout')}

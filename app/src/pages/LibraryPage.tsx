@@ -21,6 +21,8 @@ import type { PlansApi } from '../lib/usePlans.ts';
 import { ConfirmDialog } from '../components/feedback.tsx';
 import { formatDate } from '../components/PrintSheet.tsx';
 import { TemplatePicker } from '../components/TemplatePicker.tsx';
+import { AiPlanner } from '../components/AiPlanner.tsx';
+import { planFromJson, readAiReply } from '../lib/aiClass.ts';
 import { ClipboardIcon, Logo, RoundIcon } from '../components/Marks.tsx';
 import type { Template } from '../lib/samples.ts';
 import type { InstallState } from '../lib/pwa.ts';
@@ -77,6 +79,7 @@ export function LibraryPage({
   setPickerOpen: (open: boolean) => void;
 }) {
   const [pendingDelete, setPendingDelete] = useState<ClassPlan | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const sorted = [...api.plans].sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt));
@@ -84,6 +87,7 @@ export function LibraryPage({
   const open = (plan: ClassPlan) => {
     api.upsert(plan);
     setPickerOpen(false);
+    setAiOpen(false);
     navigate({ name: 'edit', id: plan.id });
   };
   const create = () => setPickerOpen(true);
@@ -98,8 +102,24 @@ export function LibraryPage({
         const plan = classFile.readClassFile(text);
         raw = plan ? [plan] : [];
       } else {
-        const parsed = JSON.parse(text);
-        raw = Array.isArray(parsed) ? parsed : [parsed];
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          parsed = null;
+        }
+        // A backup's plans carry createdAt. Anything else is class JSON an AI
+        // (or a person) wrote, which becomes a new class.
+        const backup = Array.isArray(parsed) || (parsed && typeof parsed === 'object' && 'createdAt' in parsed);
+        if (!backup) {
+          const result = parsed ? planFromJson(parsed) : readAiReply(text);
+          if ('plan' in result) {
+            open(result.plan);
+            notify(result.skipped ? t('aiBuiltSkipped', { n: result.skipped }) : t('aiBuilt'));
+            return;
+          }
+        }
+        raw = Array.isArray(parsed) ? parsed : parsed ? [parsed] : [];
       }
       list = raw.map(normalizePlan).filter((p): p is ClassPlan => p !== null);
     } catch {
@@ -155,7 +175,7 @@ export function LibraryPage({
           <input
             ref={fileRef}
             type="file"
-            accept="application/json,.json,text/html,.html,.htm"
+            accept="application/json,.json,text/html,.html,.htm,text/plain,.txt"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -288,6 +308,24 @@ export function LibraryPage({
           onClose={() => setPickerOpen(false)}
           onBlank={(format: FormatKey) => open(blankPlan(new Date(), format))}
           onTemplate={(t: Template) => open(t.build())}
+          onAi={() => {
+            setPickerOpen(false);
+            setAiOpen(true);
+          }}
+        />
+      )}
+
+      {aiOpen && (
+        <AiPlanner
+          onClose={() => setAiOpen(false)}
+          onBack={() => {
+            setAiOpen(false);
+            setPickerOpen(true);
+          }}
+          onPlan={(plan, skipped) => {
+            open(plan);
+            notify(skipped ? t('aiBuiltSkipped', { n: skipped }) : t('aiBuilt'));
+          }}
         />
       )}
 

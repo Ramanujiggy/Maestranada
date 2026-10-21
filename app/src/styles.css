@@ -2369,3 +2369,86 @@ html:has(.backdrop) body {
 .template > svg {
   flex: none;
 }
+
+/* ─── Plan with AI ───────────────────────────────────────────────────────── */
+
+.ai-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ai-steps {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ai-steps > li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.ai-step-n {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  font-family: var(--font-num);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ai-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-actions .btn {
+  white-space: normal;
+}
+
+.ai-reply,
+.ai-prompt {
+  font-family: var(--font-num);
+  font-size: 13px;
+}
+
+.ai-prompt {
+  min-height: 140px;
+}
+
+.ai-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--marker);
+  background: var(--sheet);
+  border-radius: 0 7px 7px 0;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.template.ai-start {
+  margin-top: 16px;
+  align-items: center;
+  border-color: var(--ink);
+}
