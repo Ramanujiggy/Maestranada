@@ -321,7 +321,7 @@ Reply with the filled-in JSON in one \`\`\`json code block and nothing else. No 
 
 How the format works. A class is an ordered list of blocks, each with a "kind":
 - "warmup": movement to wake the body up, ending close to the real thing. minutes, drills (short lines).
-- "concept": the one rule the whole class is about, said as what should happen. minutes, rule (one sentence), notes.
+- "concept" (Concept / Focus): the focus of today's class, the one idea everything comes back to. minutes, rule (one sentence), notes.
 - "positionalSparring": sparring from a position toward a goal. Goals and movements first, details once they've felt it. start (start position), objective, goals, details, transition, submission, rounds (roundsPerSide, minutes, restSeconds, switchPartners, switchPositions).
 - "technique": the moves that win the game. minutes, moves (each a name, with the key details in notes), options (what to do when the move is stopped).
 - "rolling": live rounds. rounds, minutes per round, restSeconds, notes.
@@ -341,7 +341,7 @@ Responda com o JSON preenchido num bloco de código \`\`\`json e mais nada. Sem 
 
 Como o formato funciona. A aula é uma lista ordenada de blocos, cada um com um "kind":
 - "warmup": aquecimento e movimentação, terminando perto da luta de verdade. minutes, drills (linhas curtas).
-- "concept": a regra que guia a aula inteira, dita como o que deve acontecer. minutes, rule (uma frase), notes.
+- "concept" (Conceito / Foco): o foco da aula de hoje, a ideia que guia todo o resto. minutes, rule (uma frase), notes.
 - "positionalSparring": treino específico de uma posição até um objetivo. Primeiro objetivos e movimentos, os detalhes depois que sentirem a posição. start (posição inicial), objective, goals, details, transition, submission, rounds (roundsPerSide, minutes, restSeconds, switchPartners, switchPositions).
 - "technique": as técnicas que vencem o jogo. minutes, moves (cada uma com name, e os detalhes-chave, o pulo do gato, em notes), options (o que fazer quando a técnica é bloqueada).
 - "rolling": rola livre. rounds, minutes por round, restSeconds, notes.
