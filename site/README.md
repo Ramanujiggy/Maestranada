@@ -9,9 +9,11 @@ At the bottom of `index.html`, set:
 - `CHECKOUT_URL`: the Lemon Squeezy checkout link. Until it's set, the buy buttons scroll to the price.
 - `SUPPORT_EMAIL`: the address shown in the footer.
 
-## Deploy on Railway
+## Deploy
 
-Add a second service from this repo and set its **Root Directory** to `site`. It serves the folder as-is on Railway's `PORT`. Then add `prancheta.app` as its custom domain, and `app.prancheta.app` on the app's service.
+Recommended: a Cloudflare Pages project with Root directory `site`, no build command, output `.`. Netlify reads `site/netlify.toml` (Base directory `site`). See [HOSTING.md](../HOSTING.md).
+
+On Railway: add a second service from this repo and set its **Root Directory** to `site`. It serves the folder as-is on Railway's `PORT`. Then add `prancheta.app` as its custom domain, and `app.prancheta.app` on the app's service.
 
 ## Preview locally
 
