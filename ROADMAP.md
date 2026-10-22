@@ -4,7 +4,7 @@ Updated 2026-10-21. The product is built. What stands between it and the first s
 
 ## Top 3 next steps
 
-1. **Settle the address before anyone uses the app for real.** Buy `prancheta.app` and move the app to `app.prancheta.app` before the first sale. A web app's saved classes belong to its address, so anything saved on the Railway test URL stays behind when the address changes. While doing this, consider hosting the app and site as static files (Cloudflare Pages or similar) instead of Railway, which went down twice on 2026-10-20 and 2026-10-21. A buyer who opens the receipt link during an outage asks for a refund.
+1. **Settle the address before anyone uses the app for real.** Buy `prancheta.app` and move the app to `app.prancheta.app` before the first sale. A web app's saved classes belong to its address, so anything saved on the Railway test URL stays behind when the address changes. Host the app and site on Cloudflare Pages with a Netlify spare instead of Railway, which went down on 2026-10-20, 10-21 and 10-22 ([HOSTING.md](HOSTING.md)). A buyer who opens the receipt link during an outage asks for a refund.
 2. **One iPhone test pass of everything since PR #8.** None of these has run on a real iPhone yet: making a clip, the class file, Teach mode with the phone locked, the folding editor, flexible blocks, the Rank icon on the home screen, and Plan with AI. Use the checklist below.
 3. **Open the store.** Create the Lemon Squeezy store and the $10 product, set the receipt to give the app link, add `CHECKOUT_URL` and the support email to `site/index.html`, and add privacy, terms and refund pages. Lemon Squeezy reviews new stores, and those pages are what it looks for.
 
@@ -30,8 +30,8 @@ Updated 2026-10-21. The product is built. What stands between it and the first s
 
 ### Robert
 
-- [ ] Buy `prancheta.app` (fallback `pranchetabjj.com`).
-- [ ] Choose where the app and site live (stay on Railway, or move to a static host).
+- [ ] Buy `prancheta.app` (fallback `pranchetabjj.com`), at Cloudflare.
+- [ ] Create Cloudflare and Netlify accounts and connect the repo (steps in [HOSTING.md](HOSTING.md)), and an UptimeRobot check.
 - [ ] Open the Lemon Squeezy store, create the $10 product, confirm the 30-day refund.
 - [ ] Set up the support inbox (`help@prancheta.app` is on the page now).
 - [ ] Send the founder line: name, belt, gym, years teaching.
@@ -46,7 +46,8 @@ Updated 2026-10-21. The product is built. What stands between it and the first s
 - [ ] Make `og:image` an absolute URL once the domain is known, so links shared in WhatsApp and iMessage show a picture.
 - [ ] Add a link to the site in the class file footer, so every class a coach sends tells the reader where it came from.
 - [ ] Put the founder line on the sales page once Robert sends it.
-- [ ] Move hosting and wire the domains, if Robert picks a new host.
+- [x] Make the repo build on Cloudflare Pages and Netlify as well as Railway (HOSTING.md).
+- [ ] Wire the domains once the accounts and domain exist.
 
 ### iPhone pass
 

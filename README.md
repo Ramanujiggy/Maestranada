@@ -18,9 +18,13 @@ npm run test:run   # unit tests
 npm run build      # static build in app/dist
 ```
 
-## Deploy on Railway
+## Deploy
 
-Create a service from this repo and leave the Root Directory empty. The root `railway.toml` and `package.json` build `app/` and serve the static build on Railway's `PORT`.
+The app is static files, so any static host works. The recommended setup (Cloudflare Pages, with a Netlify spare, behind the `prancheta.app` domain) and what an outage means for buyers are in [HOSTING.md](HOSTING.md).
+
+- **Cloudflare Pages:** Root directory empty, build command `npm run build`, output `app/dist`.
+- **Netlify:** reads `netlify.toml`.
+- **Railway:** leave the Root Directory empty. The root `railway.toml` and `package.json` build `app/` and serve it on Railway's `PORT`.
 
 Plans are saved in the browser's local storage on the device they were made on. Back up all classes, or send a class file, to move them between devices.
 
@@ -33,7 +37,7 @@ The app is a Progressive Web App. After the first visit it works with no connect
 There is no free tier, no account and no license key. A buyer pays once and gets the app.
 
 1. Create a $10 product in Lemon Squeezy.
-2. Set the purchase to deliver the app link (the Railway URL) in the receipt page and email. The same link is the install for every device:
+2. Set the purchase to deliver the app link (`https://app.prancheta.app`, never a host's own URL; see [HOSTING.md](HOSTING.md)) in the receipt page and email. The same link is the install for every device:
    - **Laptop:** Chrome or Edge show an **Install app** button. Safari on a Mac uses File → Add to Dock.
    - **iPhone / iPad:** Share → Add to Home Screen.
    - **Android:** the **Install app** button.
