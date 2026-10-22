@@ -1,15 +1,17 @@
-import { Fragment, useCallback, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { useRoute, navigate } from './lib/router.ts';
 import { usePlans } from './lib/usePlans.ts';
-import { LibraryPage } from './pages/LibraryPage.tsx';
+import { LibraryPage, downloadBackup } from './pages/LibraryPage.tsx';
 import { EditorPage } from './pages/EditorPage.tsx';
 import { RunPage } from './pages/RunPage.tsx';
 import { Toast } from './components/feedback.tsx';
 import { Welcome } from './components/Welcome.tsx';
-import { useInstall } from './lib/pwa.ts';
+import { InstallGuide } from './components/InstallGuide.tsx';
+import { canInstall, installNudgeDue, markInstallNudged, useInstall } from './lib/pwa.ts';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { usePendingFile } from './lib/files.ts';
 import { t, useLang } from './lib/i18n.ts';
+import { todayISO } from './lib/plan.ts';
 
 const WELCOMED_KEY = 'maestranada.welcomed';
 
@@ -68,6 +70,30 @@ function Screens() {
     setFlag(WELCOMED_KEY);
     setWelcomeOpen(false);
   }, []);
+  const [installOpen, setInstallOpen] = useState(false);
+  const closeInstall = useCallback(() => setInstallOpen(false), []);
+  const backup = useCallback(async () => {
+    try {
+      await downloadBackup(`prancheta-backup-${todayISO()}.json`, api.plans);
+      return true;
+    } catch {
+      notify(t('backupFailed'));
+      return false;
+    }
+  }, [api.plans, notify]);
+
+  // Once the coach has written a class of their own (the seeded example is
+  // never edited), offer to install, back on the class list with nothing else
+  // open. At most twice, a week apart (see pwa.ts).
+  const ownWork = api.plans.some((p) => p.updatedAt !== p.createdAt);
+  const nudged = useRef(false);
+  const calm = route.name === 'library' && !welcomeOpen && !pickerOpen && ownWork;
+  useEffect(() => {
+    if (nudged.current || !calm || !canInstall(install) || !installNudgeDue()) return;
+    nudged.current = true;
+    markInstallNudged();
+    setInstallOpen(true);
+  }, [calm, install]);
 
   const pendingFile = usePendingFile();
   const {
@@ -83,6 +109,7 @@ function Screens() {
         notify={notify}
         install={install}
         onHelp={() => setWelcomeOpen(true)}
+        onInstall={() => setInstallOpen(true)}
         pickerOpen={pickerOpen}
         setPickerOpen={setPickerOpen}
       />
@@ -127,6 +154,10 @@ function Screens() {
         <Welcome
           install={install}
           onClose={closeWelcome}
+          onInstall={() => {
+            closeWelcome();
+            setInstallOpen(true);
+          }}
           onStart={() => {
             closeWelcome();
             navigate({ name: 'library' });
@@ -134,6 +165,7 @@ function Screens() {
           }}
         />
       )}
+      {installOpen && <InstallGuide install={install} hasPlans={ownWork} onBackup={backup} onClose={closeInstall} />}
     </>
   );
 }

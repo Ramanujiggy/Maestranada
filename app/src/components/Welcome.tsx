@@ -2,8 +2,8 @@
 // everything stays on this device. Reopened from "How it works".
 
 import { useEffect } from 'react';
-import { Download, Share, X } from 'lucide-react';
-import type { InstallState } from '../lib/pwa.ts';
+import { Download, X } from 'lucide-react';
+import { canInstall, type InstallState } from '../lib/pwa.ts';
 import { Logo } from './Marks.tsx';
 import { t, type Key } from '../lib/i18n.ts';
 
@@ -19,10 +19,12 @@ const BLOCKS: [Key, Key][] = [
 export function Welcome({
   install,
   onStart,
+  onInstall,
   onClose,
 }: {
   install: InstallState;
   onStart: () => void;
+  onInstall: () => void;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -68,9 +70,12 @@ export function Welcome({
           <p>
             <strong>{t('welcomePrivateTitle')}</strong> {t('welcomePrivate')}
           </p>
-          {install.kind === 'ios' && (
+          {canInstall(install) && install.kind !== 'prompt' && (
             <p>
-              <strong>{t('welcomeIosTitle')}</strong> {t('welcomeIosBefore')} <Share size={13} /> {t('welcomeIosAfter')}
+              <strong>{t('welcomeInstallTitle')}</strong> {t('welcomeInstall')}{' '}
+              <button type="button" className="link" onClick={onInstall}>
+                {t('installShowMe')}
+              </button>
             </p>
           )}
         </div>
