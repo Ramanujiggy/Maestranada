@@ -254,17 +254,14 @@ export function LibraryPage({
           {t('libraryTitle')}
         </h1>
         <p className="narrative">{t('libraryLead')}</p>
-        <div className="structure-strip">
+        <ol className="structure-strip">
           {STRUCTURE.map((s, i) => (
-            <span key={s} style={{ display: 'contents' }}>
-              <span className="step">
-                <b>{i + 1}</b>
-                {t(s)}
-              </span>
-              {i < STRUCTURE.length - 1 && <span className="sep">·</span>}
-            </span>
+            <li key={s}>
+              <b>{i + 1}</b>
+              <span>{t(s)}</span>
+            </li>
           ))}
-        </div>
+        </ol>
         <p className="section-hint" style={{ margin: '8px 0 0' }}>
           {t('structureNote')}
         </p>
@@ -276,9 +273,7 @@ export function LibraryPage({
       </section>
 
       <div className="library-head">
-        <div>
-          <div className="eyebrow">{t('yourClasses')}</div>
-        </div>
+        <div className="eyebrow">{t('yourClasses')}</div>
         <span className="muted" style={{ fontSize: 13 }}>
           {api.plans.length === 1 ? t('planCountOne') : t('planCountMany', { n: api.plans.length })}
         </span>

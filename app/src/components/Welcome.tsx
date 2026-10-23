@@ -52,9 +52,7 @@ export function Welcome({
         <ol className="welcome-blocks">
           {BLOCKS.map(([title, text], i) => (
             <li key={title}>
-              <span className="section-index" style={{ fontSize: 24, minWidth: 30 }}>
-                {i + 1}
-              </span>
+              <span className="num-tag">{i + 1}</span>
               <span>
                 <strong>{t(title)}</strong>
                 <span className="muted">{t(text)}</span>
