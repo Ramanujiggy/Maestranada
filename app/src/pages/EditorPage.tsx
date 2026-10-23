@@ -418,100 +418,102 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
               />
             </div>
 
-            {plan.blocks.map((block, index) => {
-              const isOpen = open === block.id;
-              const summary = sectionSummary(block);
-              const name = blockLabel(block);
-              const next = plan.blocks[index + 1];
-              const showName = !!block.title.trim() || !!shown[`${block.id}:name`];
-              return (
-                <section
-                  key={block.id}
-                  className={`card section${isOpen ? ' open' : ''}${dragging === block.id ? ' dragging' : ''}`}
-                  id={`block-${block.id}`}
-                >
-                  <div className="section-head">
-                    <button
-                      type="button"
-                      className="drag-handle"
-                      aria-label={t('dragBlock', { name })}
-                      onPointerDown={startDrag(block.id)}
-                      onKeyDown={handleKeys(index)}
-                    >
-                      <GripVertical size={18} />
-                    </button>
-                    <button
-                      type="button"
-                      className="section-toggle"
-                      aria-expanded={isOpen}
-                      aria-controls={`block-body-${block.id}`}
-                      onClick={() => toggle(block.id)}
-                    >
-                      <span className="section-index">
-                        <span className={`section-box${summary.filled ? ' filled' : ''}`} aria-hidden />
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      <span className="section-toggle-text">
-                        <span className="card-title">{name}</span>
-                        {!isOpen && <span className={`section-summary${summary.filled ? '' : ' is-empty'}`}>{summary.text}</span>}
-                      </span>
-                      <span className="section-time">{formatMinutes(blockMinutes(block))}</span>
-                      <ChevronDown size={18} className="section-chevron" aria-hidden />
-                    </button>
-                    <BlockMenu
-                      name={name}
-                      index={index}
-                      count={plan.blocks.length}
-                      onRename={() => rename(block.id)}
-                      onDuplicate={() => duplicate(index)}
-                      onMove={(to) => reorder(index, to)}
-                      onRemove={() => remove(index)}
-                    />
-                  </div>
-                  {isOpen && (
-                    <div className="section-stack" id={`block-body-${block.id}`}>
-                      <p className="section-hint section-lead">
-                        {block.title.trim() ? `${kindLabel(block.kind)}. ` : ''}
-                        {t(`hint.${block.kind}`)}
-                      </p>
-                      {showName && (
-                        <div id={`name-${block.id}`}>
-                          <Field label={t('blockName')}>
-                            {(id) => (
-                              <TextInput
-                                id={id}
-                                value={block.title}
-                                placeholder={t('blockNamePh', { name: kindLabel(block.kind) })}
-                                onChange={(title) => setBlock({ ...block, title })}
-                              />
-                            )}
-                          </Field>
-                        </div>
-                      )}
-                      <BlockFields
-                        block={block}
-                        set={setBlock}
-                        reveal={reveal(block.id)}
-                        notify={notify}
-                        askRemoveMove={(move) => setPendingMove({ block: block.id, move })}
-                        earlierGame={block.kind === 'game' ? earlierGame(index) : undefined}
+            <div className="block-sheet">
+              {plan.blocks.map((block, index) => {
+                const isOpen = open === block.id;
+                const summary = sectionSummary(block);
+                const name = blockLabel(block);
+                const next = plan.blocks[index + 1];
+                const showName = !!block.title.trim() || !!shown[`${block.id}:name`];
+                return (
+                  <section
+                    key={block.id}
+                    className={`section${isOpen ? ' open' : ''}${dragging === block.id ? ' dragging' : ''}`}
+                    id={`block-${block.id}`}
+                  >
+                    <div className="section-head">
+                      <button
+                        type="button"
+                        className="drag-handle"
+                        aria-label={t('dragBlock', { name })}
+                        onPointerDown={startDrag(block.id)}
+                        onKeyDown={handleKeys(index)}
+                      >
+                        <GripVertical size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        className="section-toggle"
+                        aria-expanded={isOpen}
+                        aria-controls={`block-body-${block.id}`}
+                        onClick={() => toggle(block.id)}
+                      >
+                        <span className="section-index">
+                          <span className={`section-box${summary.filled ? ' filled' : ''}`} aria-hidden />
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <span className="section-toggle-text">
+                          <span className="card-title">{name}</span>
+                          {!isOpen && <span className={`section-summary${summary.filled ? '' : ' is-empty'}`}>{summary.text}</span>}
+                        </span>
+                        <span className="section-time">{formatMinutes(blockMinutes(block))}</span>
+                        <ChevronDown size={18} className="section-chevron" aria-hidden />
+                      </button>
+                      <BlockMenu
+                        name={name}
+                        index={index}
+                        count={plan.blocks.length}
+                        onRename={() => rename(block.id)}
+                        onDuplicate={() => duplicate(index)}
+                        onMove={(to) => reorder(index, to)}
+                        onRemove={() => remove(index)}
                       />
-                      {next && (
-                        <div className="section-next">
-                          <button type="button" className="btn btn-secondary" onClick={() => openBlock(next.id, true)}>
-                            {t('nextSection', { name: blockLabel(next) })} <ArrowRight size={15} />
-                          </button>
-                        </div>
-                      )}
                     </div>
-                  )}
-                </section>
-              );
-            })}
+                    {isOpen && (
+                      <div className="section-stack" id={`block-body-${block.id}`}>
+                        <p className="section-hint section-lead">
+                          {block.title.trim() ? `${kindLabel(block.kind)}. ` : ''}
+                          {t(`hint.${block.kind}`)}
+                        </p>
+                        {showName && (
+                          <div id={`name-${block.id}`}>
+                            <Field label={t('blockName')}>
+                              {(id) => (
+                                <TextInput
+                                  id={id}
+                                  value={block.title}
+                                  placeholder={t('blockNamePh', { name: kindLabel(block.kind) })}
+                                  onChange={(title) => setBlock({ ...block, title })}
+                                />
+                              )}
+                            </Field>
+                          </div>
+                        )}
+                        <BlockFields
+                          block={block}
+                          set={setBlock}
+                          reveal={reveal(block.id)}
+                          notify={notify}
+                          askRemoveMove={(move) => setPendingMove({ block: block.id, move })}
+                          earlierGame={block.kind === 'game' ? earlierGame(index) : undefined}
+                        />
+                        {next && (
+                          <div className="section-next">
+                            <button type="button" className="btn btn-secondary" onClick={() => openBlock(next.id, true)}>
+                              {t('nextSection', { name: blockLabel(next) })} <ArrowRight size={15} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
 
-            <button type="button" className="add-block" onClick={() => setAdding(true)}>
-              <Plus size={17} /> {t('addBlock')}
-            </button>
+              <button type="button" className="add-block" onClick={() => setAdding(true)}>
+                <Plus size={17} /> {t('addBlock')}
+              </button>
+            </div>
           </div>
 
           <aside className="desk-margin">

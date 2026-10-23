@@ -52,7 +52,7 @@ export function TemplatePicker({
           </span>
         </button>
 
-        <div className="eyebrow" style={{ margin: '18px 0 4px' }}>
+        <div className="eyebrow ruled" style={{ margin: '20px 0 4px' }}>
           {t('pickLayout')}
         </div>
         <p className="section-hint" style={{ margin: '0 0 10px' }}>
@@ -66,14 +66,16 @@ export function TemplatePicker({
                 <span className="template-title">{t(`format.${f}`)}</span>
                 <span className="template-blurb">{t(`formatBlurb.${f}`)}</span>
                 <span className="format-blocks" aria-hidden>
-                  {FORMATS[f].map((k) => t(`short.${k}`)).join(' · ')}
+                  {FORMATS[f].map((k, j) => (
+                    <span key={j}>{t(`short.${k}`)}</span>
+                  ))}
                 </span>
               </span>
             </button>
           ))}
         </div>
 
-        <div className="eyebrow" style={{ margin: '20px 0 10px' }}>
+        <div className="eyebrow ruled" style={{ margin: '22px 0 10px' }}>
           {t('orExample')}
         </div>
         <div className="template-grid">

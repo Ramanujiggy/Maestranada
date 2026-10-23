@@ -84,9 +84,8 @@ export function Timeline({ plan, onJump }: { plan: ClassPlan; onJump?: (id: stri
         {segments.map((s, i) => (
           <button type="button" key={s.id} className="timeline-row" onClick={() => onJump?.(s.id)}>
             <span className="timeline-dot" style={{ background: KIND_COLORS[s.kind] }} />
-            <span className="timeline-label">
-              <span className="muted">{String(i + 1).padStart(2, '0')}</span>&nbsp;&nbsp;{s.label}
-            </span>
+            <span className="timeline-num">{String(i + 1).padStart(2, '0')}</span>
+            <span className="timeline-label">{s.label}</span>
             <span className="time">{formatMinutes(s.minutes)}</span>
           </button>
         ))}

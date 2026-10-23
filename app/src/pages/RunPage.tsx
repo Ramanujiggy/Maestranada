@@ -118,7 +118,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
     case 'concept':
       body = (
         <>
-          <div className="eyebrow-strong" style={{ marginBottom: 8 }}>
+          <div className="eyebrow-strong ruled" style={{ marginBottom: 10 }}>
             {t('generalRule')}
           </div>
           <p className="run-big run-lead" style={{ fontSize: 'clamp(26px, 3.6vw, 36px)' }}>
@@ -132,7 +132,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       body = (
         <>
           <div className="run-block">
-            <div className="eyebrow-strong" style={{ marginBottom: 12 }}>
+            <div className="eyebrow-strong ruled" style={{ marginBottom: 12 }}>
               {t('goalsAndMovements')}
             </div>
             {block.goals.length ? <BigList items={block.goals} /> : <Empty />}
@@ -182,7 +182,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
           {moves.length === 0 && block.options.length === 0 && <Empty />}
           {moves.map((m, i) => (
             <div className="run-block" key={m.id}>
-              <div className="eyebrow-strong" style={{ marginBottom: 6 }}>
+              <div className="eyebrow-strong ruled" style={{ marginBottom: 8 }}>
                 {t('moveN', { n: i + 1 })}
               </div>
               <p className="run-big run-lead" style={{ fontSize: 'clamp(24px, 3.2vw, 32px)', marginBottom: 6 }}>
@@ -194,7 +194,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
           ))}
           {block.options.length > 0 && (
             <div className="run-block">
-              <div className="eyebrow-strong" style={{ marginBottom: 12 }}>
+              <div className="eyebrow-strong ruled" style={{ marginBottom: 12 }}>
                 {t('options')}
               </div>
               <BigList items={block.options} />
@@ -258,8 +258,9 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
 
       <div className={`run-stage ${schedule ? '' : 'solo'}`}>
         <div key={block.id}>
-          <div className="eyebrow">
-            {String(step + 1).padStart(2, '0')} · {kindLabel(block.kind)}
+          <div className="run-kicker">
+            <span className="num-tag">{String(step + 1).padStart(2, '0')}</span>
+            <span className="eyebrow">{kindLabel(block.kind)}</span>
           </div>
           <h1 className="run-title">{heading}</h1>
           {body}
