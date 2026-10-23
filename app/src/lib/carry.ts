@@ -5,19 +5,18 @@
 
 import { storedPlan, type ClassPlan } from './plan.ts';
 import { withClipData } from './clips.ts';
-import { getUnlock, takeCarriedUnlock } from './access.ts';
+import { isUnlocked, takeCarriedUnlock } from './access.ts';
 
 const CARRIED_KEY = 'maestranada.carryDone';
 
 /**
  * Everything the coach has, clips included, as backup JSON. Once the app is
- * unlocked, the unlock comes along too, so the copy it's pasted into is
- * unlocked as well.
+ * unlocked, a mark saying so comes along (never the license key), so the copy
+ * it's pasted into is unlocked as well.
  */
 async function carryText(plans: ClassPlan[]): Promise<string> {
   const classes = (await withClipData(plans)).map(storedPlan);
-  const unlock = getUnlock();
-  return JSON.stringify(unlock ? { classes, unlock } : classes);
+  return JSON.stringify(isUnlocked() ? { classes, unlocked: true } : classes);
 }
 
 /**
@@ -57,7 +56,7 @@ export function readBackup(text: string | null): unknown[] | null {
 /** Unlocks this copy when the copied classes came with an unlock. Says whether it did. */
 export function takeUnlockFrom(text: string | null): boolean {
   const parsed = parse(text);
-  return !!parsed && typeof parsed === 'object' && 'unlock' in parsed && takeCarriedUnlock((parsed as { unlock: unknown }).unlock);
+  return !!parsed && typeof parsed === 'object' && takeCarriedUnlock((parsed as { unlocked?: unknown }).unlocked);
 }
 
 function parse(text: string | null): unknown {

@@ -20,8 +20,11 @@ const UNLOCK_KEY = 'maestranada.unlock';
 const LS_VALIDATE = 'https://api.lemonsqueezy.com/v1/licenses/validate';
 
 export interface Unlock {
-  key: string;
-  /** When the key was checked with Lemon Squeezy. */
+  /** The license key, kept on this device only. Never copied, backed up or sent anywhere but the check. */
+  key?: string;
+  /** Unlocked by pasting classes from an unlocked copy, which brings a mark, not the key. */
+  carried?: true;
+  /** When it was unlocked. */
   at: string;
 }
 
@@ -101,9 +104,10 @@ const emit = () => listeners.forEach((l) => l());
 function readUnlock(raw: string | null): Unlock | null {
   try {
     const u: unknown = raw === null ? null : JSON.parse(raw);
-    if (u && typeof u === 'object' && typeof (u as Unlock).key === 'string' && (u as Unlock).key.trim()) {
-      return { key: (u as Unlock).key.trim(), at: String((u as Unlock).at ?? '') };
-    }
+    if (!u || typeof u !== 'object') return null;
+    const { key, carried, at } = u as Unlock;
+    if (typeof key === 'string' && key.trim()) return { key: key.trim(), at: String(at ?? '') };
+    if (carried === true) return { carried: true, at: String(at ?? '') };
   } catch {
     // Not an unlock.
   }
@@ -131,11 +135,14 @@ export function saveUnlock(u: Unlock): void {
   emit();
 }
 
-/** An unlock carried over from another copy of the app (see carry.ts). */
-export function takeCarriedUnlock(u: unknown): boolean {
-  const found = readUnlock(JSON.stringify(u ?? null));
-  if (!found || isUnlocked()) return false;
-  saveUnlock(found);
+/**
+ * Unlocks this copy when classes pasted from an unlocked copy say so (see
+ * carry.ts). Only a mark travels, never the key, so copied classes that end
+ * up in a group chat or an AI chat don't give the key away.
+ */
+export function takeCarriedUnlock(mark: unknown): boolean {
+  if (mark !== true || isUnlocked()) return false;
+  saveUnlock({ carried: true, at: new Date().toISOString() });
   return true;
 }
 

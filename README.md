@@ -38,7 +38,7 @@ Anyone can open the app at `https://app.prancheta.app` (never a host's own URL; 
 
 How the unlock works (`app/src/lib/access.ts`): Lemon Squeezy issues a license key with the purchase. The coach pastes it into the unlock sheet once; the app checks it with Lemon Squeezy's License API while online, remembers it on the device, and works offline from then on. The check goes through the app's own address first (`functions/api/license.js` on Cloudflare Pages, a proxy rule in `netlify.toml`), then straight to Lemon Squeezy.
 
-On iPhone the Home Screen app keeps storage apart from Safari, so the unlock travels with **Copy my classes**: pasting into the other copy unlocks it too. Entering the key again also works. The same goes for a new web address.
+On iPhone the Home Screen app keeps storage apart from Safari, so the unlock travels with **Copy my classes**: pasting into the other copy unlocks it too. Only a mark saying "unlocked" travels, never the key: the key stays in that one copy's storage and is never in copied classes, backups, class files or exports. Entering the key again also works. The same goes for a new web address.
 
 Someone technical could get around this by clearing storage or sharing a key. At $10 that's fine; stopping it would need accounts.
 

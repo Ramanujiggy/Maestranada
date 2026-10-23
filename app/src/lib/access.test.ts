@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { FREE_CLASSES, freeLeft, isUnlocked, judgeKey, recordMade, roomFor, saveUnlock, takeCarriedUnlock } from './access.ts';
+import { FREE_CLASSES, freeLeft, getUnlock, isUnlocked, judgeKey, recordMade, roomFor, saveUnlock, takeCarriedUnlock } from './access.ts';
 import { blankPlan, duplicatePlan, normalizePlan, samplePlan, type ClassPlan } from './plan.ts';
-import { readBackup, takeUnlockFrom } from './carry.ts';
+import { copyClasses, readBackup, takeUnlockFrom } from './carry.ts';
 
 const own = (): ClassPlan => ({ ...blankPlan(), updatedAt: '2099-01-01T00:00:00.000Z' });
 
@@ -74,16 +74,26 @@ describe('judgeKey', () => {
 describe('carrying the unlock', () => {
   beforeEach(() => localStorage.clear());
 
-  it('reads the classes and the unlock from copied text', () => {
-    const text = JSON.stringify({ classes: [own(), own()], unlock: { key: 'ABC', at: '2026-10-23' } });
+  it('reads the classes and the unlock mark from copied text', () => {
+    const text = JSON.stringify({ classes: [own(), own()], unlocked: true });
     expect(readBackup(text)).toHaveLength(2);
     expect(takeUnlockFrom(text)).toBe(true);
     expect(isUnlocked()).toBe(true);
+    expect(getUnlock()?.key).toBeUndefined();
   });
 
-  it('ignores copied text without an unlock', () => {
+  it('ignores copied text without the mark', () => {
     expect(takeUnlockFrom(JSON.stringify([own()]))).toBe(false);
-    expect(takeCarriedUnlock({ key: '  ' })).toBe(false);
+    expect(takeCarriedUnlock({ key: 'ABC' })).toBe(false);
     expect(isUnlocked()).toBe(false);
+  });
+
+  it('never puts the key in copied classes', async () => {
+    saveUnlock({ key: 'SECRET-KEY', at: '' });
+    let copied = '';
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (s: string) => void (copied = s) } });
+    expect(await copyClasses([own()])).toBe(true);
+    expect(copied).not.toContain('SECRET-KEY');
+    expect(JSON.parse(copied).unlocked).toBe(true);
   });
 });
