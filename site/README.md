@@ -7,6 +7,7 @@ The one-page site for prancheta.app. Plain HTML, no build step. The app itself l
 At the bottom of `index.html`, set:
 
 - `CHECKOUT_URL`: the Lemon Squeezy checkout link. Until it's set, the buy buttons scroll to the price.
+- `APP_URL`: the app (`https://app.prancheta.app`). The Try it free buttons open it; until it's set, they scroll to the price.
 - `SUPPORT_EMAIL`: the address shown in the footer.
 
 ## Deploy

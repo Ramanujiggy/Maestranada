@@ -123,6 +123,8 @@ export interface ClassPlan {
   updatedAt: string;
   /** The class in teaching order. Never empty. */
   blocks: Block[];
+  /** The example class every fresh copy starts with. It never counts as one the coach made. */
+  example?: true;
 }
 
 const MOVEMENTS_EN = [
@@ -379,7 +381,7 @@ export function storedPlan(plan: ClassPlan): ClassPlan & LegacySections {
 
 /** The example class: offensive opportunities from the leg drag. */
 export function samplePlan(now = new Date()): ClassPlan {
-  return getLang() === 'pt' ? samplePlanPt(now) : samplePlanEn(now);
+  return { ...(getLang() === 'pt' ? samplePlanPt(now) : samplePlanEn(now)), example: true };
 }
 
 function samplePlanEn(now: Date): ClassPlan {
@@ -757,6 +759,7 @@ export function normalizePlan(raw: unknown): ClassPlan | null {
     date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : base.date,
     createdAt: str(r.createdAt, base.createdAt),
     updatedAt: str(r.updatedAt, base.updatedAt),
+    ...(r.example === true ? { example: true as const } : {}),
   };
   const blocks = Array.isArray(r.blocks) ? r.blocks.map(normalizeBlock).filter((b): b is Block => b !== null) : [];
   if (blocks.length) return { ...meta, blocks };
@@ -769,8 +772,9 @@ export function normalizePlan(raw: unknown): ClassPlan | null {
 
 export function duplicatePlan(plan: ClassPlan, now = new Date()): ClassPlan {
   const stamp = now.toISOString();
+  const { example: _example, ...rest } = plan;
   return {
-    ...plan,
+    ...rest,
     id: uid(),
     title: plan.title ? t('copyOf', { title: plan.title }) : '',
     createdAt: stamp,

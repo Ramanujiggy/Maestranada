@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Check, ClipboardPaste, Copy, Download, Eraser, Upload, X } from 'lucide-react';
 import { classFormat, readAiReply, type ReadError } from '../lib/aiClass.ts';
 import { saveFile } from '../lib/files.ts';
-import { readBackup } from '../lib/carry.ts';
+import { readBackup, takeUnlockFrom } from '../lib/carry.ts';
 import type { ClassPlan } from '../lib/plan.ts';
 import { t, type Key } from '../lib/i18n.ts';
 
@@ -130,7 +130,10 @@ export function AiPlanner({
 
   const submit = (text: string) => {
     const classes = readBackup(text);
-    if (classes) return onClasses(classes);
+    if (classes) {
+      takeUnlockFrom(text);
+      return onClasses(classes);
+    }
     const result = readAiReply(text);
     if ('error' in result) {
       setError(result.error);

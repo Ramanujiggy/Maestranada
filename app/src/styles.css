@@ -3262,3 +3262,65 @@ html:has(.backdrop) body {
     padding-bottom: calc(110px + var(--sab));
   }
 }
+
+/* ---- Free version and the unlock ---- */
+
+.free-note {
+  margin-top: 24px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.unlock-sheet {
+  max-width: 460px;
+}
+
+.unlock-buy {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.unlock-key {
+  display: grid;
+  gap: 8px;
+}
+
+.unlock-key label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.unlock-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.unlock-row .input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  min-width: 0;
+}
+
+.unlock-fine {
+  margin: 16px 0 0;
+  font-size: 13px;
+}
+
+.unlock-done {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 18px;
+}
+
+.unlock-done svg {
+  flex: none;
+  color: var(--marker);
+  margin-top: 2px;
+}

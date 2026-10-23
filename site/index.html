@@ -66,6 +66,8 @@
       .muted { color: var(--muted); }
       .btn { display: inline-flex; align-items: center; gap: 10px; background: var(--marker); color: var(--on-marker); font: 600 19px/1 var(--ui); text-decoration: none; padding: 18px 26px; border-radius: 8px; }
       .btn:active { background: var(--marker-press); }
+      .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+      .cta-alt { font: 600 16px/1.3 var(--ui); color: inherit; }
       .btn:focus-visible { outline: 3px solid #2f6fd6; outline-offset: 3px; }
       .fine { font-size: 14px; color: var(--muted); margin-top: 12px; }
       .link-quiet { font-size: 15px; color: var(--muted); }
@@ -149,7 +151,7 @@
             <button type="button" data-lang="en" aria-pressed="true" lang="en">EN</button>
             <button type="button" data-lang="pt" aria-pressed="false" lang="pt-BR">PT</button>
           </div>
-          <a class="link-quiet" href="#buy" data-i18n="getIt">$10 · Get it</a>
+          <a class="link-quiet try" href="#buy" data-i18n="getIt">Try it free</a>
         </div>
       </header>
 
@@ -157,9 +159,12 @@
         <div>
           <p class="eyebrow" data-i18n="heroEyebrow">Class prep for Jiu-Jitsu coaches</p>
           <h1 data-i18n="heroTitle">Plan the class.<br />Teach the game.</h1>
-          <p class="lead" data-i18n="heroLead">You already know what you want to teach. Prancheta turns it into a clean class in minutes, with short clips of the moves, and keeps it on your phone, ready to teach. Pay once: $10, yours for good.</p>
-          <a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a>
-          <p class="fine" data-i18n="heroFine">One payment. No subscription, no account. Works offline.</p>
+          <p class="lead" data-i18n="heroLead">You already know what you want to teach. Prancheta turns it into a clean class in minutes, with short clips of the moves, and keeps it on your phone, ready to teach. Make your first 3 classes free. Then $10 once, yours for good.</p>
+          <div class="cta">
+            <a class="btn try" href="#buy" data-i18n="try">Try it free</a>
+            <a class="cta-alt buy" href="#buy" data-i18n="buyNow">Or get it now · $10</a>
+          </div>
+          <p class="fine" data-i18n="heroFine">3 classes free, no card. Then one payment. No subscription, no account. Works offline.</p>
         </div>
         <div class="phone"><img src="/img/game.png" width="780" height="1688" data-i18n-alt="heroAlt" alt="Prancheta on a phone in Teach mode: positional sparring with a 3:00 round timer and the round list." /></div>
       </div>
@@ -236,11 +241,14 @@
         <div>
           <p class="eyebrow" data-i18n="priceEyebrow">Price</p>
           <div class="amount" data-i18n="amount">$10<small>once</small></div>
-          <p class="lead" style="margin:14px 0 0" data-i18n="priceLead">Every update included. Less than one instructional. Less than a month of gym software.</p>
+          <p class="lead" style="margin:14px 0 0" data-i18n="priceLead">Your first 3 classes are free. After that, $10 unlocks as many as you want, every update included. Less than one instructional. Less than a month of gym software.</p>
         </div>
         <div>
-          <a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a>
-          <p class="fine" data-i18n="priceFine">Secure checkout by Lemon Squeezy. Your app link arrives right away. Full refund within 30 days.</p>
+          <div class="cta">
+            <a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a>
+            <a class="cta-alt try" href="#buy" data-i18n="tryFirst">Try it free first</a>
+          </div>
+          <p class="fine" data-i18n="priceFine">Secure checkout by Lemon Squeezy. Your unlock key arrives right away: paste it into the app once. Full refund within 30 days.</p>
         </div>
       </div>
     </section>
@@ -250,10 +258,11 @@
         <p class="eyebrow" data-i18n="faqEyebrow">Questions</p>
         <h2 data-i18n="faqTitle">Good to know</h2>
         <div class="faq">
+          <details><summary data-i18n="q0">Can I try it first?</summary><p data-i18n="q0a">Yes. Open the app and make 3 classes free, with everything in: AI planning, clips, Teach mode, printing. To make more, unlock it for $10 once. The classes you made stay yours either way.</p></details>
           <details><summary data-i18n="q1">Is it a subscription?</summary><p data-i18n="q1a">No. You pay $10 once and keep it, updates included.</p></details>
-          <details><summary data-i18n="q2">Do I need an account?</summary><p data-i18n="q2a">No. You pay, you get the link, it works.</p></details>
+          <details><summary data-i18n="q2">Do I need an account?</summary><p data-i18n="q2a">No. Open the app and start. When you buy, you paste the key from your receipt once, and that's it.</p></details>
           <details><summary data-i18n="q3">Which devices does it work on?</summary><p data-i18n="q3a">iPhone, iPad, Android, Mac, Windows and Chromebook. One purchase covers all of yours.</p></details>
-          <details><summary data-i18n="q4">How do I install it?</summary><p data-i18n="q4a">Open your link. On iPhone or iPad, tap Share, then Add to Home Screen. On Android, Chrome or Edge, tap Install app. From then on it opens like any other app.</p></details>
+          <details><summary data-i18n="q4">How do I install it?</summary><p data-i18n="q4a">Open the app. On iPhone or iPad, tap Share, then Add to Home Screen. On Android, Chrome or Edge, tap Install app. From then on it opens like any other app.</p></details>
           <details><summary data-i18n="q5">Does it work without signal?</summary><p data-i18n="q5a">Yes, once it's installed.</p></details>
           <details><summary data-i18n="q6">Where are my classes saved?</summary><p data-i18n="q6a">On your device. Back them up any time, or move them to another device.</p></details>
           <details><summary data-i18n="q10">What if I lose or change my phone?</summary><p data-i18n="q10a">Your classes live on your device, not on a server. Tap Back up all now and then and keep the file anywhere. On a new phone, open your link and import it.</p></details>
@@ -273,11 +282,13 @@
     </div>
 
     <script>
-      // The only two things to change before launch.
+      // The things to change before launch.
       const CHECKOUT_URL = ''; // Lemon Squeezy checkout link, e.g. https://prancheta.lemonsqueezy.com/buy/...
+      const APP_URL = ''; // The app, e.g. https://app.prancheta.app
       const SUPPORT_EMAIL = 'help@prancheta.app';
 
       if (CHECKOUT_URL) document.querySelectorAll('a.buy').forEach((a) => (a.href = CHECKOUT_URL));
+      if (APP_URL) document.querySelectorAll('a.try').forEach((a) => (a.href = APP_URL));
       document.querySelectorAll('a.support').forEach((a) => {
         a.href = 'mailto:' + SUPPORT_EMAIL;
         a.textContent = SUPPORT_EMAIL;
@@ -290,12 +301,15 @@
       const PT = {
         title: 'Prancheta · Planejamento de aula para professores de Jiu-Jitsu',
         desc: 'O app de planejamento de aula para professores de Jiu-Jitsu. Transforme as suas ideias numa aula organizada em minutos e leve no celular. US$10 uma vez. Funciona offline no celular, tablet e notebook.',
-        getIt: 'US$10 · Comprar',
+        getIt: 'Teste grátis',
         heroEyebrow: 'Planejamento de aula para professores de Jiu-Jitsu',
         heroTitle: 'Planeje a aula.<br />Ensine o jogo.',
-        heroLead: 'Você já sabe o que quer ensinar. A Prancheta transforma isso numa aula organizada em minutos, com clipes curtos das técnicas, e guarda no seu celular, pronta para dar. Pague uma vez só: US$10, e ela é sua para sempre.',
+        heroLead: 'Você já sabe o que quer ensinar. A Prancheta transforma isso numa aula organizada em minutos, com clipes curtos das técnicas, e guarda no seu celular, pronta para dar. Faça suas 3 primeiras aulas de graça. Depois, US$10 uma vez só, e ela é sua para sempre.',
         buy: 'Quero a Prancheta · US$10',
-        heroFine: 'Um pagamento. Sem assinatura, sem cadastro. Funciona offline.',
+        try: 'Teste grátis',
+        buyNow: 'Ou compre agora · US$10',
+        tryFirst: 'Teste grátis antes',
+        heroFine: '3 aulas grátis, sem cartão. Depois, um pagamento. Sem assinatura, sem cadastro. Funciona offline.',
         heroAlt: 'A Prancheta no celular, no modo aula: o específico com um cronômetro de 3:00 e a lista de rounds.',
         problemEyebrow: 'O problema',
         problemTitle: 'São 18h55. A aula começa às 19h.',
@@ -346,18 +360,20 @@
         nameNote: 'A prancheta do professor, agora no seu bolso.',
         priceEyebrow: 'Preço',
         amount: 'US$10<small>uma vez</small>',
-        priceLead: 'Todas as atualizações incluídas. Menos que um instrucional. Menos que um mês de sistema de academia.',
-        priceFine: 'Pagamento seguro pela Lemon Squeezy, cobrado em dólar no cartão. O link do seu app chega na hora. Reembolso integral em até 30 dias.',
+        priceLead: 'Suas 3 primeiras aulas são grátis. Depois, US$10 libera quantas você quiser, com todas as atualizações incluídas. Menos que um instrucional. Menos que um mês de sistema de academia.',
+        priceFine: 'Pagamento seguro pela Lemon Squeezy, cobrado em dólar no cartão. A chave de desbloqueio chega na hora: cole no app uma vez. Reembolso integral em até 30 dias.',
         faqEyebrow: 'Dúvidas',
         faqTitle: 'Bom saber',
+        q0: 'Posso testar antes?',
+        q0a: 'Pode. Abra o app e faça 3 aulas grátis, com tudo incluído: planejar com IA, clipes, modo aula e impressão. Para fazer mais, desbloqueie por US$10 uma vez. As aulas que você fez continuam suas de qualquer jeito.',
         q1: 'É assinatura?',
         q1a: 'Não. Você paga US$10 uma vez e é seu, com as atualizações incluídas.',
         q2: 'Preciso fazer cadastro?',
-        q2a: 'Não. Você paga, recebe o link e já funciona.',
+        q2a: 'Não. Abra o app e comece. Quando comprar, cole a chave do recibo uma vez e pronto.',
         q3: 'Em quais aparelhos funciona?',
         q3a: 'iPhone, iPad, Android, Mac, Windows e Chromebook. Uma compra vale para todos os seus.',
         q4: 'Como eu instalo?',
-        q4a: 'Abra o seu link. No iPhone ou iPad, toque em Compartilhar e depois em Adicionar à Tela de Início. No Android, Chrome ou Edge, toque em Instalar app. A partir daí ela abre como qualquer outro app.',
+        q4a: 'Abra o app. No iPhone ou iPad, toque em Compartilhar e depois em Adicionar à Tela de Início. No Android, Chrome ou Edge, toque em Instalar app. A partir daí ela abre como qualquer outro app.',
         q5: 'Funciona sem sinal?',
         q5a: 'Sim, depois de instalada.',
         q6: 'Onde minhas aulas ficam salvas?',

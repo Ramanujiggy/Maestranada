@@ -30,7 +30,8 @@ import type { Template } from '../lib/samples.ts';
 import { canInstall, isApple, isStandalone, type InstallState } from '../lib/pwa.ts';
 import { restoreClipData, withClipData } from '../lib/clips.ts';
 import { saveFile } from '../lib/files.ts';
-import { carryOfferDone, copyClasses, freshCopy, markCarryDone, readBackup, readClipboard } from '../lib/carry.ts';
+import { carryOfferDone, copyClasses, freshCopy, markCarryDone, readBackup, readClipboard, takeUnlockFrom } from '../lib/carry.ts';
+import { FREE_CLASSES, freeLeft, useUnlocked } from '../lib/access.ts';
 import { t, type Key } from '../lib/i18n.ts';
 import { LangSwitch } from '../components/LangSwitch.tsx';
 import { ThemeButton, ThemeSheet } from '../components/ThemeSheet.tsx';
@@ -117,6 +118,7 @@ export function LibraryPage({
   install,
   onHelp,
   onInstall,
+  onUnlock,
   pickerOpen,
   setPickerOpen,
 }: {
@@ -125,6 +127,7 @@ export function LibraryPage({
   install: InstallState;
   onHelp: () => void;
   onInstall: () => void;
+  onUnlock: () => void;
   pickerOpen: boolean;
   setPickerOpen: (open: boolean) => void;
 }) {
@@ -141,13 +144,17 @@ export function LibraryPage({
   const folding = shelf.months.flatMap((m) => m.plans).filter((p) => filing.folding.includes(p.id));
   const cards = [...shelf.cards, ...folding];
 
-  const open = (plan: ClassPlan) => {
-    api.upsert(plan);
+  const open = (plan: ClassPlan): boolean => {
+    const added = api.upsert(plan);
     setPickerOpen(false);
     setAiOpen(false);
-    navigate({ name: 'edit', id: plan.id });
+    if (added) navigate({ name: 'edit', id: plan.id });
+    return added;
   };
-  const create = () => setPickerOpen(true);
+  const unlocked = useUnlocked();
+  const left = unlocked ? FREE_CLASSES : freeLeft(api.plans);
+  // With the free classes used up, New class goes straight to the unlock.
+  const create = () => (left > 0 ? setPickerOpen(true) : onUnlock());
 
   // Classes waiting elsewhere: in Safari, when this is the Home Screen app on
   // Apple, or at an old web address that sent the coach here with ?paste.
@@ -159,19 +166,21 @@ export function LibraryPage({
     setCarryOffer(false);
   };
 
-  /** Stores backup plans, their clips first. Says how it went. */
-  const importBackup = async (raw: unknown[]): Promise<boolean> => {
+  /** Stores backup plans, their clips first. Says how it went: 'none' when
+   *  there were no classes in it, 'limit' when the unlock was asked for. */
+  const importBackup = async (raw: unknown[]): Promise<'done' | 'none' | 'limit'> => {
     const list = raw.map(normalizePlan).filter((p): p is ClassPlan => p !== null);
-    if (!list.length) return false;
+    if (!list.length) return 'none';
     try {
       await restoreClipData(raw);
     } catch {
       notify(t('importNoSpace'));
-      return true;
+      return 'done';
     }
     const changed = api.importMany(list);
+    if (changed === null) return 'limit';
     notify(changed ? (changed === 1 ? t('importedOne') : t('importedMany', { n: changed })) : t('importNothing'));
-    return true;
+    return 'done';
   };
 
   /** Classes copied from another Prancheta: from the paste offer, the footer, or the AI box. */
@@ -179,14 +188,18 @@ export function LibraryPage({
     // On a fresh copy, the coach's own classes replace the untouched example
     // rather than sit beside a second one. Anywhere else nothing is removed.
     const examples = freshCopy(api.plans) ? api.plans.map((p) => p.id) : [];
-    if (!(await importBackup(raw))) return notify(t('pasteNothing'));
+    const result = await importBackup(raw);
+    if (result === 'none') return notify(t('pasteNothing'));
+    if (result === 'limit') return;
     const pasted = new Set(raw.map((p) => (p as { id?: unknown } | null)?.id));
     examples.filter((id) => !pasted.has(id)).forEach(api.remove);
     closeCarry();
   };
 
   const paste = async () => {
-    const raw = readBackup(await readClipboard());
+    const text = await readClipboard();
+    if (takeUnlockFrom(text)) notify(t('unlockCarried'));
+    const raw = readBackup(text);
     if (raw) await pasteClasses(raw);
     else notify(t('pasteNothing'));
   };
@@ -217,7 +230,7 @@ export function LibraryPage({
         if (!backup) {
           const result = parsed ? planFromJson(parsed) : readAiReply(text);
           if ('plan' in result) {
-            open(result.plan);
+            if (!open(result.plan)) return;
             notify(result.skipped ? t('aiBuiltSkipped', { n: result.skipped }) : t('aiBuilt'));
             return;
           }
@@ -227,7 +240,7 @@ export function LibraryPage({
     } catch {
       raw = [];
     }
-    if (!(await importBackup(raw))) notify(t('importBad'));
+    if ((await importBackup(raw)) === 'none') notify(t('importBad'));
   };
 
   const exportAll = async () => {
@@ -384,8 +397,7 @@ export function LibraryPage({
                     aria-label={t('duplicate')}
                     title={t('duplicate')}
                     onClick={() => {
-                      api.upsert(duplicatePlan(p));
-                      notify(t('planDuplicated'));
+                      if (api.upsert(duplicatePlan(p))) notify(t('planDuplicated'));
                     }}
                   >
                     <Copy size={16} />
@@ -413,6 +425,15 @@ export function LibraryPage({
           <strong>{t('iosKeepTitle')}</strong> {t('iosKeep')}{' '}
           <button type="button" className="link" onClick={onInstall}>
             {t('installShowMe')}
+          </button>
+        </div>
+      )}
+
+      {!unlocked && (
+        <div className="subpanel free-note">
+          <span>{left > 0 ? t('freeLeft', { n: left, total: FREE_CLASSES }) : t('freeUsed', { total: FREE_CLASSES })}</span>{' '}
+          <button type="button" className="link" onClick={onUnlock}>
+            {t('unlockLink')}
           </button>
         </div>
       )}
@@ -475,7 +496,7 @@ export function LibraryPage({
             setPickerOpen(true);
           }}
           onPlan={(plan, skipped) => {
-            open(plan);
+            if (!open(plan)) return;
             notify(skipped ? t('aiBuiltSkipped', { n: skipped }) : t('aiBuilt'));
           }}
           onClasses={(raw) => {
