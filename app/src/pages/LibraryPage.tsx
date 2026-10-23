@@ -392,7 +392,7 @@ export function LibraryPage({
           {cards.map((p) => (
             <article
               key={p.id}
-              className={`card plan-card${p === next ? ' is-next' : ''}${p === picked ? ' is-picked' : ''}${folding.includes(p) ? ' is-folding' : ''}`}
+              className={`card plan-card${p === next ? ' is-next' : ''}${p === picked && api.plans.length > 1 ? ' is-picked' : ''}${folding.includes(p) ? ' is-folding' : ''}`}
               onClick={() => tapCard(p)}
               onAnimationEnd={folding.includes(p) ? () => filing.done(p.id) : undefined}
             >
@@ -454,25 +454,28 @@ export function LibraryPage({
       )}
 
       <footer className="library-foot">
-        <span>{t('worksOffline')}</span>
-        <span className="sep">·</span>
-        <span>{t('plansStayHere')}</span>
-        {api.plans.length > 0 && (
-          <>
-            <span className="sep">·</span>
-            <button type="button" className="link" onClick={() => void exportAll()}>
-              {t('backUpAll')}
-            </button>
-            <span className="sep">·</span>
-            <button type="button" className="link" onClick={() => void copyAll()}>
-              {t('copyClasses')}
-            </button>
-          </>
-        )}
-        <span className="sep">·</span>
-        <button type="button" className="link" onClick={() => void paste()}>
-          {t('pasteClasses')}
-        </button>
+        <div className="library-foot-row library-foot-info">
+          <span>{t('worksOffline')}</span>
+          <span className="sep">·</span>
+          <span>{t('plansStayHere')}</span>
+        </div>
+        <div className="library-foot-row">
+          {api.plans.length > 0 && (
+            <>
+              <button type="button" className="link" onClick={() => void exportAll()}>
+                {t('backUpAll')}
+              </button>
+              <span className="sep">·</span>
+              <button type="button" className="link" onClick={() => void copyAll()}>
+                {t('copyClasses')}
+              </button>
+              <span className="sep">·</span>
+            </>
+          )}
+          <button type="button" className="link" onClick={() => void paste()}>
+            {t('pasteClasses')}
+          </button>
+        </div>
       </footer>
 
       {/* On a phone the two things a coach does here sit under the thumb. */}
