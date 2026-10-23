@@ -11,6 +11,7 @@ import {
   formatMinutes,
   nextClass,
   normalizePlan,
+  shelveLibrary,
   storedPlan,
   todayISO,
   totalMinutes,
@@ -33,6 +34,7 @@ import { carryOfferDone, copyClasses, freshCopy, markCarryDone, readClipboard } 
 import { t, type Key } from '../lib/i18n.ts';
 import { LangSwitch } from '../components/LangSwitch.tsx';
 import { ThemeButton, ThemeSheet } from '../components/ThemeSheet.tsx';
+import { Shelf, useJustFiled } from '../components/Shelf.tsx';
 
 const STRUCTURE: Key[] = ['stripWarmup', 'sec.concept', 'sec.game', 'sec.gems', 'sec.freeRoll'];
 
@@ -131,9 +133,13 @@ export function LibraryPage({
   const [themeOpen, setThemeOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const sorted = [...api.plans].sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt));
-  const next = nextClass(api.plans);
   const today = todayISO();
+  const shelf = shelveLibrary(api.plans, today);
+  const next = nextClass(api.plans);
+  const filing = useJustFiled(shelf.months);
+  // Just-filed classes keep their card for a beat, then fold into their month.
+  const folding = shelf.months.flatMap((m) => m.plans).filter((p) => filing.folding.includes(p.id));
+  const cards = [...shelf.cards, ...folding];
 
   const open = (plan: ClassPlan) => {
     api.upsert(plan);
@@ -304,7 +310,7 @@ export function LibraryPage({
         </div>
       )}
 
-      <section className={`hero-card${sorted.length ? ' has-plans' : ''}`}>
+      <section className={`hero-card${api.plans.length ? ' has-plans' : ''}`}>
         <div className="eyebrow-strong">{t('classPrep')}</div>
         <h1 className="page-title" style={{ margin: '10px 0 8px' }}>
           {t('libraryTitle')}
@@ -335,7 +341,7 @@ export function LibraryPage({
         </span>
       </div>
 
-      {sorted.length === 0 ? (
+      {api.plans.length === 0 ? (
         <div className="card empty">
           <h2 className="card-title">{t('noClasses')}</h2>
           <p className="muted" style={{ margin: 0 }}>
@@ -346,12 +352,14 @@ export function LibraryPage({
           </button>
         </div>
       ) : (
+        <>
         <div className="plan-grid">
-          {sorted.map((p) => (
+          {cards.map((p) => (
             <article
               key={p.id}
-              className={`card plan-card${p === next ? ' is-next' : ''}`}
+              className={`card plan-card${p === next ? ' is-next' : ''}${folding.includes(p) ? ' is-folding' : ''}`}
               onClick={() => navigate({ name: 'edit', id: p.id })}
+              onAnimationEnd={folding.includes(p) ? () => filing.done(p.id) : undefined}
             >
               <div className="plan-card-head">
                 <span className="plan-date">
@@ -397,6 +405,8 @@ export function LibraryPage({
             </article>
           ))}
         </div>
+        <Shelf months={shelf.months} ticking={filing.ticking} />
+        </>
       )}
 
       {(install.kind === 'ios' || install.kind === 'ios-inapp') && (

@@ -197,6 +197,35 @@ export function nextClass<P extends { date: string; updatedAt: string }>(plans: 
   return [...plans].sort((a, b) => b.date.localeCompare(a.date) || newestEdit(a, b))[0];
 }
 
+/** Past this many classes the library tidies itself. */
+export const SHELF_AFTER = 8;
+/** How many past classes keep a full card once it does. */
+export const RECENT_CARDS = 3;
+
+export interface Shelf<P> {
+  /** Today, what's coming, and the last three taught: full cards. */
+  cards: P[];
+  /** Everything older, filed by month (YYYY-MM), newest month first. */
+  months: { month: string; plans: P[] }[];
+}
+
+/** Splits the library into cards and month folders once it grows, so a coach
+ *  with a year of classes still sees this week's on one screen. */
+export function shelveLibrary<P extends { date: string; updatedAt: string }>(plans: P[], today = todayISO()): Shelf<P> {
+  const sorted = [...plans].sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt));
+  if (sorted.length <= SHELF_AFTER) return { cards: sorted, months: [] };
+  const ahead = sorted.filter((p) => p.date >= today);
+  const past = sorted.filter((p) => p.date < today);
+  const months: Shelf<P>['months'] = [];
+  for (const p of past.slice(RECENT_CARDS)) {
+    const month = p.date.slice(0, 7);
+    const last = months[months.length - 1];
+    if (last?.month === month) last.plans.push(p);
+    else months.push({ month, plans: [p] });
+  }
+  return { cards: [...ahead, ...past.slice(0, RECENT_CARDS)], months };
+}
+
 // ─── Blocks ──────────────────────────────────────────────────────────────────
 
 export function defaultRounds(): GameRounds {
