@@ -15,7 +15,7 @@ export default defineConfig({
         name: 'Prancheta',
         short_name: 'Prancheta',
         description: 'Plan your Jiu-Jitsu classes and teach them from your phone.',
-        theme_color: '#FFFFFF',
+        theme_color: '#F8F9FB',
         background_color: '#FFFFFF',
         display: 'standalone',
         orientation: 'any',

@@ -5,11 +5,11 @@
 
 :root,
 [data-theme='light'] {
-  --paper: #ffffff;
+  --paper: #f8f9fb;
   /* The surface the sheets lie on. Same as the paper except in Tan. */
   --desk: var(--paper);
-  --sheet: #f5f7fa;
-  --sheet-2: #eef2f7;
+  --sheet: #eef1f5;
+  --sheet-2: #e6eaf0;
   --ink: #13233b;
   --ink-2: #3d4c63;
   --muted: #5d6b80;
@@ -79,46 +79,46 @@
    kraft-brown desk, so the page has two materials instead of one tint.
    The marker is a deep red that clears AA on both. */
 [data-theme='tan'] {
-  --desk: #c2a274;
-  --paper: #f3e9d2;
-  --sheet: #ebdec2;
-  --sheet-2: #e3d4b5;
-  --ink: #20160c;
-  --ink-2: #3d2f1f;
+  --desk: #c6ac84;
+  --paper: #e6d8bb;
+  --sheet: #ddcdac;
+  --sheet-2: #d4c29f;
+  --ink: #2a2015;
+  --ink-2: #45372a;
   --muted: #4a3a28;
-  --hint: #6b583f;
-  --rule: #d8c7a4;
-  --rule-strong: #b39a72;
-  --marker: #a3201a;
+  --hint: #6f5c44;
+  --rule: #cdb994;
+  --rule-strong: #a88e66;
+  --marker: #9e1f18;
   --belt: #150e07;
-  --marker-press: #7f1912;
+  --marker-press: #7c1812;
   --on-marker: #ffffff;
   --rest: #5e3a22;
   --on-rest: #ffffff;
   --focus: #2f6fd6;
-  --sec-1: #d8c7a4;
-  --sec-2: #b39a72;
-  --sec-3: #86704f;
-  --sec-4: #4b3a26;
-  --sec-5: #20160c;
+  --sec-1: #cdb994;
+  --sec-2: #a88e66;
+  --sec-3: #806a4a;
+  --sec-4: #4f3d29;
+  --sec-5: #2a2015;
   color-scheme: light;
 }
 
 /* Dark: belt black, no blue. Rest lifts to charcoal. */
 [data-theme='dark'] {
-  --paper: #111111;
-  --sheet: #1b1b1b;
-  --sheet-2: #232323;
-  --ink: #f2f1ee;
-  --ink-2: #cfcdc8;
+  --paper: #161616;
+  --sheet: #1f1f1f;
+  --sheet-2: #282828;
+  --ink: #e6e3dc;
+  --ink-2: #c7c4bd;
   --muted: #a3a19b;
   --hint: #77756f;
-  --rule: #303030;
-  --rule-strong: #484848;
+  --rule: #2e2e2e;
+  --rule-strong: #444444;
   --marker: #ff5b4f;
   --belt: var(--ink);
   --marker-press: #ff7a70;
-  --on-marker: #111111;
+  --on-marker: #161616;
   --rest: #3a3a3a;
   --on-rest: #ffffff;
   --focus: #8fb6ff;
@@ -126,7 +126,7 @@
   --sec-2: #5c5c5c;
   --sec-3: #858585;
   --sec-4: #b5b5b5;
-  --sec-5: #f2f1ee;
+  --sec-5: #e6e3dc;
   color-scheme: dark;
 }
 
