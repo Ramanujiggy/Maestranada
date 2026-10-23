@@ -93,12 +93,17 @@ export function clipIds(plans: ClassPlan[]): Set<string> {
   return ids;
 }
 
+/** Clips stored for a class that isn't saved yet (an import in progress). Pruning leaves them alone. */
+export const heldClips = new Set<string>();
+
 /** Removes stored clips no plan points at any more (a replaced clip, a deleted class). */
 export async function pruneClips(plans: ClassPlan[]): Promise<void> {
   const keep = clipIds(plans);
   const keys = await run<IDBValidKey[]>('readonly', (s) => s.getAllKeys());
   const owner = (k: string) => (k.endsWith(POSTER) ? k.slice(0, -POSTER.length) : k);
-  await Promise.all(keys.map(String).filter((k) => !keep.has(owner(k))).map((k) => deleteClip(k)));
+  // Held clips are checked last, as an import may have stored one while the keys were read.
+  const drop = (k: string) => !keep.has(owner(k)) && !heldClips.has(owner(k));
+  await Promise.all(keys.map(String).filter(drop).map((k) => deleteClip(k)));
 }
 
 export interface ClipState {
