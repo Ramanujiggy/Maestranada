@@ -10,6 +10,7 @@ import { InstallGuide } from './components/InstallGuide.tsx';
 import { canInstall, installNudgeDue, markInstallNudged, useInstall } from './lib/pwa.ts';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { usePendingFile } from './lib/files.ts';
+import { copyClasses } from './lib/carry.ts';
 import { t, useLang } from './lib/i18n.ts';
 import { todayISO } from './lib/plan.ts';
 
@@ -72,13 +73,16 @@ function Screens() {
   }, []);
   const [installOpen, setInstallOpen] = useState(false);
   const closeInstall = useCallback(() => setInstallOpen(false), []);
-  const backup = useCallback(async () => {
+  // Before installing on Apple: copy the classes for the Home Screen app to
+  // paste. Where the clipboard is blocked, a backup file does the same job.
+  const carry = useCallback(async () => {
+    if (await copyClasses(api.plans)) return 'copied' as const;
     try {
       await downloadBackup(`prancheta-backup-${todayISO()}.json`, api.plans);
-      return true;
+      return 'saved' as const;
     } catch {
       notify(t('backupFailed'));
-      return false;
+      return 'failed' as const;
     }
   }, [api.plans, notify]);
 
@@ -165,7 +169,7 @@ function Screens() {
           }}
         />
       )}
-      {installOpen && <InstallGuide install={install} hasPlans={ownWork} onBackup={backup} onClose={closeInstall} />}
+      {installOpen && <InstallGuide install={install} hasPlans={ownWork} onCarry={carry} onClose={closeInstall} />}
     </>
   );
 }

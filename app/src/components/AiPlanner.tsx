@@ -4,7 +4,7 @@
 // The class opens in the editor like any other, ready for clips and sending.
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Check, ClipboardPaste, Copy, Download, Upload, X } from 'lucide-react';
+import { ArrowLeft, Check, ClipboardPaste, Copy, Download, Eraser, Upload, X } from 'lucide-react';
 import { classFormat, readAiReply, type ReadError } from '../lib/aiClass.ts';
 import { saveFile } from '../lib/files.ts';
 import type { ClassPlan } from '../lib/plan.ts';
@@ -71,6 +71,11 @@ export function AiPlanner({
   const copy = async () => setCopied((await copyText(format)) ? 'ok' : 'failed');
   const saveFormat = () => void saveFile(new Blob([format], { type: 'text/plain' }), t('aiFormatFile')).catch(() => {});
   const fileRef = useRef<HTMLInputElement>(null);
+  const clear = () => {
+    setReply('');
+    setError(null);
+    replyRef.current?.focus();
+  };
   const openFile = async (file: File) => {
     try {
       const text = await file.text();
@@ -217,6 +222,11 @@ export function AiPlanner({
                 <button type="button" className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
                   <Upload size={16} /> {t('aiOpenFile')}
                 </button>
+                {reply && (
+                  <button type="button" className="btn btn-ghost" onClick={clear}>
+                    <Eraser size={16} /> {t('aiClear')}
+                  </button>
+                )}
               </div>
               <input
                 ref={fileRef}
