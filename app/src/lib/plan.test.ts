@@ -73,7 +73,9 @@ describe('class plan', () => {
     const p = samplePlan(NOW);
     // warm-up 10 + concept 5 + game (4×3 min + 3×30 s = 13.5) + gems 15 + free roll (4×5 + 3×1 = 23)
     expect(totalMinutes(p)).toBeCloseTo(66.5);
-    expect(formatMinutes(66.5)).toBe('1 h 6.5 min');
+    expect(formatMinutes(66.5)).toBe('1 h 7 min');
+    expect(formatMinutes(83)).toBe('1 h 23 min');
+    expect(formatMinutes(6.5)).toBe('6.5 min');
     expect(formatMinutes(45)).toBe('45 min');
     // The game-first blank adds a second, shorter game: 2×3 min + 30 s.
     expect(totalMinutes(blankPlan(NOW))).toBeCloseTo(66.5 + 6.5);

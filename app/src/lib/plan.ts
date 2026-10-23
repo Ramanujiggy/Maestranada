@@ -526,9 +526,11 @@ export function sectionSummary(b: Block): { filled: boolean; text: string } {
 export function formatMinutes(minutes: number): string {
   const rounded = Math.round(minutes * 2) / 2;
   if (rounded < 60) return `${trimZero(rounded)} min`;
-  const h = Math.floor(rounded / 60);
-  const m = rounded - h * 60;
-  return m === 0 ? `${h} h` : `${h} h ${trimZero(m)} min`;
+  // Past an hour, half minutes are noise: 66.5 reads as "1 h 7 min".
+  const whole = Math.round(minutes);
+  const h = Math.floor(whole / 60);
+  const m = whole - h * 60;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
 }
 
 function trimZero(n: number): string {
