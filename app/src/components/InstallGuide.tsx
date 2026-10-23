@@ -3,7 +3,7 @@
 // with the browser's own icons so the coach knows what to look for.
 
 import { useEffect, useState, type ReactNode } from 'react';
-import { Check, Copy, Download, EllipsisVertical, Share, SquarePlus, X } from 'lucide-react';
+import { Check, ClipboardCopy, Copy, Download, EllipsisVertical, Share, SquarePlus, X } from 'lucide-react';
 import { canInstall, iosBrowser, type InstallState } from '../lib/pwa.ts';
 import { Logo } from './Marks.tsx';
 import { t, type Key } from '../lib/i18n.ts';
@@ -13,15 +13,16 @@ type Step = { title: ReactNode; body?: ReactNode; action?: ReactNode };
 export function InstallGuide({
   install,
   hasPlans,
-  onBackup,
+  onCarry,
   onClose,
 }: {
   install: InstallState;
   hasPlans: boolean;
-  onBackup: () => Promise<boolean>;
+  /** Copies the classes, or saves a backup file where copying is blocked. */
+  onCarry: () => Promise<'copied' | 'saved' | 'failed'>;
   onClose: () => void;
 }) {
-  const [backedUp, setBackedUp] = useState(false);
+  const [carried, setCarried] = useState<'copied' | 'saved' | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -38,17 +39,18 @@ export function InstallGuide({
   const kind = install.kind;
 
   // A home-screen app on Apple starts with empty storage, so classes made in
-  // the browser have to travel over in a backup.
+  // the browser travel over on the clipboard: copy here, paste there.
   const backup: Step = {
-    title: t('installBackupTitle'),
-    body: t('installBackupBody'),
+    title: t('installCarryTitle'),
+    body: t(carried === 'saved' ? 'installBackupBody' : 'installCarryBody'),
     action: (
       <button
         type="button"
         className="btn btn-secondary"
-        onClick={() => void onBackup().then((ok) => ok && setBackedUp(true))}
+        onClick={() => void onCarry().then((r) => r !== 'failed' && setCarried(r))}
       >
-        {backedUp ? <Check size={16} /> : <Download size={16} />} {t(backedUp ? 'installBackedUp' : 'backUpAll')}
+        {carried ? <Check size={16} /> : <ClipboardCopy size={16} />}{' '}
+        {t(carried === 'copied' ? 'classesCopied' : carried === 'saved' ? 'installBackedUp' : 'copyClasses')}
       </button>
     ),
   };

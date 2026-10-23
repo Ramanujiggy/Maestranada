@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classFormat, extractJson, kindFrom, planFromJson, readAiReply } from './aiClass.ts';
+import { classForAi, classFormat, extractJson, planToJson, kindFrom, planFromJson, readAiReply } from './aiClass.ts';
 import { blocksOf, samplePlan, storedPlan, type ClassPlan } from './plan.ts';
 
 const ok = (r: ReturnType<typeof readAiReply>): { plan: ClassPlan; skipped: number } => {
@@ -146,5 +146,31 @@ describe('the class format', () => {
     const { plan } = ok(readAiReply(`Here's the plan:\n${filled.slice(filled.indexOf('```json'))}\nWant changes?`));
     expect(plan.title).toBe('Half guard sweeps');
     expect(blocksOf(plan, 'concept')[0].rule).toBe('Underhook before you move');
+  });
+});
+
+describe('a saved class back to the AI', () => {
+  it('round-trips through the AI format as a new class with the same content', () => {
+    const sample = samplePlan();
+    for (const lang of ['en', 'pt'] as const) {
+      const { plan } = ok(readAiReply(classForAi(sample, lang)));
+      expect(plan.id).not.toBe(sample.id);
+      expect(plan.title).toBe(sample.title);
+      expect(plan.blocks.map((b) => b.kind)).toEqual(sample.blocks.map((b) => b.kind));
+      expect(blocksOf(plan, 'gems')[0].moves.map((m) => m.name)).toEqual(blocksOf(sample, 'gems')[0].moves.map((m) => m.name));
+      expect(blocksOf(plan, 'game')[0].goals.map((g) => g.text)).toEqual(blocksOf(sample, 'game')[0].goals.map((g) => g.text));
+    }
+  });
+
+  it('sends plain words, not ids or clips', () => {
+    const sample = samplePlan();
+    const gems = blocksOf(sample, 'gems')[0];
+    gems.moves[0] = { ...gems.moves[0], clip: { id: 'clip1', width: 640, height: 360 } };
+    const json = JSON.stringify(planToJson(sample));
+    expect(json).not.toContain('"id"');
+    expect(json).not.toContain('clip1');
+    expect(json).toContain('"positionalSparring"');
+    expect(classForAi(sample, 'en')).toContain('Change only what I ask');
+    expect(classForAi(sample, 'pt')).toContain('Mude só o que eu pedir');
   });
 });
