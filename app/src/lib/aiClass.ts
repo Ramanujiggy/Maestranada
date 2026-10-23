@@ -315,9 +315,9 @@ const TEMPLATE = {
 const FORMAT: Record<Lang, string> = {
   en: `Fill in this Prancheta class plan (Prancheta is the app I plan my jiu-jitsu classes in).
 
-Use what we've talked about in this conversation: the position, the goal, the students, the time. Where we haven't covered something, make a sensible coaching choice. If you don't know what the class is about yet, ask me first.
+Use what we've talked about in this conversation: the position, the goal, the students, the time. Before you fill it in, check you have enough for a class I'd actually teach. If something that changes the plan is missing or unclear (what the class is about, the students' level, how long it runs, gi or no-gi), ask me first: a few short questions in one message, only the ones that matter. Small details we haven't covered, decide like a good coach would.
 
-Reply with the filled-in JSON in one \`\`\`json code block and nothing else. No comments inside the JSON.
+Once you have what you need, reply with the filled-in JSON in one \`\`\`json code block and nothing else. No comments inside the JSON.
 
 How the format works. A class is an ordered list of blocks, each with a "kind":
 - "warmup": movement to wake the body up, ending close to the real thing. minutes, drills (short lines).
@@ -335,9 +335,9 @@ ${JSON.stringify(TEMPLATE, null, 2)}
 
   pt: `Preencha este plano de aula do Prancheta (o Prancheta é o app onde eu planejo minhas aulas de jiu-jitsu).
 
-Use o que a gente conversou aqui: a posição, o objetivo, os alunos, o tempo. O que a gente não falou, decida como um bom professor decidiria. Se você ainda não sabe do que é a aula, me pergunte antes.
+Use o que a gente conversou aqui: a posição, o objetivo, os alunos, o tempo. Antes de preencher, veja se você tem o suficiente para uma aula que eu daria de verdade. Se faltar ou não estiver claro algo que muda o plano (do que é a aula, o nível dos alunos, quanto tempo dura, com ou sem kimono), me pergunte antes: poucas perguntas curtas numa mensagem só, apenas as que importam. Detalhes pequenos que a gente não falou, decida como um bom professor decidiria.
 
-Responda com o JSON preenchido num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
+Quando tiver o que precisa, responda com o JSON preenchido num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
 
 Como o formato funciona. A aula é uma lista ordenada de blocos, cada um com um "kind":
 - "warmup": aquecimento e movimentação, terminando perto da luta de verdade. minutes, drills (linhas curtas).
