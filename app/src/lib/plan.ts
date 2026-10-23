@@ -587,7 +587,8 @@ export function formatMinutes(minutes: number): string {
 }
 
 function trimZero(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+  // Portuguese writes a half minute as 13,5.
+  return Number.isInteger(n) ? String(n) : n.toFixed(1).replace('.', getLang() === 'pt' ? ',' : '.');
 }
 
 export function formatClock(totalSeconds: number): string {
