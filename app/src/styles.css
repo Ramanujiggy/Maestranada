@@ -73,30 +73,30 @@
   color-scheme: dark;
 }
 
-/* Tan: warm kraft paper with brown ink. The marker is a deeper red so it
-   still reads as the one alarm on the warm ground. */
+/* Tan: an old manila folder, heavy kraft with dark brown ink. The marker
+   is a deep oxblood red so it still reads as the one alarm on the brown. */
 [data-theme='tan'] {
-  --paper: #efe6d6;
-  --sheet: #e7dcc9;
-  --sheet-2: #dfd2bc;
-  --ink: #2b2117;
-  --ink-2: #4d3f30;
-  --muted: #65553f;
-  --hint: #85745e;
-  --rule: #d0c1a8;
-  --rule-strong: #b09e81;
-  --marker: #b3221a;
-  --belt: #1a140e;
-  --marker-press: #921b14;
+  --paper: #d2bb93;
+  --sheet: #c8af85;
+  --sheet-2: #bea47a;
+  --ink: #20160c;
+  --ink-2: #3d2f1f;
+  --muted: #4a3a28;
+  --hint: #6b583f;
+  --rule: #b9a078;
+  --rule-strong: #94795a;
+  --marker: #8e1810;
+  --belt: #150e07;
+  --marker-press: #6f120c;
   --on-marker: #ffffff;
-  --rest: #7a4a2e;
+  --rest: #5e3a22;
   --on-rest: #ffffff;
   --focus: #2f6fd6;
-  --sec-1: #d6c8b1;
-  --sec-2: #b8a487;
-  --sec-3: #8c785d;
-  --sec-4: #5c4b38;
-  --sec-5: #2b2117;
+  --sec-1: #b9a078;
+  --sec-2: #97805d;
+  --sec-3: #74603f;
+  --sec-4: #4b3a26;
+  --sec-5: #20160c;
   color-scheme: light;
 }
 
