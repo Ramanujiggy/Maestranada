@@ -18,10 +18,11 @@ function Swatch({ look }: { look: Look }) {
   );
 }
 
+/** The top-bar button on wider screens. On a phone, Theme is a row in the ⋯ menu. */
 export function ThemeButton({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" className="btn btn-ghost" aria-label={t('theme')} onClick={onClick}>
-      <Palette size={16} /> <span className="hide-sm">{t('theme')}</span>
+    <button type="button" className="btn btn-ghost hide-sm" onClick={onClick}>
+      <Palette size={16} /> {t('theme')}
     </button>
   );
 }
