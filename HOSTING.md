@@ -20,6 +20,8 @@ That's what a domain gives you. With `app.prancheta.app` pointing at a host, swi
 
 So: buy the domain and put the app on it before the first sale. Never give buyers a host's own URL.
 
+If classes ever do need to move (your own classes on the Railway address, say), keep the old address up until they're across: open the old one, tap **Copy my classes** at the bottom of the class list, then open the new address with `?paste` on the end (`https://app.prancheta.app/?paste`) and tap **Paste**. Clips come along. Don't redirect the old address before this, or its classes can't be reached.
+
 ## Recommendation
 
 1. **Buy `prancheta.app` at Cloudflare** and keep its DNS there.
