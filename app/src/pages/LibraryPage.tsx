@@ -254,6 +254,8 @@ export function LibraryPage({
   };
 
   const onImport = async (file: File) => {
+    // The picker takes any file now, so a photo or video is turned away before it's read.
+    if (/^(image|video|audio)\//.test(file.type)) return notify(t('importBad'));
     let raw: unknown[];
     try {
       const text = await file.text();
@@ -336,10 +338,11 @@ export function LibraryPage({
                 : []),
             ]}
           />
+          {/* No accept list: iPhone greys out any file whose type it doesn't know, such as
+              Evernote's .enex. What the file holds decides how it's read. */}
           <input
             ref={fileRef}
             type="file"
-            accept="application/json,.json,text/html,.html,.htm,text/plain,.txt,.enex"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];
