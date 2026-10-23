@@ -1559,6 +1559,177 @@ a {
   gap: 2px;
 }
 
+/* A class that just got filed holds its card for a beat, then folds down
+   and away into its month. Snappy and linear, like a page flipped over. */
+.plan-card.is-folding {
+  overflow: hidden;
+  transform-origin: top center;
+  animation: card-fold 180ms linear 650ms forwards;
+}
+
+@keyframes card-fold {
+  to {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+    opacity: 0;
+    transform: scaleY(0.4);
+  }
+}
+
+/* ─── Library: older classes, filed by month ─────────────────────────────── */
+
+.shelf {
+  margin-top: 28px;
+}
+
+.shelf-head {
+  margin-bottom: 8px;
+}
+
+.shelf-month {
+  border: 1px solid var(--rule-strong);
+  border-top: 2px solid var(--ink);
+  border-radius: 4px 4px 8px 8px;
+  background: var(--paper);
+}
+
+.shelf-month + .shelf-month {
+  margin-top: 8px;
+}
+
+.shelf-month-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: none;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+}
+
+.shelf-chev {
+  flex: none;
+  transition: transform 150ms linear;
+}
+
+.shelf-month.is-open .shelf-chev {
+  transform: rotate(90deg);
+}
+
+.shelf-month-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-head);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.shelf-count {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: var(--font-num);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* The count takes the new class in with one tick of the marker. */
+.shelf-count.is-ticking {
+  animation: count-tick 360ms linear;
+}
+
+@keyframes count-tick {
+  0%,
+  50% {
+    background: var(--marker);
+    color: var(--paper);
+  }
+}
+
+.shelf-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 160ms linear;
+}
+
+.shelf-month.is-open .shelf-body {
+  grid-template-rows: 1fr;
+}
+
+.shelf-rows {
+  min-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shelf-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 0 14px;
+  border-top: 1px solid var(--rule);
+}
+
+.shelf-row-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.shelf-day {
+  font-family: var(--font-num);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-right: 10px;
+  border-right: 1px solid var(--rule-strong);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+
+.shelf-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.shelf-length {
+  font-family: var(--font-num);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* On a narrow phone the title gets the room; the length is on the class. */
+@media (max-width: 380px) {
+  .shelf-length {
+    display: none;
+  }
+}
+
+.shelf-row-main:hover .shelf-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .empty {
   text-align: center;
   padding: 56px 24px;

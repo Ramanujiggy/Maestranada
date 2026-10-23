@@ -11,6 +11,8 @@ import {
   formatClock,
   formatMinutes,
   nextClass,
+  shelveLibrary,
+  SHELF_AFTER,
   freeRollSchedule,
   gameRoundCount,
   gameSchedule,
@@ -259,5 +261,38 @@ describe('folded block summaries', () => {
     expect(sectionSummary(firstOf(p, 'warmup')!).text.startsWith('Forward rolls, Backward rolls')).toBe(true);
     expect(sectionSummary({ ...firstOf(p, 'game')!, start: 'Leg drag', objective: ' ' })).toEqual({ filled: true, text: 'Leg drag' });
     expect(sectionSummary({ ...firstOf(p, 'freeRoll')!, rounds: 0 }).filled).toBe(false);
+  });
+});
+
+describe('library shelf', () => {
+  const at = (date: string, i = 0) => ({ id: `${date}-${i}`, date, updatedAt: `2026-10-0${i}T00:00:00Z` });
+
+  it('leaves a small library alone', () => {
+    const plans = Array.from({ length: SHELF_AFTER }, (_, i) => at(`2026-0${(i % 9) + 1}-10`));
+    const shelf = shelveLibrary(plans, '2026-10-20');
+    expect(shelf.months).toEqual([]);
+    expect(shelf.cards).toHaveLength(SHELF_AFTER);
+  });
+
+  it('keeps what is coming plus the last three taught, and files the rest by month', () => {
+    const plans = [
+      at('2026-10-22'),
+      at('2026-10-20'),
+      at('2026-10-18'),
+      at('2026-10-15'),
+      at('2026-10-13'),
+      at('2026-10-11'),
+      at('2026-10-08'),
+      at('2026-09-29'),
+      at('2026-09-03'),
+      at('2026-08-14'),
+    ];
+    const shelf = shelveLibrary(plans, '2026-10-20');
+    expect(shelf.cards.map((p) => p.date)).toEqual(['2026-10-22', '2026-10-20', '2026-10-18', '2026-10-15', '2026-10-13']);
+    expect(shelf.months.map((m) => [m.month, m.plans.map((p) => p.date)])).toEqual([
+      ['2026-10', ['2026-10-11', '2026-10-08']],
+      ['2026-09', ['2026-09-29', '2026-09-03']],
+      ['2026-08', ['2026-08-14']],
+    ]);
   });
 });
