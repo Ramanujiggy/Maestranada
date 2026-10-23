@@ -75,6 +75,33 @@
   color-scheme: dark;
 }
 
+/* Slate: cool charcoal with white type and grey chips, like a video
+   library at night. Coral marker as in Navy. */
+[data-theme='slate'] {
+  --paper: #181b22;
+  --sheet: #22262e;
+  --sheet-2: #2b3038;
+  --ink: #eceef1;
+  --ink-2: #d2d6dc;
+  --muted: #9ca3ad;
+  --hint: #6f7681;
+  --rule: #2a2f37;
+  --rule-strong: #3b424a;
+  --marker: #ff6a5c;
+  --belt: var(--ink);
+  --marker-press: #ff8578;
+  --on-marker: #181b22;
+  --rest: #3b424a;
+  --on-rest: #ffffff;
+  --focus: #8fb6ff;
+  --sec-1: #3b424a;
+  --sec-2: #59616c;
+  --sec-3: #7d8591;
+  --sec-4: #b3b9c2;
+  --sec-5: #eceef1;
+  color-scheme: dark;
+}
+
 /* Tan: an old brown leather folder at night. Manila-cream ink on dark
    brown, as calm as Navy. Rest lifts to a warm saddle brown. */
 [data-theme='tan'] {

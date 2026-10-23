@@ -6,10 +6,10 @@
 
 import { useSyncExternalStore } from 'react';
 
-export type Theme = 'auto' | 'navy' | 'tan' | 'light' | 'dark';
+export type Theme = 'auto' | 'navy' | 'slate' | 'tan' | 'light' | 'dark';
 export type Look = Exclude<Theme, 'auto'>;
 
-export const THEMES: Theme[] = ['auto', 'navy', 'tan', 'light', 'dark'];
+export const THEMES: Theme[] = ['auto', 'navy', 'slate', 'tan', 'light', 'dark'];
 
 const KEY = 'prancheta.theme';
 
@@ -17,6 +17,7 @@ const KEY = 'prancheta.theme';
 export const PAPER: Record<Look, string> = {
   light: '#f8f9fb',
   navy: '#0f1a2b',
+  slate: '#181b22',
   tan: '#1d1610',
   dark: '#161616',
 };
