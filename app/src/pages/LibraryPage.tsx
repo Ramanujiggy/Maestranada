@@ -30,7 +30,7 @@ import type { Template } from '../lib/samples.ts';
 import { canInstall, isApple, isStandalone, type InstallState } from '../lib/pwa.ts';
 import { restoreClipData, withClipData } from '../lib/clips.ts';
 import { saveFile } from '../lib/files.ts';
-import { carryOfferDone, copyClasses, freshCopy, markCarryDone, readClipboard } from '../lib/carry.ts';
+import { carryOfferDone, copyClasses, freshCopy, markCarryDone, readBackup, readClipboard } from '../lib/carry.ts';
 import { t, type Key } from '../lib/i18n.ts';
 import { LangSwitch } from '../components/LangSwitch.tsx';
 import { ThemeButton, ThemeSheet } from '../components/ThemeSheet.tsx';
@@ -174,22 +174,21 @@ export function LibraryPage({
     return true;
   };
 
+  /** Classes copied from another Prancheta: from the paste offer, the footer, or the AI box. */
+  const pasteClasses = async (raw: unknown[]) => {
+    // On a fresh copy, the coach's own classes replace the untouched example
+    // rather than sit beside a second one. Anywhere else nothing is removed.
+    const examples = freshCopy(api.plans) ? api.plans.map((p) => p.id) : [];
+    if (!(await importBackup(raw))) return notify(t('pasteNothing'));
+    const pasted = new Set(raw.map((p) => (p as { id?: unknown } | null)?.id));
+    examples.filter((id) => !pasted.has(id)).forEach(api.remove);
+    closeCarry();
+  };
+
   const paste = async () => {
-    const text = await readClipboard();
-    let parsed: unknown = null;
-    try {
-      parsed = text ? JSON.parse(text) : null;
-    } catch {
-      // Not classes: whatever else was on the clipboard.
-    }
-    // The offer only shows on a fresh copy, so anything here is the example.
-    // The coach's own classes replace it rather than sit beside a second one.
-    const examples = api.plans.map((p) => p.id);
-    if (Array.isArray(parsed) && (await importBackup(parsed))) {
-      const pasted = new Set(parsed.map((p) => (p as { id?: unknown } | null)?.id));
-      examples.filter((id) => !pasted.has(id)).forEach(api.remove);
-      closeCarry();
-    } else notify(t('pasteNothing'));
+    const raw = readBackup(await readClipboard());
+    if (raw) await pasteClasses(raw);
+    else notify(t('pasteNothing'));
   };
 
   const copyAll = async () => {
@@ -434,6 +433,10 @@ export function LibraryPage({
             </button>
           </>
         )}
+        <span className="sep">·</span>
+        <button type="button" className="link" onClick={() => void paste()}>
+          {t('pasteClasses')}
+        </button>
       </footer>
 
       {/* On a phone the two things a coach does here sit under the thumb. */}
@@ -474,6 +477,10 @@ export function LibraryPage({
           onPlan={(plan, skipped) => {
             open(plan);
             notify(skipped ? t('aiBuiltSkipped', { n: skipped }) : t('aiBuilt'));
+          }}
+          onClasses={(raw) => {
+            setAiOpen(false);
+            void pasteClasses(raw);
           }}
         />
       )}
