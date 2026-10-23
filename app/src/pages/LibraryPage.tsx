@@ -2,7 +2,7 @@
 // start a new class.
 
 import { useRef, useState } from 'react';
-import { CircleHelp, Copy, Download, MonitorDown, Trash2, Upload } from 'lucide-react';
+import { ClipboardPaste, CircleHelp, Copy, Download, MonitorDown, Trash2, Upload, X } from 'lucide-react';
 import {
   allMoves,
   blankPlan,
@@ -28,6 +28,7 @@ import type { Template } from '../lib/samples.ts';
 import { canInstall, isApple, isStandalone, type InstallState } from '../lib/pwa.ts';
 import { restoreClipData, withClipData } from '../lib/clips.ts';
 import { saveFile } from '../lib/files.ts';
+import { carryOfferDone, copyClasses, freshCopy, markCarryDone, readClipboard } from '../lib/carry.ts';
 import { t, type Key } from '../lib/i18n.ts';
 import { LangSwitch } from '../components/LangSwitch.tsx';
 
@@ -94,9 +95,56 @@ export function LibraryPage({
   };
   const create = () => setPickerOpen(true);
 
+  // Classes waiting elsewhere: in Safari, when this is the Home Screen app on
+  // Apple, or at an old web address that sent the coach here with ?paste.
+  const [carryOffer, setCarryOffer] = useState(
+    () => !carryOfferDone() && ((isStandalone() && isApple()) || new URLSearchParams(location.search).has('paste')),
+  );
+  const closeCarry = () => {
+    markCarryDone();
+    setCarryOffer(false);
+  };
+
+  /** Stores backup plans, their clips first. Says how it went. */
+  const importBackup = async (raw: unknown[]): Promise<boolean> => {
+    const list = raw.map(normalizePlan).filter((p): p is ClassPlan => p !== null);
+    if (!list.length) return false;
+    try {
+      await restoreClipData(raw);
+    } catch {
+      notify(t('importNoSpace'));
+      return true;
+    }
+    const changed = api.importMany(list);
+    notify(changed ? (changed === 1 ? t('importedOne') : t('importedMany', { n: changed })) : t('importNothing'));
+    return true;
+  };
+
+  const paste = async () => {
+    const text = await readClipboard();
+    let parsed: unknown = null;
+    try {
+      parsed = text ? JSON.parse(text) : null;
+    } catch {
+      // Not classes: whatever else was on the clipboard.
+    }
+    // The offer only shows on a fresh copy, so anything here is the example.
+    // The coach's own classes replace it rather than sit beside a second one.
+    const examples = api.plans.map((p) => p.id);
+    if (Array.isArray(parsed) && (await importBackup(parsed))) {
+      const pasted = new Set(parsed.map((p) => (p as { id?: unknown } | null)?.id));
+      examples.filter((id) => !pasted.has(id)).forEach(api.remove);
+      closeCarry();
+    } else notify(t('pasteNothing'));
+  };
+
+  const copyAll = async () => {
+    if (await copyClasses(api.plans)) notify(t('classesCopied'));
+    else notify(t('copyFailed'));
+  };
+
   const onImport = async (file: File) => {
     let raw: unknown[];
-    let list: ClassPlan[];
     try {
       const text = await file.text();
       const classFile = await import('../lib/classFile.ts');
@@ -123,23 +171,10 @@ export function LibraryPage({
         }
         raw = Array.isArray(parsed) ? parsed : parsed ? [parsed] : [];
       }
-      list = raw.map(normalizePlan).filter((p): p is ClassPlan => p !== null);
     } catch {
-      list = [];
       raw = [];
     }
-    if (!list.length) {
-      notify(t('importBad'));
-      return;
-    }
-    try {
-      await restoreClipData(raw);
-    } catch {
-      notify(t('importNoSpace'));
-      return;
-    }
-    const changed = api.importMany(list);
-    notify(changed ? (changed === 1 ? t('importedOne') : t('importedMany', { n: changed })) : t('importNothing'));
+    if (!(await importBackup(raw))) notify(t('importBad'));
   };
 
   const exportAll = async () => {
@@ -193,6 +228,23 @@ export function LibraryPage({
         </div>
       </header>
 
+      {carryOffer && freshCopy(api.plans) && (
+        <div className="subpanel carry-offer" role="region" aria-label={t('carryTitle')}>
+          <div>
+            <strong>{t('carryTitle')}</strong>
+            <span className="muted">{t(isStandalone() && isApple() ? 'carryBodyApple' : 'carryBody')}</span>
+          </div>
+          <div className="carry-actions">
+            <button type="button" className="btn btn-primary" onClick={() => void paste()}>
+              <ClipboardPaste size={16} /> {t('paste')}
+            </button>
+            <button type="button" className="icon-btn" aria-label={t('close')} onClick={closeCarry}>
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <section className="hero-card">
         <div className="eyebrow-strong">{t('classPrep')}</div>
         <h1 className="page-title" style={{ margin: '10px 0 8px' }}>
@@ -235,11 +287,6 @@ export function LibraryPage({
           <p className="muted" style={{ margin: 0 }}>
             {t('noClassesBody')}
           </p>
-          {isStandalone() && isApple() && (
-            <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
-              {t('emptyImportApple')}
-            </p>
-          )}
           <button type="button" className="btn btn-primary" onClick={create}>
             <ClipboardIcon size={16} /> {t('newClassPlan')}
           </button>
@@ -313,6 +360,10 @@ export function LibraryPage({
             <span className="sep">·</span>
             <button type="button" className="link" onClick={() => void exportAll()}>
               {t('backUpAll')}
+            </button>
+            <span className="sep">·</span>
+            <button type="button" className="link" onClick={() => void copyAll()}>
+              {t('copyClasses')}
             </button>
           </>
         )}

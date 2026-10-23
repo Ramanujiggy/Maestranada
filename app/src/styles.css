@@ -2508,3 +2508,28 @@ html:has(.backdrop) body {
   align-items: center;
   border-color: var(--ink);
 }
+
+/* Paste offer on a fresh copy of the app: classes may be waiting elsewhere. */
+.carry-offer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.carry-offer {
+  flex-wrap: wrap;
+}
+
+.carry-offer > div:first-child {
+  display: grid;
+  gap: 4px;
+  flex: 1 1 260px;
+  font-size: 14px;
+}
+
+.carry-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
