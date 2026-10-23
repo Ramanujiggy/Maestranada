@@ -16,7 +16,7 @@
       // Paint in the coach's theme from the first frame. Same rules as
       // resolveTheme in src/lib/theme.ts.
       (function () {
-        var t, paper = { light: '#f8f9fb', navy: '#0f1a2b', tan: '#1d1610', dark: '#161616' };
+        var t, paper = { light: '#f8f9fb', navy: '#0f1a2b', slate: '#181b22', tan: '#1d1610', dark: '#161616' };
         try { t = localStorage.getItem('prancheta.theme'); } catch (e) {}
         if (!paper[t]) t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'navy' : 'light';
         document.documentElement.setAttribute('data-theme', t);
