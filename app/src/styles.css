@@ -3,7 +3,8 @@
    seconds of a round. Lines separate things, not shadows. Everything that
    moves takes 120ms or less, and pressed states show on touch-down. */
 
-:root {
+:root,
+[data-theme='light'] {
   --paper: #ffffff;
   --sheet: #f5f7fa;
   --sheet-2: #eef2f7;
@@ -40,33 +41,89 @@
   color-scheme: light;
 }
 
-/* Night: the same sheet in ink, for planning in the dark. Rest stays a
+/* The look is set on <html> as data-theme (see lib/theme.ts). Light is the
+   default above; Auto picks light or navy from the phone. Every look keeps
+   red for "act now" only. The selectors work on any element, so the theme
+   picker's swatches show each look in its own colors. */
+
+/* Navy: the same sheet in ink, for planning in the dark. Rest stays a
    brighter navy instead of flashing white. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #0f1a2b;
-    --sheet: #16233a;
-    --sheet-2: #1c2b45;
-    --ink: #eef2f7;
-    --ink-2: #c9d3e0;
-    --muted: #9fb0c6;
-    --hint: #6e809a;
-    --rule: #26354d;
-    --rule-strong: #34465f;
-    --marker: #ff6a5c;
-    --belt: var(--ink);
-    --marker-press: #ff8578;
-    --on-marker: #0f1a2b;
-    --rest: #24467a;
-    --on-rest: #ffffff;
-    --focus: #8fb6ff;
-    --sec-1: #34465f;
-    --sec-2: #4f6585;
-    --sec-3: #7489a8;
-    --sec-4: #a7b6ca;
-    --sec-5: #eef2f7;
-    color-scheme: dark;
-  }
+[data-theme='navy'] {
+  --paper: #0f1a2b;
+  --sheet: #16233a;
+  --sheet-2: #1c2b45;
+  --ink: #eef2f7;
+  --ink-2: #c9d3e0;
+  --muted: #9fb0c6;
+  --hint: #6e809a;
+  --rule: #26354d;
+  --rule-strong: #34465f;
+  --marker: #ff6a5c;
+  --belt: var(--ink);
+  --marker-press: #ff8578;
+  --on-marker: #0f1a2b;
+  --rest: #24467a;
+  --on-rest: #ffffff;
+  --focus: #8fb6ff;
+  --sec-1: #34465f;
+  --sec-2: #4f6585;
+  --sec-3: #7489a8;
+  --sec-4: #a7b6ca;
+  --sec-5: #eef2f7;
+  color-scheme: dark;
+}
+
+/* Tan: warm kraft paper with brown ink. The marker is a deeper red so it
+   still reads as the one alarm on the warm ground. */
+[data-theme='tan'] {
+  --paper: #efe6d6;
+  --sheet: #e7dcc9;
+  --sheet-2: #dfd2bc;
+  --ink: #2b2117;
+  --ink-2: #4d3f30;
+  --muted: #65553f;
+  --hint: #85745e;
+  --rule: #d6c8b1;
+  --rule-strong: #bcab8f;
+  --marker: #b3221a;
+  --belt: #1a140e;
+  --marker-press: #921b14;
+  --on-marker: #ffffff;
+  --rest: #7a4a2e;
+  --on-rest: #ffffff;
+  --focus: #2f6fd6;
+  --sec-1: #d6c8b1;
+  --sec-2: #b8a487;
+  --sec-3: #8c785d;
+  --sec-4: #5c4b38;
+  --sec-5: #2b2117;
+  color-scheme: light;
+}
+
+/* Dark: belt black, no blue. Rest lifts to charcoal. */
+[data-theme='dark'] {
+  --paper: #111111;
+  --sheet: #1b1b1b;
+  --sheet-2: #232323;
+  --ink: #f2f1ee;
+  --ink-2: #cfcdc8;
+  --muted: #a3a19b;
+  --hint: #77756f;
+  --rule: #2b2b2b;
+  --rule-strong: #404040;
+  --marker: #ff5b4f;
+  --belt: var(--ink);
+  --marker-press: #ff7a70;
+  --on-marker: #111111;
+  --rest: #3a3a3a;
+  --on-rest: #ffffff;
+  --focus: #8fb6ff;
+  --sec-1: #3d3d3d;
+  --sec-2: #5c5c5c;
+  --sec-3: #858585;
+  --sec-4: #b5b5b5;
+  --sec-5: #f2f1ee;
+  color-scheme: dark;
 }
 
 * {
@@ -2517,6 +2574,138 @@ html:has(.backdrop) body {
   margin-top: 16px;
   align-items: center;
   border-color: var(--ink);
+}
+
+/* ─── Theme picker ───────────────────────────────────────────────────────── */
+
+.theme-sheet {
+  width: min(460px, 100%);
+}
+
+.theme-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 2px solid var(--ink);
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 4px;
+  border: none;
+  border-bottom: 1px solid var(--rule-strong);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme-option:active {
+  background: var(--sheet);
+}
+
+.theme-option[aria-checked='true'] .theme-name strong {
+  text-decoration: underline 2px;
+  text-underline-offset: 4px;
+}
+
+.theme-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.theme-name strong {
+  font: 700 18px/1.1 var(--font-head);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.theme-name .muted {
+  font-size: 14px;
+}
+
+.theme-check {
+  flex: none;
+  color: var(--ink);
+}
+
+.theme-swatch-pair {
+  display: inline-flex;
+  flex: none;
+}
+
+.theme-swatch-pair .theme-swatch {
+  width: 22px;
+}
+
+.theme-swatch-pair .theme-swatch:first-child {
+  border-radius: 6px 0 0 6px;
+  border-right: none;
+}
+
+.theme-swatch-pair .theme-swatch:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+/* A sheet of paper in the look's own colors. Its border is a fixed grey so
+   white paper still shows on a white sheet. */
+.theme-swatch {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 40px;
+  border: 1px solid #9aa3ad;
+  border-radius: 6px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.theme-swatch i {
+  position: absolute;
+  left: 7px;
+  height: 3px;
+  background: var(--ink);
+}
+
+.theme-swatch .sw-title {
+  top: 8px;
+  width: 22px;
+  height: 5px;
+}
+
+.theme-swatch .sw-line {
+  top: 19px;
+  right: 7px;
+  height: 1px;
+  background: var(--rule-strong);
+}
+
+.theme-swatch .sw-line.short {
+  top: 26px;
+}
+
+.theme-swatch .sw-marker {
+  left: auto;
+  right: 6px;
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--marker);
+}
+
+.theme-swatch-pair .theme-swatch .sw-title {
+  width: 10px;
+}
+
+.theme-swatch-pair .theme-swatch .sw-marker {
+  display: none;
 }
 
 /* ─── Phone: the thumb zone ──────────────────────────────────────────────── */

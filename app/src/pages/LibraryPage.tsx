@@ -2,7 +2,7 @@
 // start a new class.
 
 import { useEffect, useRef, useState } from 'react';
-import { CircleHelp, Copy, Download, MoreHorizontal, MonitorDown, Play, Trash2, Upload } from 'lucide-react';
+import { CircleHelp, Copy, Download, MoreHorizontal, MonitorDown, Palette, Play, Trash2, Upload } from 'lucide-react';
 import {
   allMoves,
   blankPlan,
@@ -31,6 +31,7 @@ import { restoreClipData, withClipData } from '../lib/clips.ts';
 import { saveFile } from '../lib/files.ts';
 import { t, type Key } from '../lib/i18n.ts';
 import { LangSwitch } from '../components/LangSwitch.tsx';
+import { ThemeButton, ThemeSheet } from '../components/ThemeSheet.tsx';
 
 const STRUCTURE: Key[] = ['stripWarmup', 'sec.concept', 'sec.game', 'sec.gems', 'sec.freeRoll'];
 
@@ -126,6 +127,7 @@ export function LibraryPage({
 }) {
   const [pendingDelete, setPendingDelete] = useState<ClassPlan | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const sorted = [...api.plans].sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt));
@@ -204,6 +206,7 @@ export function LibraryPage({
         </div>
         <div className="topbar-actions">
           <LangSwitch />
+          <ThemeButton onClick={() => setThemeOpen(true)} />
           {canInstall(install) && (
             <button
               type="button"
@@ -228,6 +231,7 @@ export function LibraryPage({
           <MoreMenu
             items={[
               { icon: <CircleHelp size={16} />, label: t('howItWorks'), onClick: onHelp },
+              { icon: <Palette size={16} />, label: t('theme'), onClick: () => setThemeOpen(true) },
               { icon: <Upload size={16} />, label: t('import'), onClick: () => fileRef.current?.click() },
               ...(api.plans.length > 0
                 ? [{ icon: <Download size={16} />, label: t('exportAll'), onClick: () => void exportAll() }]
@@ -417,6 +421,8 @@ export function LibraryPage({
           }}
         />
       )}
+
+      {themeOpen && <ThemeSheet onClose={() => setThemeOpen(false)} />}
 
       {pendingDelete && (
         <ConfirmDialog
