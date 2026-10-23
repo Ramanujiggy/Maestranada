@@ -12,6 +12,7 @@ import {
   type Block,
   type BlockOf,
   type GameBlock,
+  type Move,
 } from '../lib/plan.ts';
 import { Field, Stepper, TextArea, TextInput, Toggle, formatRest } from './controls.tsx';
 import { EditableList } from './EditableList.tsx';
@@ -250,12 +251,39 @@ function TechniqueFields({
   notify,
   askRemoveMove,
 }: Props<'gems'> & { notify: (m: string) => void; askRemoveMove: (moveId: string) => void }) {
-  const setMove = (id: string, patch: Partial<BlockOf<'gems'>['moves'][number]>) =>
-    set({ ...block, moves: block.moves.map((x) => (x.id === id ? { ...x, ...patch } : x)) });
   return (
     <>
       <MinutesStepper value={block.minutes} onChange={(minutes) => set({ ...block, minutes })} />
-      {block.moves.map((m, i) => (
+      <MoveCards moves={block.moves} onChange={(moves) => set({ ...block, moves })} notify={notify} askRemoveMove={askRemoveMove} />
+      {reveal.isShown('options', block.options.length > 0) && (
+        <div id={reveal.extraId('options')}>
+          <SubPanel title={t('options')} hint={t('optionsHint')}>
+            <EditableList items={block.options} onChange={(options) => set({ ...block, options })} placeholder={t('optionsPh')} />
+          </SubPanel>
+        </div>
+      )}
+      <Extras items={reveal.extra('options', t('optionsChip'), block.options.length > 0)} />
+    </>
+  );
+}
+
+/** Move cards: a name, details and a clip each, with Add move under them. Technique is built
+ *  on these; any other block can hold some too (a warm-up movement with its clip). */
+export function MoveCards({
+  moves,
+  onChange,
+  notify,
+  askRemoveMove,
+}: {
+  moves: Move[];
+  onChange: (moves: Move[]) => void;
+  notify: (m: string) => void;
+  askRemoveMove: (moveId: string) => void;
+}) {
+  const setMove = (id: string, patch: Partial<Move>) => onChange(moves.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  return (
+    <>
+      {moves.map((m, i) => (
         <div className="move-card" key={m.id}>
           <div className="move-head">
             <span className="move-num">{t('moveN', { n: i + 1 })}</span>
@@ -267,7 +295,7 @@ function TechniqueFields({
               onClick={() =>
                 m.name.trim() || m.notes.trim() || m.clip
                   ? askRemoveMove(m.id)
-                  : set({ ...block, moves: block.moves.filter((x) => x.id !== m.id) })
+                  : onChange(moves.filter((x) => x.id !== m.id))
               }
             >
               <X size={16} />
@@ -278,18 +306,10 @@ function TechniqueFields({
         </div>
       ))}
       <div>
-        <button type="button" className="btn btn-secondary" onClick={() => set({ ...block, moves: [...block.moves, move()] })}>
+        <button type="button" className="btn btn-secondary" onClick={() => onChange([...moves, move()])}>
           <Plus size={15} /> {t('addMove')}
         </button>
       </div>
-      {reveal.isShown('options', block.options.length > 0) && (
-        <div id={reveal.extraId('options')}>
-          <SubPanel title={t('options')} hint={t('optionsHint')}>
-            <EditableList items={block.options} onChange={(options) => set({ ...block, options })} placeholder={t('optionsPh')} />
-          </SubPanel>
-        </div>
-      )}
-      <Extras items={reveal.extra('options', t('optionsChip'), block.options.length > 0)} />
     </>
   );
 }

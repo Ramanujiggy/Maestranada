@@ -60,6 +60,9 @@ interface BlockBase {
   id: string;
   /** The coach's own name for the block ("Takedown game"). Empty means the kind's name. */
   title: string;
+  /** Moves with their clips, borrowed from Technique: a warm-up movement, a cool-down stretch.
+      Technique blocks always have them; any other block can add some from its menu. */
+  moves?: Move[];
 }
 
 export interface WarmupBlock extends BlockBase {
@@ -255,7 +258,7 @@ export function newBlock(kind: BlockKind): Block {
 /** A copy of a block with fresh ids all the way down. Clips are shared, not copied. */
 export function copyBlock(block: Block): Block {
   const reid = <T extends { id: string }>(xs: T[]) => xs.map((x) => ({ ...x, id: uid() }));
-  const b = { ...block, id: uid() };
+  const b = { ...block, id: uid(), ...(block.moves ? { moves: reid(block.moves) } : {}) };
   switch (b.kind) {
     case 'warmup':
       return { ...b, drills: reid(b.drills) };
@@ -308,9 +311,9 @@ export function firstOf<K extends BlockKind>(plan: ClassPlan, kind: K): BlockOf<
   return blocksOf(plan, kind)[0];
 }
 
-/** Every technique move in the class, in order. */
+/** Every move in the class, in order: Technique's and the ones other blocks hold. */
 export function allMoves(plan: ClassPlan): Move[] {
-  return blocksOf(plan, 'gems').flatMap((b) => b.moves);
+  return plan.blocks.flatMap((b) => b.moves ?? []);
 }
 
 /** Replaces one block, matched by id. */
@@ -492,6 +495,18 @@ export function blockMinutes(b: Block): number {
 export function kindLabel(kind: BlockKind): string {
   return t(`sec.${kind}`);
 }
+
+/** What a kind of block holds, for the tags that tell blocks apart. */
+export type BlockTrait = 'drills' | 'timer' | 'rounds' | 'moves' | 'clips' | 'focus' | 'notes' | 'goals' | 'question' | 'options';
+
+export const KIND_TRAITS: Record<BlockKind, BlockTrait[]> = {
+  warmup: ['drills', 'timer'],
+  concept: ['focus', 'notes'],
+  game: ['goals', 'rounds'],
+  gems: ['moves', 'clips', 'options'],
+  freeRoll: ['rounds', 'notes'],
+  wrapup: ['question', 'notes'],
+};
 
 /** What the block is called: the coach's own name, or its kind's. */
 export function blockLabel(b: Block): string {
@@ -738,7 +753,10 @@ function normalizeBlock(raw: unknown): Block | null {
   const kind = r.kind as BlockKind;
   if (!BLOCK_KINDS.includes(kind)) return null;
   const b = normalizeFields(kind, r);
-  return { ...b, id: str(r.id, '') || b.id, title: str(r.title, '') };
+  const out = { ...b, id: str(r.id, '') || b.id, title: str(r.title, '') };
+  if (kind === 'gems') return out;
+  const extra = moves(r.moves, []);
+  return extra.length ? { ...out, moves: extra } : out;
 }
 
 /** Rebuilds a plan from untrusted JSON: every field takes the stored value only

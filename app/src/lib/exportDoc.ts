@@ -182,7 +182,7 @@ export function buildClassDocument(plan: ClassPlan, clips: ClipBytes): Document 
             ],
           }),
 
-          ...plan.blocks.flatMap((b) => blockParagraphs(b, clips)),
+          ...plan.blocks.flatMap((b) => [...blockParagraphs(b, clips), ...(b.kind !== 'gems' && b.moves ? moveParagraphs(b.moves, clips) : [])]),
 
           new Paragraph({
             alignment: AlignmentType.RIGHT,
