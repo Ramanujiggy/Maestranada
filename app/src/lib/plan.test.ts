@@ -10,6 +10,7 @@ import {
   FORMAT_ORDER,
   formatClock,
   formatMinutes,
+  nextClass,
   freeRollSchedule,
   gameRoundCount,
   gameSchedule,
@@ -89,6 +90,17 @@ describe('class plan', () => {
     expect(c.find((x) => x.kind === 'concept')).toMatchObject({ count: 0, minutes: 0 });
     const withWrap = { ...p, blocks: [...p.blocks, newBlock('wrapup')] };
     expect(composition(withWrap).at(-1)).toMatchObject({ kind: 'wrapup', count: 1, minutes: 3 });
+  });
+});
+
+describe('next class', () => {
+  const p = (id: string, date: string, updatedAt = '2026-01-01') => ({ id, date, updatedAt });
+  it("picks today's class, then the next one coming, then the latest", () => {
+    expect(nextClass([p('a', '2026-10-20'), p('b', '2026-10-23'), p('c', '2026-10-25')], '2026-10-23')?.id).toBe('b');
+    expect(nextClass([p('a', '2026-10-20'), p('c', '2026-10-27'), p('d', '2026-10-25')], '2026-10-23')?.id).toBe('d');
+    expect(nextClass([p('a', '2026-10-20'), p('b', '2026-10-22')], '2026-10-23')?.id).toBe('b');
+    expect(nextClass([p('a', '2026-10-23', '2026-10-01'), p('b', '2026-10-23', '2026-10-02')], '2026-10-23')?.id).toBe('b');
+    expect(nextClass([], '2026-10-23')).toBeUndefined();
   });
 });
 

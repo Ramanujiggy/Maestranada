@@ -188,6 +188,15 @@ export function todayISO(now = new Date()): string {
   const d = String(now.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+/** The class the coach most likely wants to teach: today's, else the next
+ *  one coming up, else the most recent. Ties go to the last one edited. */
+export function nextClass<P extends { date: string; updatedAt: string }>(plans: P[], today = todayISO()): P | undefined {
+  const newestEdit = (a: P, b: P) => b.updatedAt.localeCompare(a.updatedAt);
+  const ahead = plans.filter((p) => p.date >= today).sort((a, b) => a.date.localeCompare(b.date) || newestEdit(a, b));
+  if (ahead.length) return ahead[0];
+  return [...plans].sort((a, b) => b.date.localeCompare(a.date) || newestEdit(a, b))[0];
+}
+
 // ─── Blocks ──────────────────────────────────────────────────────────────────
 
 export function defaultRounds(): GameRounds {
