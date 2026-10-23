@@ -127,6 +127,11 @@ describe('class JSON in the AI format', () => {
 });
 
 describe('the class format', () => {
+  it('asks the AI to check with the coach before guessing at what matters', () => {
+    expect(classFormat('en')).toContain('ask me first');
+    expect(classFormat('pt')).toContain('me pergunte antes');
+  });
+
   it('reads back as the usual class when pasted in unfilled', () => {
     for (const lang of ['en', 'pt'] as const) {
       const { plan } = ok(readAiReply(classFormat(lang)));
