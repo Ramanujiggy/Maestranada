@@ -18,7 +18,8 @@ const ERRORS: Record<ReadError, Key> = {
   noBlocks: 'aiErrNoBlocks',
 };
 
-async function copyText(text: string): Promise<boolean> {
+/** Copies text, falling back to a hidden field where the Clipboard API is missing or refused. */
+export async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
     return true;

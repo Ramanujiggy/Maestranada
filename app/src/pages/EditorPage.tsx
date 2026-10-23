@@ -17,6 +17,7 @@ import {
   Download,
   FileText,
   GripVertical,
+  MessagesSquare,
   MoreHorizontal,
   PencilLine,
   Plus,
@@ -52,6 +53,8 @@ import { PrintSheet } from '../components/PrintSheet.tsx';
 import { ConfirmDialog } from '../components/feedback.tsx';
 import { downloadBackup } from './LibraryPage.tsx';
 import { fileSlug, saveFile } from '../lib/files.ts';
+import { classForAi } from '../lib/aiClass.ts';
+import { copyText } from '../components/AiPlanner.tsx';
 import { t } from '../lib/i18n.ts';
 
 /** The first block that still has nothing in it, so a new class opens where the work is.
@@ -216,6 +219,13 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
     } finally {
       setExporting(null);
     }
+  };
+
+  // The class goes to the coach's AI as text; the answer comes back through New class.
+  const changeWithAi = async () => {
+    const text = classForAi(plan);
+    if (await copyText(text)) notify(t('aiClassCopied'));
+    else await saveFile(new Blob([text], { type: 'text/plain' }), `${fileSlug(plan.title)}-ai.txt`).catch(() => notify(t('aiClassFailed')));
   };
 
   // Opening one block folds the others. If the fold moved it off screen, or it
@@ -531,6 +541,9 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
               </button>
               <button type="button" className="btn btn-secondary" onClick={exportDocument} disabled={exporting !== null}>
                 <FileText size={16} /> {exporting === 'doc' ? t('makingDoc') : t('exportDoc')}
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={() => void changeWithAi()} title={t('aiClassTitle')}>
+                <MessagesSquare size={16} /> {t('aiChangeClass')}
               </button>
               <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
                 <Printer size={16} /> {t('printSheet')}

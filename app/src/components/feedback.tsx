@@ -42,7 +42,8 @@ export function ConfirmDialog({
 
 export function Toast({ message, onDone }: { message: string; onDone: () => void }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 2600);
+    // Long enough to read: a longer message stays up longer.
+    const t = setTimeout(onDone, Math.max(2600, message.length * 60));
     return () => clearTimeout(t);
   }, [message, onDone]);
   return (

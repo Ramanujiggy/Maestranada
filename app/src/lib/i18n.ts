@@ -381,6 +381,10 @@ const en = {
   aiErrCutOff: 'The answer got cut off. Ask the AI: "Send the full JSON again", then paste that.',
   aiErrBadJson: 'The JSON has a typo the app can\'t fix. Ask the AI: "Check the JSON is valid and send it again".',
   aiErrNoBlocks: 'That JSON has no blocks the app knows. Give the AI the class format again so it uses the right keys.',
+  aiChangeClass: 'Change it with AI',
+  aiClassTitle: 'Copies this class for your AI chat. Say what to change, then paste the answer into New class, Plan it with AI. It comes back as a new class.',
+  aiClassCopied: 'Copied. Paste it in your AI chat, say what to change, and bring the answer back in New class.',
+  aiClassFailed: "Couldn't copy or save the class for your AI",
   aiBuilt: 'Class built. Add clips, then send it.',
   aiBuiltSkipped: 'Class built. Blocks the app didn\'t know were left out: {n}.',
 };
@@ -745,6 +749,10 @@ const pt: Record<Key, string> = {
   aiErrCutOff: 'A resposta veio cortada. Peça para a IA: "Mande o JSON completo de novo" e cole a nova.',
   aiErrBadJson: 'O JSON tem um erro que o app não consegue corrigir. Peça para a IA: "Confira se o JSON é válido e mande de novo".',
   aiErrNoBlocks: 'Esse JSON não tem nenhum bloco que o app conhece. Dê o formato da aula para a IA de novo para ela usar as chaves certas.',
+  aiChangeClass: 'Mudar com IA',
+  aiClassTitle: 'Copia esta aula para o seu chat de IA. Diga o que mudar e cole a resposta em Nova aula, Planejar com IA. Ela volta como uma aula nova.',
+  aiClassCopied: 'Copiado. Cole no seu chat de IA, diga o que mudar e traga a resposta em Nova aula.',
+  aiClassFailed: 'Não deu para copiar nem salvar a aula para a sua IA',
   aiBuilt: 'Aula montada. Coloque os clipes e envie.',
   aiBuiltSkipped: 'Aula montada. Blocos que o app não conhece ficaram de fora: {n}.',
 };

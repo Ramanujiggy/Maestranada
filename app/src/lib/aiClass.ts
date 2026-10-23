@@ -312,6 +312,27 @@ const TEMPLATE = {
   ],
 };
 
+/** What each block is for and the rules for its fields. Shared by the blank format and a class sent back for changes. */
+const GUIDE: Record<Lang, string> = {
+  en: `How the format works. A class is an ordered list of blocks, each with a "kind":
+- "warmup": movement to wake the body up, ending close to the real thing. minutes, drills (short lines).
+- "concept" (Concept / Focus): the focus of today's class, the one idea everything comes back to. minutes, rule (one sentence), notes.
+- "positionalSparring": sparring from a position toward a goal. Goals and movements first, details once they've felt it. start (start position), objective, goals, details, transition, submission, rounds (roundsPerSide, minutes, restSeconds, switchPartners, switchPositions).
+- "technique": the moves that win the game. minutes, moves (each a name, with the key details in notes), options (what to do when the move is stopped).
+- "rolling": live rounds. rounds, minutes per round, restSeconds, notes.
+- "wrapup" (optional): minutes, question (one question back to the class), notes.
+Add, remove, repeat or reorder blocks to fit the class. "title" is my own name for a block; leave it "" to use the kind's name. Keep the keys and "kind" values exactly as written. Numbers are plain numbers (3, not "3 min"). Keep every line short, the way a coach writes on a clipboard.`,
+
+  pt: `Como o formato funciona. A aula é uma lista ordenada de blocos, cada um com um "kind":
+- "warmup": aquecimento e movimentação, terminando perto da luta de verdade. minutes, drills (linhas curtas).
+- "concept" (Conceito / Foco): o foco da aula de hoje, a ideia que guia todo o resto. minutes, rule (uma frase), notes.
+- "positionalSparring": treino específico de uma posição até um objetivo. Primeiro objetivos e movimentos, os detalhes depois que sentirem a posição. start (posição inicial), objective, goals, details, transition, submission, rounds (roundsPerSide, minutes, restSeconds, switchPartners, switchPositions).
+- "technique": as técnicas que vencem o jogo. minutes, moves (cada uma com name, e os detalhes-chave, o pulo do gato, em notes), options (o que fazer quando a técnica é bloqueada).
+- "rolling": rola livre. rounds, minutes por round, restSeconds, notes.
+- "wrapup" (opcional): minutes, question (uma pergunta de volta para a turma), notes.
+Adicione, remova, repita ou reordene blocos para caber na aula. "title" é o nome que eu dou ao bloco; deixe "" para usar o nome do tipo. Mantenha as chaves e os valores de "kind" exatamente como estão, em inglês. Números são números simples (3, e não "3 min"). Cada linha curta, como um professor escreve na prancheta.`,
+};
+
 const FORMAT: Record<Lang, string> = {
   en: `Fill in this Prancheta class plan (Prancheta is the app I plan my jiu-jitsu classes in).
 
@@ -319,14 +340,7 @@ Use what we've talked about in this conversation: the position, the goal, the st
 
 Once you have what you need, reply with the filled-in JSON in one \`\`\`json code block and nothing else. No comments inside the JSON.
 
-How the format works. A class is an ordered list of blocks, each with a "kind":
-- "warmup": movement to wake the body up, ending close to the real thing. minutes, drills (short lines).
-- "concept" (Concept / Focus): the focus of today's class, the one idea everything comes back to. minutes, rule (one sentence), notes.
-- "positionalSparring": sparring from a position toward a goal. Goals and movements first, details once they've felt it. start (start position), objective, goals, details, transition, submission, rounds (roundsPerSide, minutes, restSeconds, switchPartners, switchPositions).
-- "technique": the moves that win the game. minutes, moves (each a name, with the key details in notes), options (what to do when the move is stopped).
-- "rolling": live rounds. rounds, minutes per round, restSeconds, notes.
-- "wrapup" (optional): minutes, question (one question back to the class), notes.
-Add, remove, repeat or reorder blocks to fit the class. "title" is my own name for a block; leave it "" to use the kind's name. Keep the keys and "kind" values exactly as written. Numbers are plain numbers (3, not "3 min"). Keep every line short, the way a coach writes on a clipboard.
+${GUIDE.en}
 
 The template, in the usual order:
 \`\`\`json
@@ -339,14 +353,7 @@ Use o que a gente conversou aqui: a posição, o objetivo, os alunos, o tempo. A
 
 Quando tiver o que precisa, responda com o JSON preenchido num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
 
-Como o formato funciona. A aula é uma lista ordenada de blocos, cada um com um "kind":
-- "warmup": aquecimento e movimentação, terminando perto da luta de verdade. minutes, drills (linhas curtas).
-- "concept" (Conceito / Foco): o foco da aula de hoje, a ideia que guia todo o resto. minutes, rule (uma frase), notes.
-- "positionalSparring": treino específico de uma posição até um objetivo. Primeiro objetivos e movimentos, os detalhes depois que sentirem a posição. start (posição inicial), objective, goals, details, transition, submission, rounds (roundsPerSide, minutes, restSeconds, switchPartners, switchPositions).
-- "technique": as técnicas que vencem o jogo. minutes, moves (cada uma com name, e os detalhes-chave, o pulo do gato, em notes), options (o que fazer quando a técnica é bloqueada).
-- "rolling": rola livre. rounds, minutes por round, restSeconds, notes.
-- "wrapup" (opcional): minutes, question (uma pergunta de volta para a turma), notes.
-Adicione, remova, repita ou reordene blocos para caber na aula. "title" é o nome que eu dou ao bloco; deixe "" para usar o nome do tipo. Mantenha as chaves e os valores de "kind" exatamente como estão, em inglês. Números são números simples (3, e não "3 min"). Cada linha curta, como um professor escreve na prancheta.
+${GUIDE.pt}
 
 O modelo, na ordem de sempre:
 \`\`\`json
@@ -357,4 +364,86 @@ ${JSON.stringify(TEMPLATE, null, 2)}
 /** The class format with its fill-in instructions, to paste or upload into an AI chat. */
 export function classFormat(lang: Lang = getLang()): string {
   return FORMAT[lang];
+}
+
+// ─── A saved class, back to the AI for changes ───────────────────────────────
+
+const KIND_OUT: Record<BlockKind, string> = {
+  warmup: 'warmup',
+  concept: 'concept',
+  game: 'positionalSparring',
+  gems: 'technique',
+  freeRoll: 'rolling',
+  wrapup: 'wrapup',
+};
+
+const lines = (xs: { text: string }[]) => xs.map((x) => x.text.trim()).filter(Boolean);
+
+/** A plan in the class format: no ids or clips, the AI's kind names, lists as plain lines. */
+export function planToJson(plan: ClassPlan): Obj {
+  const blocks = plan.blocks.map((b): Obj => {
+    const base = { kind: KIND_OUT[b.kind], title: b.title };
+    switch (b.kind) {
+      case 'warmup':
+        return { ...base, minutes: b.minutes, drills: lines(b.drills) };
+      case 'concept':
+        return { ...base, minutes: b.minutes, rule: b.rule, notes: b.notes };
+      case 'game':
+        return {
+          ...base,
+          start: b.start,
+          objective: b.objective,
+          goals: lines(b.goals),
+          details: lines(b.details),
+          transition: b.transition,
+          submission: b.submission,
+          rounds: { ...b.rounds },
+        };
+      case 'gems':
+        return {
+          ...base,
+          minutes: b.minutes,
+          moves: b.moves.filter((m) => m.name.trim() || m.notes.trim()).map((m) => ({ name: m.name, notes: m.notes })),
+          options: lines(b.options),
+        };
+      case 'freeRoll':
+        return { ...base, rounds: b.rounds, minutes: b.minutes, restSeconds: b.restSeconds, notes: b.notes };
+      case 'wrapup':
+        return { ...base, minutes: b.minutes, question: b.question, notes: b.notes };
+    }
+  });
+  return { prancheta: 1, title: plan.title, date: plan.date, blocks };
+}
+
+const EDIT: Record<Lang, (json: string) => string> = {
+  en: (json) => `Here's a class plan from Prancheta (the app I plan my jiu-jitsu classes in). I'll tell you what to change.
+
+Change only what I ask and keep the rest as it is. If my change is unclear, or it would mean changing something I didn't mention (cutting a block to fit the time, say), ask me first: a few short questions in one message, only the ones that matter.
+
+Once you have what you need, reply with the whole updated class as JSON in one \`\`\`json code block and nothing else. No comments inside the JSON.
+
+${GUIDE.en}
+
+The class:
+\`\`\`json
+${json}
+\`\`\``,
+
+  pt: (json) => `Este é um plano de aula do Prancheta (o app onde eu planejo minhas aulas de jiu-jitsu). Vou te dizer o que mudar.
+
+Mude só o que eu pedir e mantenha o resto como está. Se a mudança não estiver clara, ou se ela exigir mexer em algo que eu não falei (cortar um bloco para caber no tempo, por exemplo), me pergunte antes: poucas perguntas curtas numa mensagem só, apenas as que importam.
+
+Quando tiver o que precisa, responda com a aula inteira atualizada em JSON num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
+
+${GUIDE.pt}
+
+A aula:
+\`\`\`json
+${json}
+\`\`\``,
+};
+
+/** A saved class with instructions to change it, to paste into an AI chat. Its reply imports as a new class. */
+export function classForAi(plan: ClassPlan, lang: Lang = getLang()): string {
+  return EDIT[lang](JSON.stringify(planToJson(plan), null, 2));
 }
