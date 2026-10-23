@@ -34,7 +34,7 @@ The app is a Progressive Web App. After the first visit it works with no connect
 
 ## Selling it (3 classes free, then $10 once)
 
-Anyone can open the app at `https://app.prancheta.app` (never a host's own URL; see [HOSTING.md](HOSTING.md)), install it and make **3 classes free**, with everything in. Making a 4th asks for the $10 unlock. Deleting a class never gives a free one back, the example class never counts, and every class already made stays open, teachable and printable. There are no accounts.
+Anyone can open the app at `https://app.prancheta.app` (never a host's own URL; see [HOSTING.md](HOSTING.md)), install it and make **3 classes free**, with everything in. Making a 4th asks for the $10 unlock. Every new class counts: blank, from a template, a duplicate, one planned or brought in with AI, or a single class file from someone else. Moving the coach's own classes (Paste classes, or restoring a whole-library backup) is never turned down, though those classes still count as made. Deleting a class never gives a free one back, the example class never counts, and every class already made stays open, teachable and printable. There are no accounts.
 
 How the unlock works (`app/src/lib/access.ts`): Lemon Squeezy issues a license key with the purchase. The coach pastes it into the unlock sheet once; the app checks it with Lemon Squeezy's License API while online, remembers it on the device, and works offline from then on. The check goes through the app's own address first (`functions/api/license.js` on Cloudflare Pages, a proxy rule in `netlify.toml`), then straight to Lemon Squeezy.
 

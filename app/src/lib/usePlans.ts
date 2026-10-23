@@ -13,8 +13,10 @@ export interface PlansApi {
   remove: (id: string) => void;
   /** Adds new plans and replaces older copies of ones already here (by id).
    *  Returns how many plans changed, or null when they'd go past the free
-   *  classes (the unlock is asked for instead). */
-  importMany: (incoming: ClassPlan[]) => number | null;
+   *  classes (the unlock is asked for instead). `moving` = the coach's own
+   *  classes coming over from another copy or a backup: never turned down,
+   *  though they still count as made. */
+  importMany: (incoming: ClassPlan[], moving?: boolean) => number | null;
   /** The last save was refused by the browser (storage full or blocked). */
   saveFailed: boolean;
 }
@@ -92,13 +94,13 @@ export function usePlans(onLimit: () => void): PlansApi {
   const remove = useCallback((id: string) => edit((prev) => prev.filter((p) => p.id !== id)), [edit]);
 
   const importMany = useCallback(
-    (incoming: ClassPlan[]) => {
+    (incoming: ClassPlan[], moving = false) => {
       const byId = new Map(plans.map((p) => [p.id, p]));
       const changed = incoming.filter((p) => {
         const here = byId.get(p.id);
         return !here || p.updatedAt > here.updatedAt;
       });
-      if (!roomFor(plans, changed)) {
+      if (!moving && !roomFor(plans, changed)) {
         onLimit();
         return null;
       }

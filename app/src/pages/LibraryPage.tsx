@@ -171,8 +171,10 @@ export function LibraryPage({
   };
 
   /** Stores backup plans, their clips first. Says how it went: 'none' when
-   *  there were no classes in it, 'limit' when the unlock was asked for. */
-  const importBackup = async (raw: unknown[]): Promise<'done' | 'none' | 'limit'> => {
+   *  there were no classes in it, 'limit' when the unlock was asked for.
+   *  `moving` = the coach's own classes from another copy or a backup, which
+   *  are never turned down; a class from someone else counts as a new one. */
+  const importBackup = async (raw: unknown[], moving = false): Promise<'done' | 'none' | 'limit'> => {
     const list = raw.map(normalizePlan).filter((p): p is ClassPlan => p !== null);
     if (!list.length) return 'none';
     try {
@@ -181,7 +183,7 @@ export function LibraryPage({
       notify(t('importNoSpace'));
       return 'done';
     }
-    const changed = api.importMany(list);
+    const changed = api.importMany(list, moving);
     if (changed === null) return 'limit';
     notify(changed ? (changed === 1 ? t('importedOne') : t('importedMany', { n: changed })) : t('importNothing'));
     return 'done';
@@ -192,7 +194,7 @@ export function LibraryPage({
     // On a fresh copy, the coach's own classes replace the untouched example
     // rather than sit beside a second one. Anywhere else nothing is removed.
     const examples = freshCopy(api.plans) ? api.plans.map((p) => p.id) : [];
-    const result = await importBackup(raw);
+    const result = await importBackup(raw, true);
     if (result === 'none') return notify(t('pasteNothing'));
     if (result === 'limit') return;
     const pasted = new Set(raw.map((p) => (p as { id?: unknown } | null)?.id));
@@ -221,6 +223,9 @@ export function LibraryPage({
 
   const onImport = async (file: File) => {
     let raw: unknown[];
+    // A whole-library backup is the coach's own classes moving over. A single
+    // class (a class file, one class's backup) may be someone else's.
+    let moving = false;
     try {
       const text = await file.text();
       const classFile = await import('../lib/classFile.ts');
@@ -245,12 +250,13 @@ export function LibraryPage({
             return;
           }
         }
+        moving = Array.isArray(parsed);
         raw = Array.isArray(parsed) ? parsed : parsed ? [parsed] : [];
       }
     } catch {
       raw = [];
     }
-    if ((await importBackup(raw)) === 'none') notify(t('importBad'));
+    if ((await importBackup(raw, moving)) === 'none') notify(t('importBad'));
   };
 
   const exportAll = async () => {
