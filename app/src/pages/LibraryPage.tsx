@@ -154,9 +154,13 @@ export function LibraryPage({
   const [carryOffer, setCarryOffer] = useState(
     () => !carryOfferDone() && ((isStandalone() && isApple()) || new URLSearchParams(location.search).has('paste')),
   );
+  // iOS can refuse to let a button read the clipboard (the coach misses its
+  // little Paste bubble). Then a box takes a normal press-and-hold paste.
+  const [pasteBox, setPasteBox] = useState(false);
   const closeCarry = () => {
     markCarryDone();
     setCarryOffer(false);
+    setPasteBox(false);
   };
 
   /** Stores backup plans, their clips first. Says how it went. */
@@ -186,7 +190,14 @@ export function LibraryPage({
   };
 
   const paste = async () => {
-    const raw = readBackup(await readClipboard());
+    const text = await readClipboard();
+    if (text === null) {
+      setCarryOffer(true);
+      setPasteBox(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return notify(t('pasteRefused'));
+    }
+    const raw = readBackup(text);
     if (raw) await pasteClasses(raw);
     else notify(t('pasteNothing'));
   };
@@ -292,11 +303,26 @@ export function LibraryPage({
         </div>
       </header>
 
-      {carryOffer && freshCopy(api.plans) && (
+      {carryOffer && (pasteBox || freshCopy(api.plans)) && (
         <div className="subpanel carry-offer" role="region" aria-label={t('carryTitle')}>
           <div>
             <strong>{t('carryTitle')}</strong>
             <span className="muted">{t(isStandalone() && isApple() ? 'carryBodyApple' : 'carryBody')}</span>
+            {pasteBox && (
+              <textarea
+                className="textarea carry-box"
+                rows={2}
+                autoFocus
+                value=""
+                placeholder={t('pasteHere')}
+                aria-label={t('pasteHere')}
+                onChange={(e) => {
+                  const raw = readBackup(e.target.value);
+                  if (raw) void pasteClasses(raw);
+                  else notify(t('pasteNothing'));
+                }}
+              />
+            )}
           </div>
           <div className="carry-actions">
             <button type="button" className="btn btn-primary" onClick={() => void paste()}>

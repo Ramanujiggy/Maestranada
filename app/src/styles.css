@@ -2845,6 +2845,12 @@ html:has(.backdrop) body {
   font-size: 14px;
 }
 
+.carry-box {
+  margin-top: 6px;
+  min-height: 0;
+  font-size: 16px; /* 16px or more, or iOS zooms in on focus */
+}
+
 .carry-actions {
   display: flex;
   align-items: center;
