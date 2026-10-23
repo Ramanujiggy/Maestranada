@@ -188,6 +188,15 @@ export function todayISO(now = new Date()): string {
   const d = String(now.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+/** The class the coach most likely wants to teach: today's, else the next
+ *  one coming up, else the most recent. Ties go to the last one edited. */
+export function nextClass<P extends { date: string; updatedAt: string }>(plans: P[], today = todayISO()): P | undefined {
+  const newestEdit = (a: P, b: P) => b.updatedAt.localeCompare(a.updatedAt);
+  const ahead = plans.filter((p) => p.date >= today).sort((a, b) => a.date.localeCompare(b.date) || newestEdit(a, b));
+  if (ahead.length) return ahead[0];
+  return [...plans].sort((a, b) => b.date.localeCompare(a.date) || newestEdit(a, b))[0];
+}
+
 // ─── Blocks ──────────────────────────────────────────────────────────────────
 
 export function defaultRounds(): GameRounds {
@@ -526,9 +535,11 @@ export function sectionSummary(b: Block): { filled: boolean; text: string } {
 export function formatMinutes(minutes: number): string {
   const rounded = Math.round(minutes * 2) / 2;
   if (rounded < 60) return `${trimZero(rounded)} min`;
-  const h = Math.floor(rounded / 60);
-  const m = rounded - h * 60;
-  return m === 0 ? `${h} h` : `${h} h ${trimZero(m)} min`;
+  // Past an hour, half minutes are noise: 66.5 reads as "1 h 7 min".
+  const whole = Math.round(minutes);
+  const h = Math.floor(whole / 60);
+  const m = whole - h * 60;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
 }
 
 function trimZero(n: number): string {

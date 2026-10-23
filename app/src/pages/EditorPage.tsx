@@ -19,13 +19,13 @@ import {
   GripVertical,
   MoreHorizontal,
   PencilLine,
+  Play,
   Plus,
   Printer,
   Send,
   Trash2,
   X,
 } from 'lucide-react';
-import { RoundIcon } from '../components/Marks.tsx';
 import {
   BLOCK_KINDS,
   blockLabel,
@@ -375,8 +375,8 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             <span className="save-state hide-sm">
               <span className="save-dot" /> {t('savedHere')}
             </span>
-            <button type="button" className="btn btn-primary" onClick={() => navigate({ name: 'run', id: plan.id })}>
-              <RoundIcon size={16} /> {t('teach')}
+            <button type="button" className="btn btn-primary hide-sm" onClick={() => navigate({ name: 'run', id: plan.id })}>
+              <Play size={16} /> {t('teach')}
             </button>
           </div>
         </header>
@@ -520,7 +520,7 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             <Timeline plan={plan} onJump={(id) => openBlock(id, true)} />
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate({ name: 'run', id: plan.id })}>
-                <RoundIcon size={17} /> {t('teachThisClass')}
+                <Play size={17} /> {t('teachThisClass')}
               </button>
               <button
                 type="button"
@@ -567,6 +567,13 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
             </div>
           </aside>
         </div>
+      </div>
+
+      {/* On a phone, Teach waits under the thumb; it steps aside while typing. */}
+      <div className="thumb-bar no-print">
+        <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate({ name: 'run', id: plan.id })}>
+          <Play size={17} /> {t('teachThisClass')}
+        </button>
       </div>
 
       <PrintSheet plan={plan} />

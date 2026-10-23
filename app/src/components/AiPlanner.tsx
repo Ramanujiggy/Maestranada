@@ -82,17 +82,41 @@ export function AiPlanner({
     }
   };
 
-  const pasteFromClipboard = async () => {
+  // Back from the AI chat with its answer copied, one tap reads the
+  // clipboard and builds the class. If the browser says no, the coach
+  // pastes into the box by hand.
+  const canPaste = 'clipboard' in navigator && 'readText' in navigator.clipboard;
+  const pasteAndBuild = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      if (text) {
-        setReply(text);
-        setError(null);
+      if (!text.trim()) {
+        setError('empty');
+        return;
       }
+      setReply(text);
+      setError(null);
+      submit(text);
     } catch {
-      // Permission refused: the coach pastes into the box by hand.
+      replyRef.current?.focus();
     }
   };
+
+  // Coming back to the app after copying the format, step 2 is next: bring it
+  // into view so a phone doesn't start the coach at the top of the sheet.
+  const replyRef = useRef<HTMLTextAreaElement>(null);
+  const handedOff = useRef(false);
+  useEffect(() => {
+    if (copied === 'ok') handedOff.current = true;
+  }, [copied]);
+  useEffect(() => {
+    const onShow = () => {
+      if (document.visibilityState === 'visible' && handedOff.current) {
+        replyRef.current?.closest('li')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }
+    };
+    document.addEventListener('visibilitychange', onShow);
+    return () => document.removeEventListener('visibilitychange', onShow);
+  }, []);
 
   const submit = (text: string) => {
     const result = readAiReply(text);
@@ -162,6 +186,7 @@ export function AiPlanner({
               <label className="field">
                 <span className="field-label">{t('aiReplyLabel')}</span>
                 <textarea
+                  ref={replyRef}
                   className="textarea ai-reply"
                   rows={5}
                   value={reply}
@@ -180,17 +205,18 @@ export function AiPlanner({
                 </p>
               )}
               <div className="ai-actions">
-                <button type="button" className="btn btn-primary" onClick={() => submit(reply)} disabled={!reply.trim()}>
-                  {t('aiBuild')}
-                </button>
+                {canPaste && !reply.trim() ? (
+                  <button type="button" className="btn btn-primary" onClick={() => void pasteAndBuild()}>
+                    <ClipboardPaste size={16} /> {t('aiPasteBuild')}
+                  </button>
+                ) : (
+                  <button type="button" className="btn btn-primary" onClick={() => submit(reply)} disabled={!reply.trim()}>
+                    {t('aiBuild')}
+                  </button>
+                )}
                 <button type="button" className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
                   <Upload size={16} /> {t('aiOpenFile')}
                 </button>
-                {'clipboard' in navigator && 'readText' in navigator.clipboard && (
-                  <button type="button" className="btn btn-ghost" onClick={() => void pasteFromClipboard()}>
-                    <ClipboardPaste size={16} /> {t('aiPaste')}
-                  </button>
-                )}
               </div>
               <input
                 ref={fileRef}

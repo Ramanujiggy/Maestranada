@@ -1,14 +1,15 @@
 // Home: every class plan, newest first, and the one action that matters —
 // start a new class.
 
-import { useRef, useState } from 'react';
-import { CircleHelp, Copy, Download, MonitorDown, Trash2, Upload } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { CircleHelp, Copy, Download, MoreHorizontal, MonitorDown, Palette, Play, Trash2, Upload } from 'lucide-react';
 import {
   allMoves,
   blankPlan,
   duplicatePlan,
   firstOf,
   formatMinutes,
+  nextClass,
   normalizePlan,
   storedPlan,
   todayISO,
@@ -23,13 +24,14 @@ import { formatDate } from '../components/PrintSheet.tsx';
 import { TemplatePicker } from '../components/TemplatePicker.tsx';
 import { AiPlanner } from '../components/AiPlanner.tsx';
 import { planFromJson, readAiReply } from '../lib/aiClass.ts';
-import { ClipboardIcon, Logo, RoundIcon } from '../components/Marks.tsx';
+import { ClipboardIcon, Logo } from '../components/Marks.tsx';
 import type { Template } from '../lib/samples.ts';
 import { canInstall, isApple, isStandalone, type InstallState } from '../lib/pwa.ts';
 import { restoreClipData, withClipData } from '../lib/clips.ts';
 import { saveFile } from '../lib/files.ts';
 import { t, type Key } from '../lib/i18n.ts';
 import { LangSwitch } from '../components/LangSwitch.tsx';
+import { ThemeButton, ThemeSheet } from '../components/ThemeSheet.tsx';
 
 const STRUCTURE: Key[] = ['stripWarmup', 'sec.concept', 'sec.game', 'sec.gems', 'sec.freeRoll'];
 
@@ -51,6 +53,49 @@ function PlanCardBody({ plan }: { plan: ClassPlan }) {
         {moves > 0 && <span className="pill">{t('gemCount', { n: moves })}</span>}
       </div>
     </>
+  );
+}
+
+/** On a phone the top bar's rarer actions fold into one menu, so the bar
+ *  keeps the language switch and the logo room to breathe. */
+function MoreMenu({ items }: { items: { icon: JSX.Element; label: string; onClick: () => void }[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, [open]);
+  return (
+    <div className="more-menu show-sm" ref={ref}>
+      <button type="button" className="icon-btn" aria-label={t('more')} aria-expanded={open} onClick={() => setOpen(!open)}>
+        <MoreHorizontal size={18} />
+      </button>
+      {open && (
+        <div className="more-list" role="menu">
+          {items.map((it) => (
+            <button
+              key={it.label}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                it.onClick();
+              }}
+            >
+              {it.icon} {it.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -82,9 +127,12 @@ export function LibraryPage({
 }) {
   const [pendingDelete, setPendingDelete] = useState<ClassPlan | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const sorted = [...api.plans].sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt));
+  const next = nextClass(api.plans);
+  const today = todayISO();
 
   const open = (plan: ClassPlan) => {
     api.upsert(plan);
@@ -158,6 +206,7 @@ export function LibraryPage({
         </div>
         <div className="topbar-actions">
           <LangSwitch />
+          <ThemeButton onClick={() => setThemeOpen(true)} />
           {canInstall(install) && (
             <button
               type="button"
@@ -168,17 +217,27 @@ export function LibraryPage({
               <MonitorDown size={16} /> <span className="hide-sm">{t('installApp')}</span>
             </button>
           )}
-          <button type="button" className="btn btn-ghost" onClick={onHelp}>
-            <CircleHelp size={16} /> <span className="hide-sm">{t('howItWorks')}</span>
+          <button type="button" className="btn btn-ghost hide-sm" onClick={onHelp}>
+            <CircleHelp size={16} /> {t('howItWorks')}
           </button>
-          <button type="button" className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
-            <Upload size={16} /> <span className="hide-sm">{t('import')}</span>
+          <button type="button" className="btn btn-ghost hide-sm" onClick={() => fileRef.current?.click()}>
+            <Upload size={16} /> {t('import')}
           </button>
           {api.plans.length > 0 && (
-            <button type="button" className="btn btn-ghost hide-xs" onClick={() => void exportAll()}>
-              <Download size={16} /> <span className="hide-sm">{t('exportAll')}</span>
+            <button type="button" className="btn btn-ghost hide-sm" onClick={() => void exportAll()}>
+              <Download size={16} /> {t('exportAll')}
             </button>
           )}
+          <MoreMenu
+            items={[
+              { icon: <CircleHelp size={16} />, label: t('howItWorks'), onClick: onHelp },
+              { icon: <Palette size={16} />, label: t('theme'), onClick: () => setThemeOpen(true) },
+              { icon: <Upload size={16} />, label: t('import'), onClick: () => fileRef.current?.click() },
+              ...(api.plans.length > 0
+                ? [{ icon: <Download size={16} />, label: t('exportAll'), onClick: () => void exportAll() }]
+                : []),
+            ]}
+          />
           <input
             ref={fileRef}
             type="file"
@@ -193,7 +252,7 @@ export function LibraryPage({
         </div>
       </header>
 
-      <section className="hero-card">
+      <section className={`hero-card${sorted.length ? ' has-plans' : ''}`}>
         <div className="eyebrow-strong">{t('classPrep')}</div>
         <h1 className="page-title" style={{ margin: '10px 0 8px' }}>
           {t('libraryTitle')}
@@ -244,11 +303,14 @@ export function LibraryPage({
           {sorted.map((p) => (
             <article
               key={p.id}
-              className="card plan-card"
+              className={`card plan-card${p === next ? ' is-next' : ''}`}
               onClick={() => navigate({ name: 'edit', id: p.id })}
             >
               <div className="plan-card-head">
-                <span className="plan-date">{formatDate(p.date)}</span>
+                <span className="plan-date">
+                  {p === next && <span className="next-tag">{p.date === today ? t('today') : t('nextUp')}</span>}
+                  {formatDate(p.date)}
+                </span>
                 <span className="plan-length">{formatMinutes(totalMinutes(p))}</span>
               </div>
               <h2 className="card-title">
@@ -259,7 +321,7 @@ export function LibraryPage({
               <PlanCardBody plan={p} />
               <div className="plan-card-foot" onClick={(e) => e.stopPropagation()}>
                 <a className="btn btn-secondary" href={hrefFor({ name: 'run', id: p.id })}>
-                  <RoundIcon size={15} /> {t('teach')}
+                  <Play size={15} /> {t('teach')}
                 </a>
                 <div className="actions">
                   <button
@@ -313,6 +375,22 @@ export function LibraryPage({
         )}
       </footer>
 
+      {/* On a phone the two things a coach does here sit under the thumb. */}
+      {next && (
+        <div className="thumb-bar">
+          <button type="button" className="btn btn-secondary btn-lg" onClick={create}>
+            <ClipboardIcon size={17} /> {t('newClassPlan')}
+          </button>
+          <a className="btn btn-primary btn-lg" href={hrefFor({ name: 'run', id: next.id })}>
+            <Play size={17} />
+            <span className="thumb-bar-label">
+              {t('teach')}
+              <small>{next.title || t('untitledClass')}</small>
+            </span>
+          </a>
+        </div>
+      )}
+
       {pickerOpen && (
         <TemplatePicker
           onClose={() => setPickerOpen(false)}
@@ -338,6 +416,8 @@ export function LibraryPage({
           }}
         />
       )}
+
+      {themeOpen && <ThemeSheet onClose={() => setThemeOpen(false)} />}
 
       {pendingDelete && (
         <ConfirmDialog
