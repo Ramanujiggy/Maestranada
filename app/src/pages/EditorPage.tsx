@@ -59,6 +59,7 @@ import { fileSlug, saveFile } from '../lib/files.ts';
 import { classForAi } from '../lib/aiClass.ts';
 import { copyText } from '../components/AiPlanner.tsx';
 import { t } from '../lib/i18n.ts';
+import { rememberOpened } from '../lib/lastOpened.ts';
 
 /** The first block that still has nothing in it, so a new class opens where the work is.
     A class that's all planned opens folded, as an overview. */
@@ -189,6 +190,7 @@ function AddBlockSheet({ onPick, onClose }: { onPick: (kind: BlockKind) => void;
 
 export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansApi; notify: (m: string) => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  useEffect(() => rememberOpened(plan.id), [plan.id]);
   const [pendingMove, setPendingMove] = useState<{ block: string; move: string } | null>(null);
   const [adding, setAdding] = useState(false);
   const [removed, setRemoved] = useState<{ block: Block; index: number } | null>(null);

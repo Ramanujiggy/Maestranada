@@ -32,6 +32,7 @@ import { restoreClipData, withClipData } from '../lib/clips.ts';
 import { saveFile } from '../lib/files.ts';
 import { carryOfferDone, copyClasses, freshCopy, markCarryDone, readBackup, readClipboard } from '../lib/carry.ts';
 import { t, type Key } from '../lib/i18n.ts';
+import { lastOpened } from '../lib/lastOpened.ts';
 import { LangSwitch } from '../components/LangSwitch.tsx';
 import { ThemeButton, ThemeSheet } from '../components/ThemeSheet.tsx';
 import { Shelf, useJustFiled } from '../components/Shelf.tsx';
@@ -136,6 +137,8 @@ export function LibraryPage({
   const today = todayISO();
   const shelf = shelveLibrary(api.plans, today);
   const next = nextClass(api.plans);
+  // The Teach button follows the class opened last, else the next one by date.
+  const picked = api.plans.find((p) => p.id === lastOpened()) ?? next;
   const filing = useJustFiled(shelf.months);
   // Just-filed classes keep their card for a beat, then fold into their month.
   const folding = shelf.months.flatMap((m) => m.plans).filter((p) => filing.folding.includes(p.id));
@@ -382,7 +385,7 @@ export function LibraryPage({
           {cards.map((p) => (
             <article
               key={p.id}
-              className={`card plan-card${p === next ? ' is-next' : ''}${folding.includes(p) ? ' is-folding' : ''}`}
+              className={`card plan-card${p === next ? ' is-next' : ''}${p === picked && picked !== next ? ' is-picked' : ''}${folding.includes(p) ? ' is-folding' : ''}`}
               onClick={() => navigate({ name: 'edit', id: p.id })}
               onAnimationEnd={folding.includes(p) ? () => filing.done(p.id) : undefined}
             >
@@ -466,16 +469,16 @@ export function LibraryPage({
       </footer>
 
       {/* On a phone the two things a coach does here sit under the thumb. */}
-      {next && (
+      {picked && (
         <div className="thumb-bar">
           <button type="button" className="btn btn-secondary btn-lg" onClick={create}>
             <ClipboardIcon size={17} /> {t('newClassPlan')}
           </button>
-          <a className="btn btn-primary btn-lg" href={hrefFor({ name: 'run', id: next.id })}>
+          <a className="btn btn-primary btn-lg" href={hrefFor({ name: 'run', id: picked.id })}>
             <Play size={17} />
             <span className="thumb-bar-label">
               {t('teach')}
-              <small>{next.title || t('untitledClass')}</small>
+              <small>{picked.title || t('untitledClass')}</small>
             </span>
           </a>
         </div>

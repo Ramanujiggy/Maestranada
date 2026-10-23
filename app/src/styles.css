@@ -3153,6 +3153,11 @@ html:has(.backdrop) body {
   display: none;
 }
 
+/* The class the Teach button points at, when it isn't the next by date. */
+.plan-card.is-picked {
+  border-top-color: var(--marker);
+}
+
 .next-tag {
   display: inline-block;
   margin-right: 8px;
