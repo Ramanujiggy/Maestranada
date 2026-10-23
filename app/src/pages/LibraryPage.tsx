@@ -241,7 +241,9 @@ export function LibraryPage({
           t('enDone', {
             classes: t(r.classes === 1 ? 'planCountOne' : 'planCountMany', { n: r.classes }),
             clips: r.clips === 1 ? t('enClipsOne') : t('enClipsMany', { n: r.clips }),
-          }) + (r.skipped ? t('enSkipped', { n: r.skipped }) : ''),
+          }) +
+            (r.skipped ? t('enSkipped', { n: r.skipped }) : '') +
+            (r.missing ? t('enMissing', { n: r.missing }) : ''),
         );
     } catch (e) {
       console.error(e);

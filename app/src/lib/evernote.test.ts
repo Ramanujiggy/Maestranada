@@ -1,7 +1,7 @@
 import { GIFEncoder } from 'gifenc';
 import { GifReader } from 'omggif';
 import { md5 } from './md5.ts';
-import { countNotes, looksLikeEnex, noteLines, noteToPlan, readEnex } from './evernote.ts';
+import { countNotes, looksLikeEnex, noteLines, noteToPlan, readEnex, sectionKind } from './evernote.ts';
 import { frameSeconds } from './gifClip.ts';
 
 const bytes = (s: string) => new TextEncoder().encode(s);
@@ -139,5 +139,73 @@ describe('readEnex and noteToPlan', () => {
     expect(r.numFrames()).toBe(4);
     expect(frameSeconds(r.frameInfo(0).delay)).toBe(0.1);
     expect(frameSeconds(0)).toBe(0.1);
+  });
+
+  it('keeps the place of a GIF the export left out, and never gives it another GIF', () => {
+    const n = note('Y', `<div>Move 1:</div><en-media type="image/gif" hash="${'0'.repeat(32)}"/><div>Move 2:</div><en-media type="image/gif" hash="${md5(g2)}"/>`, resource(g2));
+    const [y] = [...readEnex(enex([n]))];
+    expect(y.gifs).toEqual([null, g2]);
+    const plan = noteToPlan(y, [undefined, { id: 'c2', width: 2, height: 2 }]);
+    expect(plan.blocks.map((b) => b.kind)).toEqual(['gems']);
+    expect(plan.blocks[0].moves).toMatchObject([{ name: 'Move 1' }, { name: 'Move 2', clip: { id: 'c2' } }]);
+    expect(plan.blocks[0].moves?.[0].clip).toBeUndefined();
+  });
+
+  it('reads a note from an export that stops partway', () => {
+    const cut = enex([legDrag]).replace(/<\/note>[\s\S]*$/, '');
+    const [a] = [...readEnex(cut)];
+    expect(a.title).toBe('Leg drag & back take');
+    expect(a.gifs).toEqual([g1, g2]);
+  });
+
+  it('reads the created date even with whitespace around it', () => {
+    const n = note('Z', '<div>x</div>', '').replace('<created>20240314T190000Z</created>', '<created>\n      20261020T015103Z\n    </created>');
+    expect([...readEnex(enex([n]))][0].date).toBe('2026-10-20');
+  });
+});
+
+describe('sections', () => {
+  it('spots section headings, not notes that mention them', () => {
+    expect(sectionKind('[Movement section]')).toBe('warmup');
+    expect(sectionKind('Warm up with:')).toBe('warmup');
+    expect(sectionKind('[Concept section]')).toBe('concept');
+    expect(sectionKind('[Game around that concept/objective]')).toBe('game');
+    expect(sectionKind('[Then the gems]')).toBe('gems');
+    expect(sectionKind('[Free roll]')).toBe('freeRoll');
+    expect(sectionKind('Free roll')).toBe('freeRoll');
+    expect(sectionKind('Aquecimento:')).toBe('warmup');
+    expect(sectionKind('Just rolls today')).toBeNull();
+    expect(sectionKind('Move 1:')).toBeNull();
+    expect(sectionKind('Positional spar from leg drag to take the back :')).toBeNull();
+    expect(sectionKind('General rule: offensive opportunities from leg drag')).toBeNull();
+  });
+
+  it('turns a sectioned note into blocks of each kind', () => {
+    const g1 = gif(2, 1);
+    const g2 = gif(2, 2);
+    const g3 = gif(2, 3);
+    const body = [
+      '<div>Warm up with:</div><div>[Movement section]</div><div>Forward rolls</div><div>Shrimps</div><div><br/></div>',
+      '<div>[Concept section]</div><div>General rule: offensive opportunities from leg drag</div>',
+      '<div>[Game around that concept/objective]</div><div>Positional spar from leg drag to take the back :</div>',
+      '<div>Show general goals first</div><div>Rounds: </div><div>2x3 minutes, switch partners, then switch positions?</div>',
+      `<div>[Then the gems]</div><div>Move 1: </div><en-media type="image/gif" hash="${md5(g1)}"/><div><br/></div>`,
+      `<en-media type="image/gif" hash="${md5(g2)}"/><div>Options:</div><en-media type="image/gif" hash="${md5(g3)}"/>`,
+      '<div>[Free roll]</div>',
+    ].join('');
+    const [x] = [...readEnex(enex([note('Class', body, resource(g1) + resource(g2) + resource(g3))]))];
+    const clips = [1, 2, 3].map((i) => ({ id: `c${i}`, width: 2, height: 2 }));
+    const plan = noteToPlan(x, clips);
+    expect(plan.blocks.map((b) => b.kind)).toEqual(['warmup', 'concept', 'game', 'gems', 'freeRoll']);
+    const [warmup, concept, game, gems] = plan.blocks;
+    expect(warmup.kind === 'warmup' && warmup.drills.map((d) => d.text)).toEqual(['Forward rolls', 'Shrimps']);
+    expect(concept).toMatchObject({ rule: 'General rule: offensive opportunities from leg drag' });
+    expect(game).toMatchObject({ objective: 'Positional spar from leg drag to take the back :', rounds: { roundsPerSide: 2, minutes: 3 } });
+    expect(game.kind === 'game' && game.goals.map((g) => g.text)).toEqual(['Show general goals first']);
+    expect(gems.moves).toMatchObject([
+      { name: 'Move 1', clip: { id: 'c1' } },
+      { name: 'Move 1 (2)', clip: { id: 'c2' } },
+      { name: 'Options', clip: { id: 'c3' } },
+    ]);
   });
 });

@@ -19,6 +19,8 @@ export interface EnexResult {
   clips: number;
   /** GIFs that could not be read; their technique cards come in without a clip. */
   skipped: number;
+  /** GIFs the note shows but the export left out. */
+  missing: number;
   /** Why the import ended early, in the coach's words (storage full). */
   error?: string;
 }
@@ -30,7 +32,7 @@ export async function importEnex(
   stopped: () => boolean,
 ): Promise<EnexResult> {
   const notes = countNotes(text);
-  const result: EnexResult = { classes: 0, clips: 0, skipped: 0 };
+  const result: EnexResult = { classes: 0, clips: 0, skipped: 0, missing: 0 };
   let n = 0;
   for (const note of readEnex(text)) {
     if (stopped()) break;
@@ -39,9 +41,15 @@ export async function importEnex(
     for (let i = 0; i < note.gifs.length; i++) {
       onProgress({ note: n, notes, title: note.title, clip: i + 1, clips: note.gifs.length });
       if (stopped()) return done(result);
+      const bytes = note.gifs[i];
+      if (!bytes) {
+        result.missing++;
+        clips.push(undefined);
+        continue;
+      }
       let made;
       try {
-        made = await gifToClip(note.gifs[i]);
+        made = await gifToClip(bytes);
       } catch (e) {
         console.warn('A GIF from Evernote could not be read.', e);
         result.skipped++;
