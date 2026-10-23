@@ -13,12 +13,12 @@ export const THEMES: Theme[] = ['auto', 'navy', 'tan', 'light', 'dark'];
 
 const KEY = 'prancheta.theme';
 
-/** The paper color of each look, for the browser bar and the phone's status bar. */
+/** The page color of each look, for the browser bar and the phone's status bar. */
 export const PAPER: Record<Look, string> = {
-  light: '#ffffff',
+  light: '#f8f9fb',
   navy: '#0f1a2b',
-  tan: '#efe6d6',
-  dark: '#111111',
+  tan: '#1d1610',
+  dark: '#161616',
 };
 
 const darkQuery = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;

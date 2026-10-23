@@ -5,9 +5,11 @@
 
 :root,
 [data-theme='light'] {
-  --paper: #ffffff;
-  --sheet: #f5f7fa;
-  --sheet-2: #eef2f7;
+  --paper: #f8f9fb;
+  /* The surface the sheets lie on. Every look uses the paper for now. */
+  --desk: var(--paper);
+  --sheet: #eef1f5;
+  --sheet-2: #e6eaf0;
   --ink: #13233b;
   --ink-2: #3d4c63;
   --muted: #5d6b80;
@@ -73,48 +75,48 @@
   color-scheme: dark;
 }
 
-/* Tan: warm kraft paper with brown ink. The marker is a deeper red so it
-   still reads as the one alarm on the warm ground. */
+/* Tan: an old brown leather folder at night. Manila-cream ink on dark
+   brown, as calm as Navy. Rest lifts to a warm saddle brown. */
 [data-theme='tan'] {
-  --paper: #efe6d6;
-  --sheet: #e7dcc9;
-  --sheet-2: #dfd2bc;
-  --ink: #2b2117;
-  --ink-2: #4d3f30;
-  --muted: #65553f;
-  --hint: #85745e;
-  --rule: #d0c1a8;
-  --rule-strong: #b09e81;
-  --marker: #b3221a;
-  --belt: #1a140e;
-  --marker-press: #921b14;
-  --on-marker: #ffffff;
-  --rest: #7a4a2e;
+  --paper: #1d1610;
+  --sheet: #271e16;
+  --sheet-2: #30251b;
+  --ink: #efe3c9;
+  --ink-2: #d6c4a2;
+  --muted: #b39e7d;
+  --hint: #82705a;
+  --rule: #3b2e22;
+  --rule-strong: #55432f;
+  --marker: #ff6a5c;
+  --belt: var(--ink);
+  --marker-press: #ff8578;
+  --on-marker: #1d1610;
+  --rest: #6a4426;
   --on-rest: #ffffff;
-  --focus: #2f6fd6;
-  --sec-1: #d6c8b1;
-  --sec-2: #b8a487;
-  --sec-3: #8c785d;
-  --sec-4: #5c4b38;
-  --sec-5: #2b2117;
-  color-scheme: light;
+  --focus: #8fb6ff;
+  --sec-1: #55432f;
+  --sec-2: #7a6247;
+  --sec-3: #a08766;
+  --sec-4: #cbb592;
+  --sec-5: #efe3c9;
+  color-scheme: dark;
 }
 
 /* Dark: belt black, no blue. Rest lifts to charcoal. */
 [data-theme='dark'] {
-  --paper: #111111;
-  --sheet: #1b1b1b;
-  --sheet-2: #232323;
-  --ink: #f2f1ee;
-  --ink-2: #cfcdc8;
+  --paper: #161616;
+  --sheet: #1f1f1f;
+  --sheet-2: #282828;
+  --ink: #e6e3dc;
+  --ink-2: #c7c4bd;
   --muted: #a3a19b;
   --hint: #77756f;
-  --rule: #303030;
-  --rule-strong: #484848;
+  --rule: #2e2e2e;
+  --rule-strong: #444444;
   --marker: #ff5b4f;
   --belt: var(--ink);
   --marker-press: #ff7a70;
-  --on-marker: #111111;
+  --on-marker: #161616;
   --rest: #3a3a3a;
   --on-rest: #ffffff;
   --focus: #8fb6ff;
@@ -122,7 +124,7 @@
   --sec-2: #5c5c5c;
   --sec-3: #858585;
   --sec-4: #b5b5b5;
-  --sec-5: #f2f1ee;
+  --sec-5: #e6e3dc;
   color-scheme: dark;
 }
 
@@ -134,7 +136,7 @@
 html,
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--desk);
   overflow-x: hidden;
 }
 
@@ -3065,7 +3067,7 @@ html:has(.backdrop) body {
   height: 40px;
   border: 1px solid #9aa3ad;
   border-radius: 6px;
-  background: var(--paper);
+  background: var(--desk);
   overflow: hidden;
 }
 
@@ -3196,7 +3198,7 @@ html:has(.backdrop) body {
     display: flex;
     gap: 10px;
     padding: 10px 16px calc(10px + var(--sab));
-    background: var(--paper);
+    background: var(--desk);
     border-top: 1px solid var(--rule-strong);
   }
 
@@ -3254,7 +3256,7 @@ html:has(.backdrop) body {
     z-index: 20;
     margin: 0;
     padding: 10px 16px calc(10px + var(--sab));
-    background: var(--paper);
+    background: var(--desk);
     border-top: 1px solid var(--rule-strong);
   }
 
