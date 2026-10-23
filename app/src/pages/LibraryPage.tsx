@@ -137,10 +137,15 @@ export function LibraryPage({
   const today = todayISO();
   const shelf = shelveLibrary(api.plans, today);
   const next = nextClass(api.plans);
-  // The Teach button follows the class in the middle of the screen once the coach
-  // scrolls, else the class opened last, else the next one by date.
-  const onScreen = useCardOnScreen();
-  const picked = api.plans.find((p) => p.id === onScreen) ?? api.plans.find((p) => p.id === lastOpened()) ?? next;
+  // The Teach button follows the class the coach tapped, else the class opened
+  // last, else the next one by date.
+  const [selected, setSelected] = useState<string | null>(null);
+  const picked = api.plans.find((p) => p.id === selected) ?? api.plans.find((p) => p.id === lastOpened()) ?? next;
+  // On a phone a first tap selects a card for the Teach button; a second tap (or its title) opens it.
+  const tapCard = (p: ClassPlan) => {
+    if (p !== picked && window.matchMedia('(max-width: 620px)').matches) setSelected(p.id);
+    else navigate({ name: 'edit', id: p.id });
+  };
   const filing = useJustFiled(shelf.months);
   // Just-filed classes keep their card for a beat, then fold into their month.
   const folding = shelf.months.flatMap((m) => m.plans).filter((p) => filing.folding.includes(p.id));
@@ -387,9 +392,8 @@ export function LibraryPage({
           {cards.map((p) => (
             <article
               key={p.id}
-              data-plan={p.id}
-              className={`card plan-card${p === next ? ' is-next' : ''}${p === picked && picked !== next ? ' is-picked' : ''}${folding.includes(p) ? ' is-folding' : ''}`}
-              onClick={() => navigate({ name: 'edit', id: p.id })}
+              className={`card plan-card${p === next ? ' is-next' : ''}${p === picked ? ' is-picked' : ''}${folding.includes(p) ? ' is-folding' : ''}`}
+              onClick={() => tapCard(p)}
               onAnimationEnd={folding.includes(p) ? () => filing.done(p.id) : undefined}
             >
               <div className="plan-card-head">
@@ -535,35 +539,3 @@ export function LibraryPage({
     </div>
   );
 }
-
-/** The class card under the middle of the screen, from the coach's first scroll on.
-    Phone only, where the Teach button sits in the bottom bar. */
-function useCardOnScreen(): string | null {
-  const [id, setId] = useState<string | null>(null);
-  useEffect(() => {
-    const phone = window.matchMedia('(max-width: 620px)');
-    let frame = 0;
-    const pick = () => {
-      frame = 0;
-      if (!phone.matches) return;
-      const mid = window.innerHeight * 0.45;
-      let best: { id: string; d: number } | null = null;
-      for (const el of document.querySelectorAll<HTMLElement>('.plan-card[data-plan]')) {
-        const r = el.getBoundingClientRect();
-        const d = r.top <= mid && r.bottom >= mid ? 0 : Math.min(Math.abs(r.top - mid), Math.abs(r.bottom - mid));
-        if (!best || d < best.d) best = { id: el.dataset.plan!, d };
-      }
-      if (best) setId(best.id);
-    };
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(pick);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      cancelAnimationFrame(frame);
-    };
-  }, []);
-  return id;
-}
-

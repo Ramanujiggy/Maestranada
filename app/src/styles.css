@@ -3182,9 +3182,14 @@ html:has(.backdrop) body {
   display: none;
 }
 
-/* The class the Teach button points at, when it isn't the next by date. */
-.plan-card.is-picked {
-  border-top-color: var(--marker);
+/* On a phone, the class the bottom Teach button starts: the one tapped, else
+   the one opened last, else the next one. */
+@media (max-width: 620px) {
+  .plan-card.is-picked,
+  .plan-card.is-picked:hover {
+    border-color: var(--marker);
+    box-shadow: 0 0 0 1px var(--marker);
+  }
 }
 
 .next-tag {
