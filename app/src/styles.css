@@ -6,6 +6,8 @@
 :root,
 [data-theme='light'] {
   --paper: #ffffff;
+  /* The surface the sheets lie on. Same as the paper except in Tan. */
+  --desk: var(--paper);
   --sheet: #f5f7fa;
   --sheet-2: #eef2f7;
   --ink: #13233b;
@@ -73,28 +75,30 @@
   color-scheme: dark;
 }
 
-/* Tan: an old manila folder, heavy kraft with dark brown ink. The marker
-   is a deep oxblood red so it still reads as the one alarm on the brown. */
+/* Tan: an old manila folder. Cream sheets with dark brown ink lie on a
+   kraft-brown desk, so the page has two materials instead of one tint.
+   The marker is a deep red that clears AA on both. */
 [data-theme='tan'] {
-  --paper: #d2bb93;
-  --sheet: #c8af85;
-  --sheet-2: #bea47a;
+  --desk: #c2a274;
+  --paper: #f3e9d2;
+  --sheet: #ebdec2;
+  --sheet-2: #e3d4b5;
   --ink: #20160c;
   --ink-2: #3d2f1f;
   --muted: #4a3a28;
   --hint: #6b583f;
-  --rule: #b9a078;
-  --rule-strong: #94795a;
-  --marker: #8e1810;
+  --rule: #d8c7a4;
+  --rule-strong: #b39a72;
+  --marker: #a3201a;
   --belt: #150e07;
-  --marker-press: #6f120c;
+  --marker-press: #7f1912;
   --on-marker: #ffffff;
   --rest: #5e3a22;
   --on-rest: #ffffff;
   --focus: #2f6fd6;
-  --sec-1: #b9a078;
-  --sec-2: #97805d;
-  --sec-3: #74603f;
+  --sec-1: #d8c7a4;
+  --sec-2: #b39a72;
+  --sec-3: #86704f;
   --sec-4: #4b3a26;
   --sec-5: #20160c;
   color-scheme: light;
@@ -134,7 +138,7 @@
 html,
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--desk);
   overflow-x: hidden;
 }
 
@@ -3065,7 +3069,7 @@ html:has(.backdrop) body {
   height: 40px;
   border: 1px solid #9aa3ad;
   border-radius: 6px;
-  background: var(--paper);
+  background: var(--desk);
   overflow: hidden;
 }
 
@@ -3196,7 +3200,7 @@ html:has(.backdrop) body {
     display: flex;
     gap: 10px;
     padding: 10px 16px calc(10px + var(--sab));
-    background: var(--paper);
+    background: var(--desk);
     border-top: 1px solid var(--rule-strong);
   }
 
@@ -3254,7 +3258,7 @@ html:has(.backdrop) body {
     z-index: 20;
     margin: 0;
     padding: 10px 16px calc(10px + var(--sab));
-    background: var(--paper);
+    background: var(--desk);
     border-top: 1px solid var(--rule-strong);
   }
 
