@@ -26,7 +26,7 @@
 // A backup or class file's own JSON (internal kinds, `{id, text}` list items)
 // reads too, so the same importer takes either.
 
-import { blankPlan, normalizePlan, uid, type BlockKind, type ClassPlan } from './plan.ts';
+import { blankPlan, normalizePlan, uid, type Block, type BlockKind, type ClassPlan } from './plan.ts';
 import { getLang, type Lang } from './i18n.ts';
 
 type Obj = Record<string, unknown>;
@@ -234,6 +234,12 @@ function block(raw: unknown): Obj | null {
       out.notes = text(pick(r, 'notes', 'description'));
       break;
   }
+  // Any other block can hold a few moves too (a warm-up movement), in Technique's shape.
+  if (kind !== 'gems') {
+    const extra = moves(pick(r, 'moves', 'techniques'));
+    if (extra?.length) out.moves = extra;
+    else delete out.moves;
+  }
   return out;
 }
 
@@ -321,6 +327,7 @@ const GUIDE: Record<Lang, string> = {
 - "technique": the moves that win the game. minutes, moves (each a name, with the key details in notes), options (what to do when the move is stopped).
 - "rolling": live rounds. rounds, minutes per round, restSeconds, notes.
 - "wrapup" (optional): minutes, question (one question back to the class), notes.
+Any other block can also have "moves" in the same shape as technique's when a specific technique belongs there (a warm-up movement, a drill to show). Leave it out otherwise.
 Add, remove, repeat or reorder blocks to fit the class. "title" is my own name for a block; leave it "" to use the kind's name. Keep the keys and "kind" values exactly as written. Numbers are plain numbers (3, not "3 min"). Keep every line short, the way a coach writes on a clipboard.`,
 
   pt: `Como o formato funciona. A aula é uma lista ordenada de blocos, cada um com um "kind":
@@ -330,6 +337,7 @@ Add, remove, repeat or reorder blocks to fit the class. "title" is my own name f
 - "technique": as técnicas que vencem o jogo. minutes, moves (cada uma com name, e os detalhes-chave, o pulo do gato, em notes), options (o que fazer quando a técnica é bloqueada).
 - "rolling": rola livre. rounds, minutes por round, restSeconds, notes.
 - "wrapup" (opcional): minutes, question (uma pergunta de volta para a turma), notes.
+Qualquer outro bloco também pode ter "moves", no mesmo formato do technique, quando uma técnica específica pertence a ele (um movimento do aquecimento, um drill para mostrar). Senão, deixe de fora.
 Adicione, remova, repita ou reordene blocos para caber na aula. "title" é o nome que eu dou ao bloco; deixe "" para usar o nome do tipo. Mantenha as chaves e os valores de "kind" exatamente como estão, em inglês. Números são números simples (3, e não "3 min"). Cada linha curta, como um professor escreve na prancheta.`,
 };
 
@@ -382,37 +390,43 @@ const lines = (xs: { text: string }[]) => xs.map((x) => x.text.trim()).filter(Bo
 /** A plan in the class format: no ids or clips, the AI's kind names, lists as plain lines. */
 export function planToJson(plan: ClassPlan): Obj {
   const blocks = plan.blocks.map((b): Obj => {
-    const base = { kind: KIND_OUT[b.kind], title: b.title };
-    switch (b.kind) {
-      case 'warmup':
-        return { ...base, minutes: b.minutes, drills: lines(b.drills) };
-      case 'concept':
-        return { ...base, minutes: b.minutes, rule: b.rule, notes: b.notes };
-      case 'game':
-        return {
-          ...base,
-          start: b.start,
-          objective: b.objective,
-          goals: lines(b.goals),
-          details: lines(b.details),
-          transition: b.transition,
-          submission: b.submission,
-          rounds: { ...b.rounds },
-        };
-      case 'gems':
-        return {
-          ...base,
-          minutes: b.minutes,
-          moves: b.moves.filter((m) => m.name.trim() || m.notes.trim()).map((m) => ({ name: m.name, notes: m.notes })),
-          options: lines(b.options),
-        };
-      case 'freeRoll':
-        return { ...base, rounds: b.rounds, minutes: b.minutes, restSeconds: b.restSeconds, notes: b.notes };
-      case 'wrapup':
-        return { ...base, minutes: b.minutes, question: b.question, notes: b.notes };
-    }
+    const own = b.kind === 'gems' ? [] : (b.moves ?? []).filter((m) => m.name.trim() || m.notes.trim());
+    const out = blockJson(b);
+    return own.length ? { ...out, moves: own.map((m) => ({ name: m.name, notes: m.notes })) } : out;
   });
   return { prancheta: 1, title: plan.title, date: plan.date, blocks };
+}
+
+function blockJson(b: Block): Obj {
+  const base = { kind: KIND_OUT[b.kind], title: b.title };
+  switch (b.kind) {
+    case 'warmup':
+      return { ...base, minutes: b.minutes, drills: lines(b.drills) };
+    case 'concept':
+      return { ...base, minutes: b.minutes, rule: b.rule, notes: b.notes };
+    case 'game':
+      return {
+        ...base,
+        start: b.start,
+        objective: b.objective,
+        goals: lines(b.goals),
+        details: lines(b.details),
+        transition: b.transition,
+        submission: b.submission,
+        rounds: { ...b.rounds },
+      };
+    case 'gems':
+      return {
+        ...base,
+        minutes: b.minutes,
+        moves: b.moves.filter((m) => m.name.trim() || m.notes.trim()).map((m) => ({ name: m.name, notes: m.notes })),
+        options: lines(b.options),
+      };
+    case 'freeRoll':
+      return { ...base, rounds: b.rounds, minutes: b.minutes, restSeconds: b.restSeconds, notes: b.notes };
+    case 'wrapup':
+      return { ...base, minutes: b.minutes, question: b.question, notes: b.notes };
+  }
 }
 
 const EDIT: Record<Lang, (json: string) => string> = {

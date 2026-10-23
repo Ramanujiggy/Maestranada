@@ -1397,6 +1397,7 @@ a {
   font-weight: 600;
   color: var(--ink);
   min-width: 56px;
+  flex-shrink: 0;
   align-self: stretch;
   display: flex;
   align-items: center;
@@ -2662,6 +2663,38 @@ html:has(.backdrop) body {
   color: var(--muted);
 }
 
+/* What a block holds: small ruled tags, the clip and timer ones in ink. */
+.traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.section-stack > .traits {
+  margin-top: -4px;
+}
+
+.trait {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.trait-strong {
+  border-color: var(--ink);
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .template-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3267,4 +3300,11 @@ html:has(.backdrop) body {
   .run {
     padding-bottom: calc(110px + var(--sab));
   }
+}
+
+/* Techniques a block other than Technique holds, under its own fields. */
+.borrowed-moves {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }

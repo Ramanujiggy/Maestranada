@@ -16,6 +16,7 @@ import {
   CopyPlus,
   Download,
   FileText,
+  Film,
   GripVertical,
   MessagesSquare,
   MoreHorizontal,
@@ -36,6 +37,7 @@ import {
   formatMinutes,
   kindLabel,
   moveBlock,
+  move,
   newBlock,
   sectionSummary,
   withBlock,
@@ -47,10 +49,11 @@ import {
 import { navigate } from '../lib/router.ts';
 import type { PlansApi } from '../lib/usePlans.ts';
 import { Field, TextInput } from '../components/controls.tsx';
-import { BlockFields, type Reveal } from '../components/BlockFields.tsx';
+import { BlockFields, MoveCards, type Reveal } from '../components/BlockFields.tsx';
 import { ClassStrip, Timeline } from '../components/Timeline.tsx';
 import { PrintSheet } from '../components/PrintSheet.tsx';
 import { ConfirmDialog } from '../components/feedback.tsx';
+import { BlockTraits } from '../components/BlockTraits.tsx';
 import { downloadBackup } from './LibraryPage.tsx';
 import { fileSlug, saveFile } from '../lib/files.ts';
 import { classForAi } from '../lib/aiClass.ts';
@@ -67,6 +70,7 @@ function BlockMenu({
   name,
   index,
   count,
+  onAddTechnique,
   onRename,
   onDuplicate,
   onMove,
@@ -75,6 +79,8 @@ function BlockMenu({
   name: string;
   index: number;
   count: number;
+  /** Only for blocks other than Technique, which has its own Add technique button. */
+  onAddTechnique?: () => void;
   onRename: () => void;
   onDuplicate: () => void;
   onMove: (to: number) => void;
@@ -112,6 +118,11 @@ function BlockMenu({
       </button>
       {open && (
         <div className="menu-pop card" role="menu">
+          {onAddTechnique && (
+            <button type="button" role="menuitem" onClick={act(onAddTechnique)}>
+              <Film size={15} /> {t('addTechniqueMenu')}
+            </button>
+          )}
           <button type="button" role="menuitem" onClick={act(onRename)}>
             <PencilLine size={15} /> {t('rename')}
           </button>
@@ -166,6 +177,7 @@ function AddBlockSheet({ onPick, onClose }: { onPick: (kind: BlockKind) => void;
               <span>
                 <span className="template-title">{kindLabel(kind)}</span>
                 <span className="template-blurb">{t(`hint.${kind}`)}</span>
+                <BlockTraits kind={kind} />
               </span>
             </button>
           ))}
@@ -473,6 +485,14 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                         name={name}
                         index={index}
                         count={plan.blocks.length}
+                        onAddTechnique={
+                          block.kind === 'gems'
+                            ? undefined
+                            : () => {
+                                setBlock({ ...block, moves: [...(block.moves ?? []), move()] });
+                                openBlock(block.id, true);
+                              }
+                        }
                         onRename={() => rename(block.id)}
                         onDuplicate={() => duplicate(index)}
                         onMove={(to) => reorder(index, to)}
@@ -485,6 +505,7 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                           {block.title.trim() ? `${kindLabel(block.kind)}. ` : ''}
                           {t(`hint.${block.kind}`)}
                         </p>
+                        <BlockTraits kind={block.kind} />
                         {showName && (
                           <div id={`name-${block.id}`}>
                             <Field label={t('blockName')}>
@@ -507,6 +528,17 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                           askRemoveMove={(move) => setPendingMove({ block: block.id, move })}
                           earlierGame={block.kind === 'game' ? earlierGame(index) : undefined}
                         />
+                        {block.kind !== 'gems' && !!block.moves?.length && (
+                          <div className="borrowed-moves">
+                            <div className="eyebrow-strong ruled">{t('techniquesHere')}</div>
+                            <MoveCards
+                              moves={block.moves}
+                              notify={notify}
+                              askRemoveMove={(move) => setPendingMove({ block: block.id, move })}
+                              onChange={(moves) => setBlock({ ...block, moves })}
+                            />
+                          </div>
+                        )}
                         {next && (
                           <div className="section-next">
                             <button type="button" className="btn btn-secondary" onClick={() => openBlock(next.id, true)}>
@@ -615,14 +647,14 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
           }}
         />
       )}
-      {pendingMove && pendingBlock?.kind === 'gems' && (
+      {pendingMove && pendingBlock?.moves && (
         <ConfirmDialog
           title={t('removeMoveTitle')}
           body={t('removeMoveBody')}
           confirmLabel={t('removeMove')}
           onCancel={() => setPendingMove(null)}
           onConfirm={() => {
-            setBlock({ ...pendingBlock, moves: pendingBlock.moves.filter((x) => x.id !== pendingMove.move) });
+            setBlock({ ...pendingBlock, moves: pendingBlock.moves!.filter((x) => x.id !== pendingMove.move) });
             setPendingMove(null);
           }}
         />

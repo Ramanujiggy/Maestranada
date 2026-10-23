@@ -13,6 +13,7 @@ import {
   kindLabel,
   type ClassPlan,
   type ListItem,
+  type Move,
 } from '../lib/plan.ts';
 import { navigate } from '../lib/router.ts';
 import { RoundTimer } from '../components/RoundTimer.tsx';
@@ -110,10 +111,12 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
   const schedules = useMemo(() => new Map(blocks.map((b) => [b.id, blockSchedule(b)])), [blocks]);
   const schedule = schedules.get(block.id);
 
+  // Technique's moves, or the ones another block holds, each with its clip.
+  const moves = (block.moves ?? []).filter((m) => m.name.trim() || m.notes.trim() || m.clip);
   let body;
   switch (block.kind) {
     case 'warmup':
-      body = block.drills.some((d) => d.text.trim()) ? <BigList items={block.drills} /> : <Empty />;
+      body = block.drills.some((d) => d.text.trim()) ? <BigList items={block.drills} /> : moves.length ? null : <Empty />;
       break;
     case 'concept':
       body = (
@@ -176,22 +179,10 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       );
       break;
     case 'gems': {
-      const moves = block.moves.filter((m) => m.name.trim() || m.notes.trim() || m.clip);
       body = (
         <>
           {moves.length === 0 && block.options.length === 0 && <Empty />}
-          {moves.map((m, i) => (
-            <div className="run-block" key={m.id}>
-              <div className="eyebrow-strong ruled" style={{ marginBottom: 8 }}>
-                {t('moveN', { n: i + 1 })}
-              </div>
-              <p className="run-big run-lead" style={{ fontSize: 'clamp(24px, 3.2vw, 32px)', marginBottom: 6 }}>
-                {m.name || t('untitledMove')}
-              </p>
-              {m.clip && <ClipView clip={m.clip} label={m.name || t('moveN', { n: i + 1 })} />}
-              {m.notes && <p className="run-big muted">{m.notes}</p>}
-            </div>
-          ))}
+          <RunMoves moves={moves} />
           {block.options.length > 0 && (
             <div className="run-block">
               <div className="eyebrow-strong ruled" style={{ marginBottom: 12 }}>
@@ -214,7 +205,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
             <p className="run-big run-lead" style={{ fontSize: 'clamp(26px, 3.6vw, 36px)' }}>
               {block.question}
             </p>
-          ) : (
+          ) : moves.length ? null : (
             <Empty />
           )}
           {block.notes && <p className="run-big muted">{block.notes}</p>}
@@ -264,6 +255,7 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
           </div>
           <h1 className="run-title">{heading}</h1>
           {body}
+          {block.kind !== 'gems' && <RunMoves moves={moves} />}
         </div>
         {/* Every timer stays mounted, so stepping to another block mid-round
             never loses the clock; only the current block's timer shows. */}
@@ -293,4 +285,19 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
       </div>
     </div>
   );
+}
+
+function RunMoves({ moves }: { moves: Move[] }) {
+  return moves.map((m, i) => (
+    <div className="run-block" key={m.id}>
+      <div className="eyebrow-strong ruled" style={{ marginBottom: 8 }}>
+        {t('moveN', { n: i + 1 })}
+      </div>
+      <p className="run-big run-lead" style={{ fontSize: 'clamp(24px, 3.2vw, 32px)', marginBottom: 6 }}>
+        {m.name || t('untitledMove')}
+      </p>
+      {m.clip && <ClipView clip={m.clip} label={m.name || t('moveN', { n: i + 1 })} />}
+      {m.notes && <p className="run-big muted">{m.notes}</p>}
+    </div>
+  ));
 }

@@ -20,6 +20,7 @@ import {
   type Block,
   type ClassPlan,
   type ListItem,
+  type Move,
 } from './plan.ts';
 import { withClipData } from './clips.ts';
 import { APP_NAME } from './brand.ts';
@@ -101,6 +102,18 @@ document.querySelectorAll('video[data-clip]').forEach(function(v){
 });
 `;
 
+/** Technique's moves, or the ones another block holds, each with its clip. */
+function moveCards(moves: Move[], clipData: Record<string, string>): string {
+  return moves
+    .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
+    .map((m, i) => {
+      const name = m.name || t('untitledMove');
+      const clip = m.clip ? clipTag(m.clip.id, name, m.clip.width, m.clip.height, clipData) : '';
+      return `<div class="move"><h3>${esc(t('moveNamed', { n: i + 1, name }))}</h3>${clip}${para(m.notes)}</div>`;
+    })
+    .join('');
+}
+
 function blockBody(b: Block, clipData: Record<string, string>): string {
   switch (b.kind) {
     case 'warmup':
@@ -116,17 +129,8 @@ function blockBody(b: Block, clipData: Record<string, string>): string {
         line(t('submission'), b.submission) +
         line(t('rounds'), `${describeGameRounds(b.rounds)} · ${t('restLower')} ${formatRest(b.rounds.restSeconds)}`)
       );
-    case 'gems': {
-      const moves = b.moves
-        .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
-        .map((m, i) => {
-          const name = m.name || t('untitledMove');
-          const clip = m.clip ? clipTag(m.clip.id, name, m.clip.width, m.clip.height, clipData) : '';
-          return `<div class="move"><h3>${esc(t('moveNamed', { n: i + 1, name }))}</h3>${clip}${para(m.notes)}</div>`;
-        })
-        .join('');
-      return moves + (b.options.length ? `<h3>${esc(t('options'))}</h3>${list(b.options)}` : '');
-    }
+    case 'gems':
+      return moveCards(b.moves, clipData) + (b.options.length ? `<h3>${esc(t('options'))}</h3>${list(b.options)}` : '');
     case 'freeRoll':
       return `<p>${b.rounds} × ${b.minutes} min · ${esc(t('restLower'))} ${esc(formatRest(b.restSeconds))}</p>${para(b.notes)}`;
     case 'wrapup':
@@ -154,7 +158,7 @@ export function buildClassFile(plan: ClassPlan, clipData: Record<string, string>
 <div class="top">${LOGO}<span>${esc(t('classPlan'))}</span></div>
 <h1>${esc(title)}</h1>
 <div class="meta">${esc(formatDate(plan.date))} · ${esc(formatMinutes(totalMinutes(plan)))}</div>
-${plan.blocks.map((b, i) => section(i + 1, blockLabel(b), formatMinutes(blockMinutes(b)), blockBody(b, clipData))).join('\n')}
+${plan.blocks.map((b, i) => section(i + 1, blockLabel(b), formatMinutes(blockMinutes(b)), blockBody(b, clipData) + (b.kind !== 'gems' && b.moves ? moveCards(b.moves, clipData) : ''))).join('\n')}
 <footer>${esc(t('classFileFooter', { app: APP_NAME }))}</footer>
 </main>
 <script type="application/json" id="${PLAN_ID}">${json}</script>
