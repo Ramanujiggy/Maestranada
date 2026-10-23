@@ -344,6 +344,8 @@ Adicione, remova, repita ou reordene blocos para caber na aula. "title" é o nom
 const FORMAT: Record<Lang, string> = {
   en: `Fill in this Prancheta class plan (Prancheta is the app I plan my jiu-jitsu classes in).
 
+If I paste notes from a class I've already written, that's the class: sort my words into the blocks and keep them as I wrote them, in my order. Don't add drills or moves I didn't write. Only ask about what the notes leave out.
+
 Use what we've talked about in this conversation: the position, the goal, the students, the time. Before you fill it in, check you have enough for a class I'd actually teach. If something that changes the plan is missing or unclear (what the class is about, the students' level, how long it runs, gi or no-gi), ask me first: a few short questions in one message, only the ones that matter. Small details we haven't covered, decide like a good coach would.
 
 Once you have what you need, reply with the filled-in JSON in one \`\`\`json code block and nothing else. No comments inside the JSON.
@@ -356,6 +358,8 @@ ${JSON.stringify(TEMPLATE, null, 2)}
 \`\`\``,
 
   pt: `Preencha este plano de aula do Prancheta (o Prancheta é o app onde eu planejo minhas aulas de jiu-jitsu).
+
+Se eu colar anotações de uma aula que já escrevi, essa é a aula: organize as minhas palavras nos blocos e mantenha do jeito que eu escrevi, na minha ordem. Não acrescente exercícios ou técnicas que eu não escrevi. Só pergunte o que as anotações não dizem.
 
 Use o que a gente conversou aqui: a posição, o objetivo, os alunos, o tempo. Antes de preencher, veja se você tem o suficiente para uma aula que eu daria de verdade. Se faltar ou não estiver claro algo que muda o plano (do que é a aula, o nível dos alunos, quanto tempo dura, com ou sem kimono), me pergunte antes: poucas perguntas curtas numa mensagem só, apenas as que importam. Detalhes pequenos que a gente não falou, decida como um bom professor decidiria.
 
