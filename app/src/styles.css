@@ -6,7 +6,7 @@
 :root,
 [data-theme='light'] {
   --paper: #f8f9fb;
-  /* The surface the sheets lie on. Same as the paper except in Tan. */
+  /* The surface the sheets lie on. Every look uses the paper for now. */
   --desk: var(--paper);
   --sheet: #eef1f5;
   --sheet-2: #e6eaf0;
@@ -75,33 +75,31 @@
   color-scheme: dark;
 }
 
-/* Tan: an old manila folder. Cream sheets with dark brown ink lie on a
-   kraft-brown desk, so the page has two materials instead of one tint.
-   The marker is a deep red that clears AA on both. */
+/* Tan: an old brown leather folder at night. Manila-cream ink on dark
+   brown, as calm as Navy. Rest lifts to a warm saddle brown. */
 [data-theme='tan'] {
-  --desk: #c6ac84;
-  --paper: #e6d8bb;
-  --sheet: #ddcdac;
-  --sheet-2: #d4c29f;
-  --ink: #2a2015;
-  --ink-2: #45372a;
-  --muted: #4a3a28;
-  --hint: #6f5c44;
-  --rule: #cdb994;
-  --rule-strong: #a88e66;
-  --marker: #9e1f18;
-  --belt: #150e07;
-  --marker-press: #7c1812;
-  --on-marker: #ffffff;
-  --rest: #5e3a22;
+  --paper: #1d1610;
+  --sheet: #271e16;
+  --sheet-2: #30251b;
+  --ink: #efe3c9;
+  --ink-2: #d6c4a2;
+  --muted: #b39e7d;
+  --hint: #82705a;
+  --rule: #3b2e22;
+  --rule-strong: #55432f;
+  --marker: #ff6a5c;
+  --belt: var(--ink);
+  --marker-press: #ff8578;
+  --on-marker: #1d1610;
+  --rest: #6a4426;
   --on-rest: #ffffff;
-  --focus: #2f6fd6;
-  --sec-1: #cdb994;
-  --sec-2: #a88e66;
-  --sec-3: #806a4a;
-  --sec-4: #4f3d29;
-  --sec-5: #2a2015;
-  color-scheme: light;
+  --focus: #8fb6ff;
+  --sec-1: #55432f;
+  --sec-2: #7a6247;
+  --sec-3: #a08766;
+  --sec-4: #cbb592;
+  --sec-5: #efe3c9;
+  color-scheme: dark;
 }
 
 /* Dark: belt black, no blue. Rest lifts to charcoal. */

@@ -17,7 +17,7 @@ const KEY = 'prancheta.theme';
 export const PAPER: Record<Look, string> = {
   light: '#f8f9fb',
   navy: '#0f1a2b',
-  tan: '#c6ac84',
+  tan: '#1d1610',
   dark: '#161616',
 };
 
