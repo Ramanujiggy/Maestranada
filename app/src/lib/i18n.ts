@@ -156,6 +156,8 @@ const en = {
   pasteNothing: 'No classes on the clipboard. Tap Copy my classes in the other Prancheta first.',
   copyClasses: 'Copy my classes',
   pasteClasses: 'Paste classes',
+  pasteRefused: "The phone didn't let Prancheta read the clipboard. Press and hold the box at the top, then tap Paste.",
+  pasteHere: 'Press and hold here, then tap Paste',
   classesCopied: 'Classes copied',
   // Free version and the unlock
   freeLeft: '{n} of {total} free classes left.',
@@ -573,6 +575,8 @@ const pt: Record<Key, string> = {
   pasteNothing: 'Nenhuma aula copiada. Toque antes em Copiar minhas aulas na outra Prancheta.',
   copyClasses: 'Copiar minhas aulas',
   pasteClasses: 'Colar aulas',
+  pasteRefused: 'O celular não deixou a Prancheta ler o que foi copiado. Toque e segure a caixa no topo, depois toque em Colar.',
+  pasteHere: 'Toque e segure aqui, depois toque em Colar',
   classesCopied: 'Aulas copiadas',
   // Versão grátis e desbloqueio
   freeLeft: 'Restam {n} de {total} aulas grátis.',

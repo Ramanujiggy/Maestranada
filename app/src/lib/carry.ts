@@ -68,7 +68,7 @@ function parse(text: string | null): unknown {
   }
 }
 
-/** What's on the clipboard, or null when the browser won't say. */
+/** What's on the clipboard, or null when the browser refused to say. */
 export async function readClipboard(): Promise<string | null> {
   try {
     return await navigator.clipboard.readText();
