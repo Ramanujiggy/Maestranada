@@ -37,6 +37,19 @@ export async function copyClasses(plans: ClassPlan[]): Promise<boolean> {
   }
 }
 
+/**
+ * The classes in copied or backed-up text: a list of saved classes. A single
+ * class an AI wrote is something else, so this says null for it.
+ */
+export function readBackup(text: string | null): unknown[] | null {
+  try {
+    const parsed: unknown = JSON.parse((text ?? '').trim());
+    return Array.isArray(parsed) && parsed.some((p) => p && typeof p === 'object' && 'createdAt' in p) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 /** What's on the clipboard, or null when the browser won't say. */
 export async function readClipboard(): Promise<string | null> {
   try {
