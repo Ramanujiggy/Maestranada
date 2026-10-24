@@ -6,10 +6,14 @@
 //
 // A browser with no video encoder keeps the GIF as it is, and so does a GIF
 // with one frame or one that somehow comes out smaller than its MP4.
+//
+// A still picture (a PNG or JPEG pasted into a note) stays a picture, scaled
+// down to a size a phone shows sharply and saved as a JPEG when that's smaller.
 
 import { GifReader } from 'omggif';
 import { BufferTarget, CanvasSource, Mp4OutputFormat, Output, getFirstEncodableVideoCodec } from 'mediabunny';
-import { fitSize } from './gif.ts';
+import { fitSize, imageSize } from './gif.ts';
+import { imageType } from './evernote.ts';
 import { CLIP_MAX_SIDE, type MadeClip } from './video.ts';
 
 const BITRATE = 1_200_000;
@@ -17,6 +21,35 @@ const BITRATE = 1_200_000;
 /** Seconds a GIF frame shows. Browsers play delays under 0.02 s at 0.1 s, so the clip does too. */
 export function frameSeconds(delay: number): number {
   return (delay < 2 ? 10 : delay) / 100;
+}
+
+/** Longest side of a still picture. Bigger than a clip: diagrams carry small writing. */
+const STILL_MAX_SIDE = 1280;
+
+/** A picture from a note as a clip: a GIF becomes an MP4, a still stays a still. */
+export async function imageToClip(bytes: Uint8Array): Promise<MadeClip> {
+  const type = imageType(bytes);
+  if (type === 'image/gif') return gifToClip(bytes);
+  if (!type) throw new Error('Not a picture this app can show.');
+  return stillToClip(new Blob([bytes], { type }));
+}
+
+async function stillToClip(original: Blob): Promise<MadeClip> {
+  const { width, height } = await imageSize(original);
+  const size = fitSize(width, height, STILL_MAX_SIDE);
+  const img = await createImageBitmap(original);
+  const canvas = document.createElement('canvas');
+  canvas.width = size.width;
+  canvas.height = size.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return { blob: original, width, height };
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, size.width, size.height);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, size.width, size.height);
+  img.close();
+  const jpeg = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+  return jpeg && jpeg.size < original.size ? { blob: jpeg, ...size } : { blob: original, width, height };
 }
 
 export async function gifToClip(bytes: Uint8Array): Promise<MadeClip> {

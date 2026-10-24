@@ -53,10 +53,10 @@ describe('noteLines', () => {
       'Leg drag to the back',
       'Pin the knee',
       'Hip to hip',
-      { gif: true, hash: 'abc' },
+      { image: true, hash: 'abc' },
       'a & b',
       'c',
-      { gif: false, hash: 'def' },
+      { image: true, hash: 'def' },
     ]);
   });
 });
@@ -88,9 +88,9 @@ describe('readEnex and noteToPlan', () => {
     const [a, b] = [...readEnex(file)];
     expect(a.title).toBe('Leg drag & back take');
     expect(a.date).toBe('2024-03-14');
-    expect(a.gifs).toEqual([g1, g2]);
+    expect(a.images).toEqual([g1, g2]);
     expect(a.pieces).toContain(0);
-    expect(b).toMatchObject({ title: 'Open mat', date: '2025-01-02', gifs: [] });
+    expect(b).toMatchObject({ title: 'Open mat', date: '2025-01-02', images: [] });
   });
 
   it('makes each GIF a technique named by the line above it, with the lines below as notes', () => {
@@ -128,7 +128,7 @@ describe('readEnex and noteToPlan', () => {
     const long = 'This is a long sentence about the position that is clearly a note, not the name of a move';
     const n = note('X', `<div>${long}</div><en-media type="image/gif" hash="${md5(g1)}"/>`, resource(g1) + resource(g2));
     const [x] = [...readEnex(enex([n]))];
-    expect(x.gifs).toEqual([g1, g2]);
+    expect(x.images).toEqual([g1, g2]);
     const plan = noteToPlan(x, []);
     expect(plan.blocks[0]).toMatchObject({ kind: 'concept', notes: long });
     expect(plan.blocks[1].moves?.map((m) => m.name)).toEqual(['', '']);
@@ -144,7 +144,7 @@ describe('readEnex and noteToPlan', () => {
   it('keeps the place of a GIF the export left out, and never gives it another GIF', () => {
     const n = note('Y', `<div>Move 1:</div><en-media type="image/gif" hash="${'0'.repeat(32)}"/><div>Move 2:</div><en-media type="image/gif" hash="${md5(g2)}"/>`, resource(g2));
     const [y] = [...readEnex(enex([n]))];
-    expect(y.gifs).toEqual([null, g2]);
+    expect(y.images).toEqual([null, g2]);
     const plan = noteToPlan(y, [undefined, { id: 'c2', width: 2, height: 2 }]);
     expect(plan.blocks.map((b) => b.kind)).toEqual(['gems']);
     expect(plan.blocks[0].moves).toMatchObject([{ name: 'Move 1' }, { name: 'Move 2', clip: { id: 'c2' } }]);
@@ -155,7 +155,7 @@ describe('readEnex and noteToPlan', () => {
     const cut = enex([legDrag]).replace(/<\/note>[\s\S]*$/, '');
     const [a] = [...readEnex(cut)];
     expect(a.title).toBe('Leg drag & back take');
-    expect(a.gifs).toEqual([g1, g2]);
+    expect(a.images).toEqual([g1, g2]);
   });
 
   it('reads the created date even with whitespace around it', () => {
@@ -207,5 +207,36 @@ describe('sections', () => {
       { name: 'Move 1 (2)', clip: { id: 'c2' } },
       { name: 'Options', clip: { id: 'c3' } },
     ]);
+  });
+
+  it('reads a note with no headings by its Game, Move, Details and Troubleshooting lines', () => {
+    // A tiny PNG: stills come in too, not only GIFs.
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
+    const pics = [gif(2, 5), png, gif(2, 6), gif(2, 7)];
+    const pic = (b: Uint8Array, type = 'image/gif') => `<en-media hash="${md5(b)}" type="${type}"/>`;
+    const body = [
+      '<div>Warm up:</div><div>Forward Rolls</div><div>Shrimps</div>',
+      `<div>Warm up Games: </div><div>Game 1: Pinning/ Guard retention</div>${pic(pics[0])}`,
+      '<div>Top player keeps shoulders pinned</div><div>Bottom player recovers knee shield</div>',
+      `<div>Game 2: winning the battle at 50/50 half guard. </div>${pic(pics[1], 'image/png')}<div>Top player clears the frames</div>`,
+      '<div>Move: Fight up to dog fight: Troubleshooting</div><ol><li><div>Details: </div></li><ol><li><div>Strong grip</div></li></ol></ol>',
+      `<div>Troubleshooting: on the way to the underhook</div><div>Knee bump to clear cross face</div>${pic(pics[2])}<div>Dog fight underhook details.</div>`,
+      `<div>Move: Cross Arm Drag into Spring Sweep:</div>${pic(pics[3])}<div>Details: </div><ol><li><div>Use the elbow to frame</div></li></ol>`,
+    ].join('');
+    const [n] = [...readEnex(enex([note('Half Guard', body, pics.map((b) => resource(b)).join(''))]))];
+    expect(n.images).toEqual(pics);
+    const plan = noteToPlan(n, pics.map((_, i) => ({ id: `p${i}`, width: 2, height: 2 })));
+    expect(plan.blocks.map((b) => b.kind)).toEqual(['warmup', 'game', 'game', 'gems']);
+    const [warmup, g1, g2, gems] = plan.blocks;
+    expect(warmup.kind === 'warmup' && warmup.drills.map((d) => d.text)).toEqual(['Forward Rolls', 'Shrimps']);
+    expect(g1).toMatchObject({ objective: 'Pinning/ Guard retention', moves: [{ clip: { id: 'p0' } }] });
+    expect(g1.kind === 'game' && g1.goals.map((g) => g.text)).toEqual(['Top player keeps shoulders pinned', 'Bottom player recovers knee shield']);
+    expect(g2).toMatchObject({ objective: 'winning the battle at 50/50 half guard.', moves: [{ clip: { id: 'p1' } }] });
+    expect(gems.moves).toMatchObject([
+      { name: 'Fight up to dog fight: Troubleshooting', notes: 'Strong grip' },
+      { name: 'Troubleshooting: on the way to the underhook', notes: 'Knee bump to clear cross face\nDog fight underhook details.', clip: { id: 'p2' } },
+      { name: 'Cross Arm Drag into Spring Sweep', notes: 'Use the elbow to frame', clip: { id: 'p3' } },
+    ]);
+    expect(gems.moves?.[0].clip).toBeUndefined();
   });
 });
