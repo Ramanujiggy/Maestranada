@@ -1,0 +1,9 @@
+// Cloudflare Workers deploy for the sales page: serves this folder as plain files.
+// "name" must match the Worker's name in the Cloudflare dashboard.
+{
+  "name": "prancheta-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "."
+  }
+}

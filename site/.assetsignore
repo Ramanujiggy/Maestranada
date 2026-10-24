@@ -1,0 +1,9 @@
+# Repo files that shouldn't be published with the sales page.
+node_modules
+package.json
+package-lock.json
+wrangler.jsonc
+netlify.toml
+railway.toml
+README.md
+.assetsignore
