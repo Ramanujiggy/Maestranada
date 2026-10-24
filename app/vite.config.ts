@@ -10,12 +10,15 @@ export default defineConfig({
     // precached, so after the first visit it runs with no connection.
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      // Icon files carry the logo's name: browsers and phones cache icons by URL,
+      // so a new logo needs new file names to replace an installed app's icon.
+      // apple-touch-icon.png stays because iOS also asks for it by that name.
+      includeAssets: ['favicon-rank.svg', 'rank-touch-180.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Prancheta',
         short_name: 'Prancheta',
         description: 'Plan your Jiu-Jitsu classes and teach them from your phone.',
-        theme_color: '#FFFFFF',
+        theme_color: '#F8F9FB',
         background_color: '#FFFFFF',
         display: 'standalone',
         orientation: 'any',
@@ -23,9 +26,9 @@ export default defineConfig({
         scope: '/',
         categories: ['sports', 'education', 'productivity'],
         icons: [
-          { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'rank-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'rank-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'rank-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {

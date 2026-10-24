@@ -8,11 +8,12 @@
     <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0F1A2B" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon-rank.svg" />
+    <link rel="apple-touch-icon" href="/rank-touch-180.png" />
     <meta property="og:title" content="Prancheta · Plan the class. Teach the game." />
     <meta property="og:description" content="The class-prep app for Jiu-Jitsu coaches. Five blocks, five minutes, $10 once." />
-    <meta property="og:image" content="/img/game.png" />
+    <meta property="og:url" content="https://pranchetabjj.com/" />
+    <meta property="og:image" content="https://pranchetabjj.com/img/game.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -103,6 +104,12 @@
       .steps .n { display: block; font: 500 15px/1 var(--num); color: var(--muted); margin-bottom: 8px; }
       .steps-note { margin: 22px 0 0; color: var(--muted); font-size: 16px; }
 
+      .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; margin-top: 30px; }
+      .before-after figure { margin: 0; display: grid; gap: 10px; }
+      .before-after figcaption { font-size: 14px; color: var(--muted); }
+      .before-after .phone { max-width: 330px; justify-self: start; }
+      .note-card { background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px; padding: 20px 22px; font: 400 15px/1.55 system-ui, -apple-system, 'Segoe UI', sans-serif; color: var(--ink-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+
       .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px 28px; margin-top: 30px; }
       .features p { color: var(--ink-2); font-size: 16px; }
 
@@ -130,6 +137,8 @@
         .blocks { grid-template-columns: 1fr; gap: 18px; }
         .steps { grid-template-columns: 1fr; gap: 18px; }
         .features { grid-template-columns: 1fr; gap: 22px; }
+        .before-after { grid-template-columns: 1fr; max-width: 420px; }
+        .before-after .phone { justify-self: center; }
         .shots { grid-template-columns: 1fr; max-width: 330px; margin-left: auto; margin-right: auto; }
         section { padding: 48px 0; }
       }
@@ -175,6 +184,42 @@
         <p class="eyebrow" data-i18n="problemEyebrow">The problem</p>
         <h2 data-i18n="problemTitle">It's 6:55. Class starts at 7.</h2>
         <p class="lead" style="margin-bottom:0" data-i18n="problemLead">You know what you want to teach. But the plan turns into pages of typing, GIFs you made yourself and a notes app that keeps getting bigger. Prancheta gives every class a clear shape, so you plan it in minutes and teach it straight from your phone.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="narrow">
+          <p class="eyebrow" data-i18n="notesEyebrow">From your notes app</p>
+          <h2 data-i18n="notesTitle">Same class. Ready to teach.</h2>
+          <p class="lead" data-i18n="notesLead">Already have classes in your notes app? Paste one into your AI chat with the Prancheta class format. Your words come back in blocks, with times and rounds, and you teach it with the timer running.</p>
+        </div>
+        <div class="before-after">
+          <figure>
+            <div class="note-card" data-i18n="notesNote">thurs 7pm - leg drag
+
+warmup 10 - fwd/back rolls, shrimps, fwd shrimps, cartwheels
+
+focus: keep hips pinned -&gt; back opens up
+
+GAME from leg drag. top wants back, bottom squares up / recovers guard / single. reset if closed guard
+chest on FAR hip not near!! control far sleeve first. back knee in when they turn
+4 rounds x 3 min?? switch partners then sides, 30s rest
+finish RNC or bow &amp; arrow
+
+tech 15 - back take when they turn (seatbelt THEN hook, let them give it)
+knee cut far side if they block -&gt; mount
+arm posts = armbar. or switch to other leg drag
+
+roll 5x5</div>
+            <figcaption data-i18n="notesBefore">Before: the note you wrote at 6:55.</figcaption>
+          </figure>
+          <figure>
+            <div class="phone"><img src="/img/teach.png" data-src-pt="/img/teach-pt.png" width="780" height="1688" loading="lazy" data-i18n-alt="notesAfterAlt" alt="The same class in Prancheta's Teach mode: positional sparring from the leg drag, round 1 of 4, a 3:00 timer and the rounds with rest." /></div>
+            <figcaption data-i18n="notesAfter">After: the same class, block by block, rounds timed for you.</figcaption>
+          </figure>
+        </div>
+        <p class="steps-note" data-i18n="notesFine">Your AI is told to keep your words as you wrote them and not add drills of its own. Prefer to type? Build the class yourself in five minutes.</p>
       </div>
     </section>
 
@@ -277,15 +322,15 @@
     <div class="wrap">
       <footer>
         <span>© <span id="year">2026</span> Prancheta</span>
-        <span><a class="support" href="mailto:help@prancheta.app">help@prancheta.app</a></span>
+        <span><a class="support" href="mailto:help@pranchetabjj.com">help@pranchetabjj.com</a></span>
       </footer>
     </div>
 
     <script>
       // The things to change before launch.
       const CHECKOUT_URL = ''; // Lemon Squeezy checkout link, e.g. https://prancheta.lemonsqueezy.com/buy/...
-      const APP_URL = ''; // The app, e.g. https://app.prancheta.app
-      const SUPPORT_EMAIL = 'help@prancheta.app';
+      const APP_URL = 'https://app.pranchetabjj.com'; // The app
+      const SUPPORT_EMAIL = 'help@pranchetabjj.com';
 
       if (CHECKOUT_URL) document.querySelectorAll('a.buy').forEach((a) => (a.href = CHECKOUT_URL));
       if (APP_URL) document.querySelectorAll('a.try').forEach((a) => (a.href = APP_URL));
@@ -314,6 +359,29 @@
         problemEyebrow: 'O problema',
         problemTitle: 'São 18h55. A aula começa às 19h.',
         problemLead: 'Você sabe o que quer ensinar. Mas o plano vira páginas de texto, GIFs que você mesmo fez e um app de notas que só cresce. A Prancheta dá um formato claro para cada aula, então você planeja em minutos e dá a aula direto do celular.',
+        notesEyebrow: 'Do seu app de notas',
+        notesTitle: 'A mesma aula. Pronta para dar.',
+        notesLead: 'Já tem aulas no app de notas? Cole uma no chat da sua IA junto com o formato de aula da Prancheta. As suas palavras voltam em blocos, com tempos e rounds, e você dá a aula com o cronômetro rodando.',
+        notesNote: `qui 19h - leg drag
+
+aquecimento 10 - rolamento frente/trás, fuga de quadril, fuga pra frente, estrelinha
+
+foco: prender o quadril -&gt; as costas aparecem
+
+ESPECÍFICO do leg drag. cima quer as costas, baixo fica de frente / recupera guarda / single. recomeça se fechar a guarda
+peito no quadril de LONGE não no de perto!! controla a manga de longe antes. joelho de trás entra quando ele vira
+4 rounds de 3 min?? troca parceiro depois lado, 30s descanso
+finaliza mata-leão ou arco e flecha
+
+técnica 15 - pegada de costas quando ele vira (cinto PRIMEIRO depois gancho, deixa ele te dar)
+passagem de joelho do outro lado se bloquear -&gt; montada
+apoiou o braço = chave de braço. ou troca pro leg drag do outro lado
+
+luta 5x5`,
+        notesBefore: 'Antes: a anotação que você fez às 18h55.',
+        notesAfter: 'Depois: a mesma aula, bloco a bloco, com os rounds cronometrados para você.',
+        notesAfterAlt: 'A mesma aula no modo aula da Prancheta: específico do leg drag, round 1 de 4, cronômetro de 3:00 e os rounds com descanso.',
+        notesFine: 'A sua IA recebe a instrução de manter as suas palavras como você escreveu e não acrescentar exercícios por conta própria. Prefere digitar? Monte a aula você mesmo em cinco minutos.',
         aiEyebrow: 'Planejar com IA',
         aiTitle: 'A sua aula já está na sua cabeça.',
         aiLead: 'Planejar não devia ser escrever páginas. Converse com a IA que você já usa, falando, do jeito que a ideia vier. A Prancheta passa o formato da aula, e os seus pensamentos voltam em ordem: aquecimento, foco, específico, técnica e luta, com tempos e rounds.',
@@ -404,6 +472,10 @@
         });
         document.querySelectorAll('[data-i18n-alt]').forEach((el) => (el.alt = t[el.dataset.i18nAlt]));
         document.querySelectorAll('[data-i18n-content]').forEach((el) => (el.content = t[el.dataset.i18nContent]));
+        document.querySelectorAll('img[data-src-pt]').forEach((el) => {
+          el.dataset.srcEn ??= el.getAttribute('src');
+          el.src = lang === 'pt' ? el.dataset.srcPt : el.dataset.srcEn;
+        });
         document.querySelectorAll('[data-only]').forEach((el) => (el.hidden = el.dataset.only !== lang));
         document.querySelectorAll('.lang button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
       }

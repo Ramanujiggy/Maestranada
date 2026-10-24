@@ -31,6 +31,10 @@ export function usePlans(onLimit: () => void): PlansApi {
   const fromOtherTab = useRef(false);
   // While stored data was unreadable, clips are left alone until a real edit.
   const touched = useRef(!initial.damaged);
+  // The plans with every class let in so far, even before React redraws, so
+  // several classes added in a row (an Evernote import) count each other.
+  const latest = useRef(plans);
+  latest.current = plans;
 
   useEffect(() => {
     if (fromOtherTab.current) {
@@ -74,10 +78,11 @@ export function usePlans(onLimit: () => void): PlansApi {
 
   const upsert = useCallback(
     (plan: ClassPlan) => {
-      if (!roomFor(plans, [plan])) {
+      if (!roomFor(latest.current, [plan])) {
         onLimit();
         return false;
       }
+      if (!latest.current.some((p) => p.id === plan.id)) latest.current = [plan, ...latest.current];
       const stamped = { ...plan, updatedAt: new Date().toISOString() };
       edit((prev) => {
         const i = prev.findIndex((p) => p.id === plan.id);
@@ -100,10 +105,12 @@ export function usePlans(onLimit: () => void): PlansApi {
         const here = byId.get(p.id);
         return !here || p.updatedAt > here.updatedAt;
       });
-      if (!moving && !roomFor(plans, changed)) {
+      if (!moving && !roomFor(latest.current, changed)) {
         onLimit();
         return null;
       }
+      const known = new Set(latest.current.map((p) => p.id));
+      latest.current = [...changed.filter((p) => !known.has(p.id)), ...latest.current];
       if (changed.length) {
         const ids = new Set(changed.map((p) => p.id));
         edit((prev) => [...changed, ...prev.filter((p) => !ids.has(p.id))]);

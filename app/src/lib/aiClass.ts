@@ -25,8 +25,13 @@
 //
 // A backup or class file's own JSON (internal kinds, `{id, text}` list items)
 // reads too, so the same importer takes either.
+//
+// Clips never go to the AI. A class sent with "Change it with AI" numbers
+// each move's clip ("clip": 1) and says which class it came from ("from");
+// the app remembers which clip each number stands for, so the AI's answer
+// gets its clips back on whichever moves carry those numbers.
 
-import { blankPlan, normalizePlan, uid, type BlockKind, type ClassPlan } from './plan.ts';
+import { allMoves, blankPlan, normalizePlan, uid, type Block, type BlockKind, type ClassPlan, type Clip, type Move } from './plan.ts';
 import { getLang, type Lang } from './i18n.ts';
 
 type Obj = Record<string, unknown>;
@@ -234,6 +239,12 @@ function block(raw: unknown): Obj | null {
       out.notes = text(pick(r, 'notes', 'description'));
       break;
   }
+  // Any other block can hold a few moves too (a warm-up movement), in Technique's shape.
+  if (kind !== 'gems') {
+    const extra = moves(pick(r, 'moves', 'techniques'));
+    if (extra?.length) out.moves = extra;
+    else delete out.moves;
+  }
   return out;
 }
 
@@ -244,8 +255,9 @@ export function planFromJson(value: unknown, now = new Date()): AiImport {
   let root = isObj(value) ? value : {};
   // { "class": {...} } and friends.
   for (const k of ['class', 'plan', 'aula', 'classPlan']) if (isObj(root[k])) root = root[k] as Obj;
-  const rawBlocks = pick(root, 'blocks', 'sections', 'blocos');
-  if (!Array.isArray(rawBlocks)) return { error: 'noBlocks' };
+  const found = pick(root, 'blocks', 'sections', 'blocos');
+  if (!Array.isArray(found)) return { error: 'noBlocks' };
+  const rawBlocks = withClips(found, clipsSentFrom(typeof root.from === 'string' ? root.from : undefined));
   const blocks = rawBlocks.map(block).filter((b): b is Obj => b !== null);
   if (!blocks.length) return { error: 'noBlocks' };
   const plan = normalizePlan({ ...root, blocks });
@@ -263,6 +275,61 @@ export function planFromJson(value: unknown, now = new Date()): AiImport {
     },
     skipped: rawBlocks.length - blocks.length,
   };
+}
+
+// ─── Clips through the AI ────────────────────────────────────────────────────
+
+const AI_CLIPS_KEY = 'prancheta.aiClips';
+/** Classes sent to an AI that are remembered, newest last. */
+const AI_CLIPS_KEEP = 20;
+
+type Sent = { from: string; clips: Clip[] };
+
+function sentList(): Sent[] {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(AI_CLIPS_KEY) ?? '[]');
+    return Array.isArray(v) ? (v as Sent[]).filter((x) => isObj(x) && typeof x.from === 'string' && Array.isArray(x.clips)) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** The clips of a class, in the order planToJson numbers them. */
+function clipOrder(plan: ClassPlan): Clip[] {
+  return allMoves(plan).flatMap((m) => (m.clip ? [m.clip] : []));
+}
+
+/** Remembers what each clip number stands for, so the AI's answer can get them back. */
+function rememberClips(plan: ClassPlan) {
+  const clips = clipOrder(plan);
+  if (!clips.length) return;
+  const list = [...sentList().filter((x) => x.from !== plan.id), { from: plan.id, clips }].slice(-AI_CLIPS_KEEP);
+  try {
+    localStorage.setItem(AI_CLIPS_KEY, JSON.stringify(list));
+  } catch {
+    // Storage blocked: the answer comes back without its clips, as before.
+  }
+}
+
+/** The clips a sent class carried. An answer that lost "from" gets the class sent last. */
+function clipsSentFrom(from: string | undefined): Clip[] | undefined {
+  const list = sentList();
+  return (from && list.find((x) => x.from === from)?.clips) || (from ? undefined : list[list.length - 1]?.clips);
+}
+
+/** Swaps each move's clip number for the clip it stands for, and drops numbers that stand for nothing. */
+function withClips(rawBlocks: unknown[], clips: Clip[] | undefined): unknown[] {
+  return rawBlocks.map((b) => {
+    if (!isObj(b) || !Array.isArray(b.moves)) return b;
+    const moves = b.moves.map((m) => {
+      if (!isObj(m) || isObj(m.clip) || m.clip === undefined) return m;
+      const { clip: ref, ...rest } = m;
+      const n = typeof ref === 'number' ? ref : typeof ref === 'string' ? Number(ref.replace(/\D/g, '')) : NaN;
+      const clip = Number.isInteger(n) && n > 0 ? clips?.[n - 1] : undefined;
+      return clip ? { ...rest, clip } : rest;
+    });
+    return { ...b, moves };
+  });
 }
 
 /** The whole trip: a pasted chat reply to a new plan. */
@@ -321,6 +388,7 @@ const GUIDE: Record<Lang, string> = {
 - "technique": the moves that win the game. minutes, moves (each a name, with the key details in notes), options (what to do when the move is stopped).
 - "rolling": live rounds. rounds, minutes per round, restSeconds, notes.
 - "wrapup" (optional): minutes, question (one question back to the class), notes.
+Any other block can also have "moves" in the same shape as technique's when a specific technique belongs there (a warm-up movement, a drill to show). Leave it out otherwise.
 Add, remove, repeat or reorder blocks to fit the class. "title" is my own name for a block; leave it "" to use the kind's name. Keep the keys and "kind" values exactly as written. Numbers are plain numbers (3, not "3 min"). Keep every line short, the way a coach writes on a clipboard.`,
 
   pt: `Como o formato funciona. A aula é uma lista ordenada de blocos, cada um com um "kind":
@@ -330,15 +398,18 @@ Add, remove, repeat or reorder blocks to fit the class. "title" is my own name f
 - "technique": as técnicas que vencem o jogo. minutes, moves (cada uma com name, e os detalhes-chave, o pulo do gato, em notes), options (o que fazer quando a técnica é bloqueada).
 - "rolling": rola livre. rounds, minutes por round, restSeconds, notes.
 - "wrapup" (opcional): minutes, question (uma pergunta de volta para a turma), notes.
+Qualquer outro bloco também pode ter "moves", no mesmo formato do technique, quando uma técnica específica pertence a ele (um movimento do aquecimento, um drill para mostrar). Senão, deixe de fora.
 Adicione, remova, repita ou reordene blocos para caber na aula. "title" é o nome que eu dou ao bloco; deixe "" para usar o nome do tipo. Mantenha as chaves e os valores de "kind" exatamente como estão, em inglês. Números são números simples (3, e não "3 min"). Cada linha curta, como um professor escreve na prancheta.`,
 };
 
 const FORMAT: Record<Lang, string> = {
   en: `Fill in this Prancheta class plan (Prancheta is the app I plan my jiu-jitsu classes in).
 
+If I paste notes from a class I've already written, that's the class: sort my words into the blocks and keep them as I wrote them, in my order. Don't add drills or moves I didn't write. Only ask about what the notes leave out.
+
 Use what we've talked about in this conversation: the position, the goal, the students, the time. Before you fill it in, check you have enough for a class I'd actually teach. If something that changes the plan is missing or unclear (what the class is about, the students' level, how long it runs, gi or no-gi), ask me first: a few short questions in one message, only the ones that matter. Small details we haven't covered, decide like a good coach would.
 
-Once you have what you need, reply with the filled-in JSON in one \`\`\`json code block and nothing else. No comments inside the JSON.
+Once you have what you need, give me the filled-in JSON as a file I can download, named prancheta-class.json, with only the JSON inside. If you can't make files, reply with it in one \`\`\`json code block and nothing else. No comments inside the JSON.
 
 ${GUIDE.en}
 
@@ -349,9 +420,11 @@ ${JSON.stringify(TEMPLATE, null, 2)}
 
   pt: `Preencha este plano de aula do Prancheta (o Prancheta é o app onde eu planejo minhas aulas de jiu-jitsu).
 
+Se eu colar anotações de uma aula que já escrevi, essa é a aula: organize as minhas palavras nos blocos e mantenha do jeito que eu escrevi, na minha ordem. Não acrescente exercícios ou técnicas que eu não escrevi. Só pergunte o que as anotações não dizem.
+
 Use o que a gente conversou aqui: a posição, o objetivo, os alunos, o tempo. Antes de preencher, veja se você tem o suficiente para uma aula que eu daria de verdade. Se faltar ou não estiver claro algo que muda o plano (do que é a aula, o nível dos alunos, quanto tempo dura, com ou sem kimono), me pergunte antes: poucas perguntas curtas numa mensagem só, apenas as que importam. Detalhes pequenos que a gente não falou, decida como um bom professor decidiria.
 
-Quando tiver o que precisa, responda com o JSON preenchido num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
+Quando tiver o que precisa, me dê o JSON preenchido como um arquivo para baixar, chamado prancheta-aula.json, só com o JSON dentro. Se você não puder criar arquivos, responda com ele num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
 
 ${GUIDE.pt}
 
@@ -379,40 +452,55 @@ const KIND_OUT: Record<BlockKind, string> = {
 
 const lines = (xs: { text: string }[]) => xs.map((x) => x.text.trim()).filter(Boolean);
 
-/** A plan in the class format: no ids or clips, the AI's kind names, lists as plain lines. */
+/**
+ * A plan in the class format: no ids, the AI's kind names, lists as plain
+ * lines. A move with a clip carries the clip's number instead of the clip.
+ */
 export function planToJson(plan: ClassPlan): Obj {
+  const order = clipOrder(plan).map((c) => c.id);
+  const moveJson = (m: Move): Obj => {
+    const n = m.clip ? order.indexOf(m.clip.id) + 1 : 0;
+    return n ? { name: m.name, notes: m.notes, clip: n } : { name: m.name, notes: m.notes };
+  };
+  const kept = (ms: Move[]) => ms.filter((m) => m.name.trim() || m.notes.trim() || m.clip).map(moveJson);
   const blocks = plan.blocks.map((b): Obj => {
-    const base = { kind: KIND_OUT[b.kind], title: b.title };
-    switch (b.kind) {
-      case 'warmup':
-        return { ...base, minutes: b.minutes, drills: lines(b.drills) };
-      case 'concept':
-        return { ...base, minutes: b.minutes, rule: b.rule, notes: b.notes };
-      case 'game':
-        return {
-          ...base,
-          start: b.start,
-          objective: b.objective,
-          goals: lines(b.goals),
-          details: lines(b.details),
-          transition: b.transition,
-          submission: b.submission,
-          rounds: { ...b.rounds },
-        };
-      case 'gems':
-        return {
-          ...base,
-          minutes: b.minutes,
-          moves: b.moves.filter((m) => m.name.trim() || m.notes.trim()).map((m) => ({ name: m.name, notes: m.notes })),
-          options: lines(b.options),
-        };
-      case 'freeRoll':
-        return { ...base, rounds: b.rounds, minutes: b.minutes, restSeconds: b.restSeconds, notes: b.notes };
-      case 'wrapup':
-        return { ...base, minutes: b.minutes, question: b.question, notes: b.notes };
-    }
+    const out = blockJson(b);
+    if (b.kind === 'gems') return { ...out, moves: kept(b.moves) };
+    const own = kept(b.moves ?? []);
+    return own.length ? { ...out, moves: own } : out;
   });
-  return { prancheta: 1, title: plan.title, date: plan.date, blocks };
+  return { prancheta: 1, ...(order.length ? { from: plan.id } : {}), title: plan.title, date: plan.date, blocks };
+}
+
+function blockJson(b: Block): Obj {
+  const base = { kind: KIND_OUT[b.kind], title: b.title };
+  switch (b.kind) {
+    case 'warmup':
+      return { ...base, minutes: b.minutes, drills: lines(b.drills) };
+    case 'concept':
+      return { ...base, minutes: b.minutes, rule: b.rule, notes: b.notes };
+    case 'game':
+      return {
+        ...base,
+        start: b.start,
+        objective: b.objective,
+        goals: lines(b.goals),
+        details: lines(b.details),
+        transition: b.transition,
+        submission: b.submission,
+        rounds: { ...b.rounds },
+      };
+    case 'gems':
+      return {
+        ...base,
+        minutes: b.minutes,
+        options: lines(b.options),
+      };
+    case 'freeRoll':
+      return { ...base, rounds: b.rounds, minutes: b.minutes, restSeconds: b.restSeconds, notes: b.notes };
+    case 'wrapup':
+      return { ...base, minutes: b.minutes, question: b.question, notes: b.notes };
+  }
 }
 
 const EDIT: Record<Lang, (json: string) => string> = {
@@ -420,7 +508,9 @@ const EDIT: Record<Lang, (json: string) => string> = {
 
 Change only what I ask and keep the rest as it is. If my change is unclear, or it would mean changing something I didn't mention (cutting a block to fit the time, say), ask me first: a few short questions in one message, only the ones that matter.
 
-Once you have what you need, reply with the whole updated class as JSON in one \`\`\`json code block and nothing else. No comments inside the JSON.
+Some moves have a "clip" number: that's a video of the move, kept in my app. Keep each "clip" with its move wherever the move goes, and keep "from" exactly as it is.
+
+Once you have what you need, give me the whole updated class as a JSON file I can download, named prancheta-class.json, with only the JSON inside. If you can't make files, reply with it in one \`\`\`json code block and nothing else. No comments inside the JSON.
 
 ${GUIDE.en}
 
@@ -433,7 +523,9 @@ ${json}
 
 Mude só o que eu pedir e mantenha o resto como está. Se a mudança não estiver clara, ou se ela exigir mexer em algo que eu não falei (cortar um bloco para caber no tempo, por exemplo), me pergunte antes: poucas perguntas curtas numa mensagem só, apenas as que importam.
 
-Quando tiver o que precisa, responda com a aula inteira atualizada em JSON num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
+Alguns golpes têm um número em "clip": é o vídeo do golpe, guardado no meu app. Mantenha cada "clip" com o seu golpe, aonde quer que ele vá, e mantenha "from" exatamente como está.
+
+Quando tiver o que precisa, me dê a aula inteira atualizada como um arquivo JSON para baixar, chamado prancheta-aula.json, só com o JSON dentro. Se você não puder criar arquivos, responda com ela num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
 
 ${GUIDE.pt}
 
@@ -445,5 +537,6 @@ ${json}
 
 /** A saved class with instructions to change it, to paste into an AI chat. Its reply imports as a new class. */
 export function classForAi(plan: ClassPlan, lang: Lang = getLang()): string {
+  rememberClips(plan);
   return EDIT[lang](JSON.stringify(planToJson(plan), null, 2));
 }

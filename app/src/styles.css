@@ -5,9 +5,11 @@
 
 :root,
 [data-theme='light'] {
-  --paper: #ffffff;
-  --sheet: #f5f7fa;
-  --sheet-2: #eef2f7;
+  --paper: #f8f9fb;
+  /* The surface the sheets lie on. Every look uses the paper for now. */
+  --desk: var(--paper);
+  --sheet: #eef1f5;
+  --sheet-2: #e6eaf0;
   --ink: #13233b;
   --ink-2: #3d4c63;
   --muted: #5d6b80;
@@ -73,48 +75,75 @@
   color-scheme: dark;
 }
 
-/* Tan: warm kraft paper with brown ink. The marker is a deeper red so it
-   still reads as the one alarm on the warm ground. */
-[data-theme='tan'] {
-  --paper: #efe6d6;
-  --sheet: #e7dcc9;
-  --sheet-2: #dfd2bc;
-  --ink: #2b2117;
-  --ink-2: #4d3f30;
-  --muted: #65553f;
-  --hint: #85745e;
-  --rule: #d0c1a8;
-  --rule-strong: #b09e81;
-  --marker: #b3221a;
-  --belt: #1a140e;
-  --marker-press: #921b14;
-  --on-marker: #ffffff;
-  --rest: #7a4a2e;
+/* Slate: cool charcoal with white type and grey chips, like a video
+   library at night. Coral marker as in Navy. */
+[data-theme='slate'] {
+  --paper: #181b22;
+  --sheet: #22262e;
+  --sheet-2: #2b3038;
+  --ink: #eceef1;
+  --ink-2: #d2d6dc;
+  --muted: #9ca3ad;
+  --hint: #6f7681;
+  --rule: #2a2f37;
+  --rule-strong: #3b424a;
+  --marker: #ff6a5c;
+  --belt: var(--ink);
+  --marker-press: #ff8578;
+  --on-marker: #181b22;
+  --rest: #3b424a;
   --on-rest: #ffffff;
-  --focus: #2f6fd6;
-  --sec-1: #d6c8b1;
-  --sec-2: #b8a487;
-  --sec-3: #8c785d;
-  --sec-4: #5c4b38;
-  --sec-5: #2b2117;
-  color-scheme: light;
+  --focus: #8fb6ff;
+  --sec-1: #3b424a;
+  --sec-2: #59616c;
+  --sec-3: #7d8591;
+  --sec-4: #b3b9c2;
+  --sec-5: #eceef1;
+  color-scheme: dark;
+}
+
+/* Tan: an old brown leather folder at night. Manila-cream ink on dark
+   brown, as calm as Navy. Rest lifts to a warm saddle brown. */
+[data-theme='tan'] {
+  --paper: #1d1610;
+  --sheet: #271e16;
+  --sheet-2: #30251b;
+  --ink: #efe3c9;
+  --ink-2: #d6c4a2;
+  --muted: #b39e7d;
+  --hint: #82705a;
+  --rule: #3b2e22;
+  --rule-strong: #55432f;
+  --marker: #ff6a5c;
+  --belt: var(--ink);
+  --marker-press: #ff8578;
+  --on-marker: #1d1610;
+  --rest: #6a4426;
+  --on-rest: #ffffff;
+  --focus: #8fb6ff;
+  --sec-1: #55432f;
+  --sec-2: #7a6247;
+  --sec-3: #a08766;
+  --sec-4: #cbb592;
+  --sec-5: #efe3c9;
+  color-scheme: dark;
 }
 
 /* Dark: belt black, no blue. Rest lifts to charcoal. */
 [data-theme='dark'] {
-  --paper: #111111;
-  --sheet: #1b1b1b;
-  --sheet-2: #232323;
-  --ink: #f2f1ee;
-  --ink-2: #cfcdc8;
+  --paper: #161616;
+  --sheet: #1f1f1f;
+  --sheet-2: #282828;
+  --ink: #e6e3dc;
+  --ink-2: #c7c4bd;
   --muted: #a3a19b;
   --hint: #77756f;
-  --rule: #303030;
-  --rule-strong: #484848;
+  --rule: #2e2e2e;
+  --rule-strong: #444444;
   --marker: #ff5b4f;
   --belt: var(--ink);
   --marker-press: #ff7a70;
-  --on-marker: #111111;
+  --on-marker: #161616;
   --rest: #3a3a3a;
   --on-rest: #ffffff;
   --focus: #8fb6ff;
@@ -122,7 +151,7 @@
   --sec-2: #5c5c5c;
   --sec-3: #858585;
   --sec-4: #b5b5b5;
-  --sec-5: #f2f1ee;
+  --sec-5: #e6e3dc;
   color-scheme: dark;
 }
 
@@ -134,7 +163,7 @@
 html,
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--desk);
   overflow-x: hidden;
 }
 
@@ -489,9 +518,14 @@ a {
   touch-action: none;
 }
 
-.drag-handle:hover,
 .drag-handle:focus-visible {
   color: var(--ink);
+}
+
+@media (hover: hover) {
+  .drag-handle:hover {
+    color: var(--ink);
+  }
 }
 
 .section.dragging {
@@ -536,8 +570,10 @@ a {
   text-align: left;
 }
 
-.menu-pop button:hover:not(:disabled) {
-  background: var(--sheet);
+@media (hover: hover) {
+  .menu-pop button:hover:not(:disabled) {
+    background: var(--sheet);
+  }
 }
 
 .menu-pop button:disabled {
@@ -565,9 +601,11 @@ a {
   font-weight: 600;
 }
 
-.add-block:hover {
-  color: var(--ink);
-  background: var(--sheet);
+@media (hover: hover) {
+  .add-block:hover {
+    color: var(--ink);
+    background: var(--sheet);
+  }
 }
 
 .add-block:active {
@@ -631,8 +669,10 @@ a {
   white-space: nowrap;
 }
 
-.strip-kind:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .strip-kind:hover {
+    border-color: var(--ink);
+  }
 }
 
 .strip-kind.unused {
@@ -641,8 +681,10 @@ a {
   font-weight: 500;
 }
 
-.strip-kind.unused:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .strip-kind.unused:hover {
+    color: var(--ink);
+  }
 }
 
 .strip-tally {
@@ -925,8 +967,10 @@ a {
   color: var(--on-marker);
 }
 
-.btn-primary:hover {
-  background: var(--marker-press);
+@media (hover: hover) {
+  .btn-primary:hover {
+    background: var(--marker-press);
+  }
 }
 
 .btn-secondary {
@@ -935,8 +979,10 @@ a {
   border-color: var(--rule-strong);
 }
 
-.btn-secondary:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .btn-secondary:hover {
+    border-color: var(--ink);
+  }
 }
 
 .btn-ghost {
@@ -945,9 +991,11 @@ a {
   padding: 8px 10px;
 }
 
-.btn-ghost:hover {
-  color: var(--ink);
-  background: var(--sheet);
+@media (hover: hover) {
+  .btn-ghost:hover {
+    color: var(--ink);
+    background: var(--sheet);
+  }
 }
 
 /* Destructive actions stay ink: red is reserved for "act now". */
@@ -1010,9 +1058,11 @@ a {
     color var(--fast);
 }
 
-.icon-btn:hover {
-  background: var(--sheet);
-  color: var(--ink);
+@media (hover: hover) {
+  .icon-btn:hover {
+    background: var(--sheet);
+    color: var(--ink);
+  }
 }
 
 .icon-btn:active:not(:disabled) {
@@ -1063,9 +1113,11 @@ a {
   color: var(--hint);
 }
 
-.input:hover,
-.textarea:hover {
-  border-color: var(--muted);
+@media (hover: hover) {
+  .input:hover,
+  .textarea:hover {
+    border-color: var(--muted);
+  }
 }
 
 .input:focus,
@@ -1074,6 +1126,15 @@ a {
   outline: none;
   border-color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+/* One-line fields are textareas that grow, so a long line wraps on a phone. */
+.line-input {
+  display: block;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.4;
+  font-family: inherit;
 }
 
 .textarea {
@@ -1156,9 +1217,11 @@ a {
   border-radius: 7px;
 }
 
-.stepper button:hover {
-  color: var(--ink);
-  background: var(--sheet);
+@media (hover: hover) {
+  .stepper button:hover {
+    color: var(--ink);
+    background: var(--sheet);
+  }
 }
 
 .stepper button:active {
@@ -1265,7 +1328,7 @@ a {
   margin-right: 4px;
 }
 
-.list-row input {
+.list-row .line-input {
   flex: 1;
   min-width: 0;
   background: transparent;
@@ -1275,7 +1338,7 @@ a {
   color: var(--ink);
 }
 
-.list-row input:focus {
+.list-row .line-input:focus {
   outline: none;
 }
 
@@ -1285,9 +1348,14 @@ a {
   transition: opacity var(--fast);
 }
 
-.list-row:hover .list-row-actions,
 .list-row:focus-within .list-row-actions {
   opacity: 1;
+}
+
+@media (hover: hover) {
+  .list-row:hover .list-row-actions {
+    opacity: 1;
+  }
 }
 
 .list-row-actions .icon-btn {
@@ -1345,10 +1413,12 @@ a {
     border-color var(--fast);
 }
 
-.chip:hover {
-  border-style: solid;
-  border-color: var(--ink);
-  color: var(--ink);
+@media (hover: hover) {
+  .chip:hover {
+    border-style: solid;
+    border-color: var(--ink);
+    color: var(--ink);
+  }
 }
 
 .chip:active {
@@ -1390,13 +1460,19 @@ a {
   gap: 10px;
 }
 
+.move-head .input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .move-num {
   white-space: nowrap;
-  font-family: var(--font-head);
-  font-size: 17px;
+  font-family: var(--font-num);
+  font-size: 15px;
   font-weight: 600;
   color: var(--ink);
-  min-width: 56px;
+  min-width: 30px;
+  flex-shrink: 0;
   align-self: stretch;
   display: flex;
   align-items: center;
@@ -1453,8 +1529,10 @@ a {
   width: 100%;
 }
 
-.timeline-row:hover {
-  background: var(--sheet);
+@media (hover: hover) {
+  .timeline-row:hover {
+    background: var(--sheet);
+  }
 }
 
 .timeline-num {
@@ -1539,8 +1617,10 @@ a {
   transition: border-color var(--fast);
 }
 
-.plan-card:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .plan-card:hover {
+    border-color: var(--ink);
+  }
 }
 
 .plan-card-head {
@@ -1782,9 +1862,11 @@ a {
   }
 }
 
-.shelf-row-main:hover .shelf-title {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+@media (hover: hover) {
+  .shelf-row-main:hover .shelf-title {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .empty {
@@ -2277,13 +2359,19 @@ html:has(.backdrop) body {
   transition: border-color var(--fast);
 }
 
-.clip-add:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .clip-add:hover {
+    border-color: var(--ink);
+  }
 }
 
 .clip-add:active {
   background: var(--sheet-2);
   transition: none;
+}
+
+.clip-add > svg {
+  flex: none;
 }
 
 .clip-add > span {
@@ -2623,8 +2711,10 @@ html:has(.backdrop) body {
   transition: border-color var(--fast);
 }
 
-.template:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .template:hover {
+    border-color: var(--ink);
+  }
 }
 
 .template:active {
@@ -2660,6 +2750,38 @@ html:has(.backdrop) body {
 .template-blurb {
   font-size: 13.5px;
   color: var(--muted);
+}
+
+/* What a block holds: small ruled tags, the clip and timer ones in ink. */
+.traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.section-stack > .traits {
+  margin-top: -4px;
+}
+
+.trait {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.trait-strong {
+  border-color: var(--ink);
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .template-grid {
@@ -2778,13 +2900,33 @@ html:has(.backdrop) body {
 
 .library-foot {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 48px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.library-foot-row {
+  display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 6px 10px;
-  margin-top: 48px;
-  font-size: 13px;
-  color: var(--muted);
+}
+
+/* On a narrow phone the two facts stack instead of leaving a stray dot. */
+@media (max-width: 420px) {
+  .library-foot-info {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .library-foot-info .sep {
+    display: none;
+  }
 }
 
 .library-foot .sep {
@@ -2803,8 +2945,10 @@ html:has(.backdrop) body {
   text-decoration-color: var(--rule-strong);
 }
 
-.link:hover {
-  text-decoration-color: var(--ink);
+@media (hover: hover) {
+  .link:hover {
+    text-decoration-color: var(--ink);
+  }
 }
 
 .update-toast {
@@ -2882,7 +3026,7 @@ html:has(.backdrop) body {
   textarea,
   select,
   .input:not(.title-input),
-  .list-row input,
+  .list-row .line-input,
   .list-add .input {
     font-size: 16px;
   }
@@ -3065,7 +3209,7 @@ html:has(.backdrop) body {
   height: 40px;
   border: 1px solid #9aa3ad;
   border-radius: 6px;
-  background: var(--paper);
+  background: var(--desk);
   overflow: hidden;
 }
 
@@ -3118,6 +3262,16 @@ html:has(.backdrop) body {
 .thumb-bar,
 .show-sm {
   display: none;
+}
+
+/* On a phone, the class the bottom Teach button starts: the one tapped, else
+   the one opened last, else the next one. */
+@media (max-width: 620px) {
+  .plan-card.is-picked,
+  .plan-card.is-picked:hover {
+    border-color: var(--marker);
+    box-shadow: 0 0 0 1px var(--marker);
+  }
 }
 
 .next-tag {
@@ -3196,7 +3350,7 @@ html:has(.backdrop) body {
     display: flex;
     gap: 10px;
     padding: 10px 16px calc(10px + var(--sab));
-    background: var(--paper);
+    background: var(--desk);
     border-top: 1px solid var(--rule-strong);
   }
 
@@ -3254,7 +3408,7 @@ html:has(.backdrop) body {
     z-index: 20;
     margin: 0;
     padding: 10px 16px calc(10px + var(--sab));
-    background: var(--paper);
+    background: var(--desk);
     border-top: 1px solid var(--rule-strong);
   }
 
@@ -3267,6 +3421,13 @@ html:has(.backdrop) body {
   .run {
     padding-bottom: calc(110px + var(--sab));
   }
+}
+
+/* Techniques a block other than Technique holds, under its own fields. */
+.borrowed-moves {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* ---- Free version and the unlock ---- */

@@ -127,9 +127,19 @@ describe('class JSON in the AI format', () => {
 });
 
 describe('the class format', () => {
+  it("keeps a coach's pasted notes as written instead of adding to them", () => {
+    expect(classFormat('en')).toContain('keep them as I wrote them');
+    expect(classFormat('pt')).toContain('mantenha do jeito que eu escrevi');
+  });
+
   it('asks the AI to check with the coach before guessing at what matters', () => {
     expect(classFormat('en')).toContain('ask me first');
     expect(classFormat('pt')).toContain('me pergunte antes');
+  });
+
+  it('asks for a file first, with a code block when the chat cannot make files', () => {
+    expect(classFormat('en')).toContain('prancheta-class.json');
+    expect(classFormat('pt')).toContain('prancheta-aula.json');
   });
 
   it('reads back as the usual class when pasted in unfilled', () => {

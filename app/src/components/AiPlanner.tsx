@@ -176,6 +176,12 @@ export function AiPlanner({
               <p className="section-hint" style={{ margin: 0 }}>
                 {t('aiFormatHint')}
               </p>
+              <p className="section-hint" style={{ margin: 0 }}>
+                {t('aiNotesHint')}
+              </p>
+              <p className="section-hint" style={{ margin: 0 }}>
+                {t('enHint')}
+              </p>
               <div className="ai-actions">
                 <button type="button" className="btn btn-primary" onClick={() => void copy()}>
                   {copied === 'ok' ? <Check size={16} /> : <Copy size={16} />}{' '}
@@ -229,7 +235,7 @@ export function AiPlanner({
                     {t('aiBuild')}
                   </button>
                 )}
-                <button type="button" className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
+                <button type="button" className="btn btn-secondary" onClick={() => fileRef.current?.click()}>
                   <Upload size={16} /> {t('aiOpenFile')}
                 </button>
                 {reply && (

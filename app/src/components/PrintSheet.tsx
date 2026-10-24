@@ -13,6 +13,7 @@ import {
   type ClassPlan,
   type Clip,
   type ListItem,
+  type Move,
 } from '../lib/plan.ts';
 import { useClipStill } from '../lib/clips.ts';
 import { formatRest } from './controls.tsx';
@@ -100,15 +101,7 @@ function BlockBody({ block }: { block: Block }) {
     case 'gems':
       return (
         <>
-          {block.moves
-            .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
-            .map((m, i) => (
-              <div key={m.id}>
-                <h3>{t('moveNamed', { n: i + 1, name: m.name })}</h3>
-                {m.clip && <PrintClip clip={m.clip} />}
-                {m.notes && <p>{m.notes}</p>}
-              </div>
-            ))}
+          <PrintMoves moves={block.moves} />
           {block.options.length > 0 && <h3>{t('options')}</h3>}
           <Bullets items={block.options} />
         </>
@@ -154,6 +147,7 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
       {plan.blocks.map((b) => (
         <BlockBox key={b.id} title={blockLabel(b)} time={formatMinutes(blockMinutes(b))}>
           <BlockBody block={b} />
+          {b.kind !== 'gems' && b.moves && <PrintMoves moves={b.moves} />}
         </BlockBox>
       ))}
 
@@ -166,4 +160,17 @@ export function PrintSheet({ plan }: { plan: ClassPlan }) {
       </div>
     </div>
   );
+}
+
+/** Technique's moves, or the ones another block holds, each with a still of its clip. */
+function PrintMoves({ moves }: { moves: Move[] }) {
+  return moves
+    .filter((m) => m.name.trim() || m.notes.trim() || m.clip)
+    .map((m, i) => (
+      <div key={m.id}>
+        <h3>{t('moveNamed', { n: i + 1, name: m.name })}</h3>
+        {m.clip && <PrintClip clip={m.clip} />}
+        {m.notes && <p>{m.notes}</p>}
+      </div>
+    ));
 }
