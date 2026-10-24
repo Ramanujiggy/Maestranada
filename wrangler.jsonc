@@ -1,0 +1,10 @@
+// Cloudflare Workers deploy for the app: build with `npm run build`, then serve app/dist.
+// "name" must match the Worker's name in the Cloudflare dashboard.
+{
+  "name": "prancheta",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./app/dist",
+    "not_found_handling": "single-page-application"
+  }
+}
