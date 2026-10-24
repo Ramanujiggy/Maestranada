@@ -29,6 +29,8 @@
         --rule: #dfe3ea;
         --marker: #d42a20;
         --belt: #0d1117;
+        --belt-bar: #d42a20;
+        --belt-edge: transparent;
         --marker-press: #b3221a;
         --on-marker: #ffffff;
         --head: 'IBM Plex Sans Condensed', 'Arial Narrow', system-ui, sans-serif;
@@ -44,7 +46,7 @@
           --muted: #9fb0c6;
           --rule: #26354d;
           --marker: #ff6a5c;
-          --belt: #eef2f7;
+          --belt-edge: rgba(238, 242, 247, 0.4);
           --marker-press: #ff8578;
           --on-marker: #0f1a2b;
         }
@@ -163,7 +165,7 @@
     <div class="wrap">
       <header class="top">
         <a class="logo" href="/" aria-label="Prancheta home">
-          <svg viewBox="0 0 60 40" aria-hidden="true"><rect y="4" width="60" height="32" rx="6" fill="var(--belt)" /><rect x="32" y="4" width="15" height="32" fill="var(--marker)" /></svg>
+          <svg viewBox="0 0 60 40" aria-hidden="true"><rect x="0.75" y="4.75" width="58.5" height="30.5" rx="5.5" fill="var(--belt)" stroke="var(--belt-edge)" stroke-width="1.5" /><rect x="32" y="5.5" width="15" height="29" fill="var(--belt-bar)" /></svg>
           Prancheta
         </a>
         <div class="top-right">
