@@ -232,7 +232,7 @@ export function AiPlanner({
                     {t('aiBuild')}
                   </button>
                 )}
-                <button type="button" className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
+                <button type="button" className="btn btn-secondary" onClick={() => fileRef.current?.click()}>
                   <Upload size={16} /> {t('aiOpenFile')}
                 </button>
                 {reply && (

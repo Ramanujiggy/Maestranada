@@ -409,7 +409,7 @@ If I paste notes from a class I've already written, that's the class: sort my wo
 
 Use what we've talked about in this conversation: the position, the goal, the students, the time. Before you fill it in, check you have enough for a class I'd actually teach. If something that changes the plan is missing or unclear (what the class is about, the students' level, how long it runs, gi or no-gi), ask me first: a few short questions in one message, only the ones that matter. Small details we haven't covered, decide like a good coach would.
 
-Once you have what you need, reply with the filled-in JSON in one \`\`\`json code block and nothing else. No comments inside the JSON.
+Once you have what you need, give me the filled-in JSON as a file I can download, named prancheta-class.json, with only the JSON inside. If you can't make files, reply with it in one \`\`\`json code block and nothing else. No comments inside the JSON.
 
 ${GUIDE.en}
 
@@ -424,7 +424,7 @@ Se eu colar anotações de uma aula que já escrevi, essa é a aula: organize as
 
 Use o que a gente conversou aqui: a posição, o objetivo, os alunos, o tempo. Antes de preencher, veja se você tem o suficiente para uma aula que eu daria de verdade. Se faltar ou não estiver claro algo que muda o plano (do que é a aula, o nível dos alunos, quanto tempo dura, com ou sem kimono), me pergunte antes: poucas perguntas curtas numa mensagem só, apenas as que importam. Detalhes pequenos que a gente não falou, decida como um bom professor decidiria.
 
-Quando tiver o que precisa, responda com o JSON preenchido num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
+Quando tiver o que precisa, me dê o JSON preenchido como um arquivo para baixar, chamado prancheta-aula.json, só com o JSON dentro. Se você não puder criar arquivos, responda com ele num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
 
 ${GUIDE.pt}
 
@@ -510,7 +510,7 @@ Change only what I ask and keep the rest as it is. If my change is unclear, or i
 
 Some moves have a "clip" number: that's a video of the move, kept in my app. Keep each "clip" with its move wherever the move goes, and keep "from" exactly as it is.
 
-Once you have what you need, reply with the whole updated class as JSON in one \`\`\`json code block and nothing else. No comments inside the JSON.
+Once you have what you need, give me the whole updated class as a JSON file I can download, named prancheta-class.json, with only the JSON inside. If you can't make files, reply with it in one \`\`\`json code block and nothing else. No comments inside the JSON.
 
 ${GUIDE.en}
 
@@ -525,7 +525,7 @@ Mude só o que eu pedir e mantenha o resto como está. Se a mudança não estive
 
 Alguns golpes têm um número em "clip": é o vídeo do golpe, guardado no meu app. Mantenha cada "clip" com o seu golpe, aonde quer que ele vá, e mantenha "from" exatamente como está.
 
-Quando tiver o que precisa, responda com a aula inteira atualizada em JSON num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
+Quando tiver o que precisa, me dê a aula inteira atualizada como um arquivo JSON para baixar, chamado prancheta-aula.json, só com o JSON dentro. Se você não puder criar arquivos, responda com ela num bloco de código \`\`\`json e mais nada. Sem comentários dentro do JSON. Escreva o texto da aula em português do Brasil.
 
 ${GUIDE.pt}
 

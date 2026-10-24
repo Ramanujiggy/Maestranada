@@ -137,6 +137,11 @@ describe('the class format', () => {
     expect(classFormat('pt')).toContain('me pergunte antes');
   });
 
+  it('asks for a file first, with a code block when the chat cannot make files', () => {
+    expect(classFormat('en')).toContain('prancheta-class.json');
+    expect(classFormat('pt')).toContain('prancheta-aula.json');
+  });
+
   it('reads back as the usual class when pasted in unfilled', () => {
     for (const lang of ['en', 'pt'] as const) {
       const { plan } = ok(readAiReply(classFormat(lang)));
