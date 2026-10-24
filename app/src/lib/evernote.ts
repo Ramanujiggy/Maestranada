@@ -2,13 +2,12 @@
 // one .enex file: XML holding each note's text and every picture in it, the
 // pictures as base64. The text points at each picture by the MD5 of its bytes.
 //
-// One note becomes one class. Each GIF in it becomes a technique card whose
-// name is the short line just above the GIF and whose notes are the lines
-// below it, up to the next GIF. Text before the first GIF goes to a Concept
-// block. Nothing is sorted further: the coach's words come over as written,
-// and the AI can sort them into blocks afterwards.
+// One note becomes one class, read line by line (see noteToPlan). Headings
+// such as "Warm up:" or "[Concept section]" open blocks, "Game 1: …" opens a
+// game, "Move: …" a technique, and each picture (a GIF or a still) lands on a
+// technique card. The coach's words come over as written.
 //
-// This file only reads; turning each GIF into a clip happens in gifClip.ts.
+// This file only reads; turning each picture into a clip happens in gifClip.ts.
 
 import { md5 } from './md5.ts';
 import { item, move, newBlock, todayISO, uid, type Block, type BlockKind, type ClassPlan, type Clip, type Move } from './plan.ts';
@@ -17,10 +16,10 @@ export interface EnexNote {
   title: string;
   /** YYYY-MM-DD, from when the note was made. */
   date?: string;
-  /** The note's lines in order, with a number where each GIF sits (an index into gifs). */
+  /** The note's lines in order, with a number where each picture sits (an index into images). */
   pieces: Array<string | number>;
-  /** Each GIF's bytes, or null where the note shows a GIF the export didn't include. */
-  gifs: Array<Uint8Array | null>;
+  /** Each picture's bytes, or null where the note shows one the export didn't include. */
+  images: Array<Uint8Array | null>;
 }
 
 /** Longest line that still reads as a technique's name rather than a sentence of notes. */
@@ -76,14 +75,21 @@ function base64Bytes(b64: string): Uint8Array {
   return bytes;
 }
 
-const isGif = (bytes: Uint8Array) => bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46; // "GIF"
+/** A picture's type from its first bytes: GIF, PNG, JPEG or WebP. */
+export function imageType(b: Uint8Array): string | null {
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return 'image/gif';
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'image/png';
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg';
+  if (b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return 'image/webp';
+  return null;
+}
 
 function readNote(xml: string): EnexNote {
   const title = unescapeXml(tag(xml, 'title') ?? '').trim();
   const created = /^(\d{4})(\d{2})(\d{2})T/.exec((tag(xml, 'created') ?? '').trim());
   const date = created ? `${created[1]}-${created[2]}-${created[3]}` : undefined;
 
-  // Every GIF the note carries, by its MD5.
+  // Every picture the note carries, by its MD5.
   const files: Array<{ hash: string; bytes: Uint8Array }> = [];
   const resourceRe = /<resource>([\s\S]*?)<\/resource>/g;
   for (let m = resourceRe.exec(xml); m; m = resourceRe.exec(xml)) {
@@ -95,14 +101,14 @@ function readNote(xml: string): EnexNote {
     } catch {
       continue;
     }
-    if (isGif(bytes)) files.push({ hash: md5(bytes), bytes });
+    if (imageType(bytes)) files.push({ hash: md5(bytes), bytes });
   }
 
   // The note's text is XHTML, usually wrapped in CDATA; without it, it is escaped.
   const raw = tag(xml, 'content') ?? '';
   const cdata = /^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/.exec(raw);
   const content = cdata ? cdata[1] : unescapeXml(raw);
-  const gifs: Array<Uint8Array | null> = [];
+  const images: Array<Uint8Array | null> = [];
   const used = new Set<number>();
   const pieces: Array<string | number> = [];
   for (const p of noteLines(content)) {
@@ -110,31 +116,31 @@ function readNote(xml: string): EnexNote {
       pieces.push(p);
       continue;
     }
-    if (!p.gif) continue;
-    // Match by hash. A GIF the export left out (Evernote on a phone only
+    if (!p.image) continue;
+    // Match by hash. A picture the export left out (Evernote on a phone only
     // exports what it has downloaded) keeps its place, without its file.
     let i = files.findIndex((f, k) => !used.has(k) && f.hash === p.hash);
     if (i < 0 && !p.hash) i = files.findIndex((_, k) => !used.has(k));
     if (i >= 0) used.add(i);
-    pieces.push(gifs.length);
-    gifs.push(i >= 0 ? files[i].bytes : null);
+    pieces.push(images.length);
+    images.push(i >= 0 ? files[i].bytes : null);
   }
-  // GIFs the text never shows still come over, at the end.
+  // Pictures the text never shows still come over, at the end.
   files.forEach((f, k) => {
     if (used.has(k)) return;
-    pieces.push(gifs.length);
-    gifs.push(f.bytes);
+    pieces.push(images.length);
+    images.push(f.bytes);
   });
-  return { title, date, pieces, gifs };
+  return { title, date, pieces, images };
 }
 
 const BLOCK_TAGS = new Set(['DIV', 'P', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'TR', 'BLOCKQUOTE', 'PRE', 'UL', 'OL', 'TABLE', 'HR']);
 
-/** A note's text as lines, with a marker for each picture: whether it's a GIF, and its hash. */
-export function noteLines(enml: string): Array<string | { gif: boolean; hash: string }> {
+/** A note's text as lines, with a marker for each attachment: whether it's a picture, and its hash. */
+export function noteLines(enml: string): Array<string | { image: boolean; hash: string }> {
   const html = enml.replace(/<\?xml[\s\S]*?\?>/, '').replace(/<!DOCTYPE[\s\S]*?>/i, '');
   const doc = new DOMParser().parseFromString(html, 'text/html');
-  const out: Array<string | { gif: boolean; hash: string }> = [];
+  const out: Array<string | { image: boolean; hash: string }> = [];
   let line = '';
   const breakLine = () => {
     const l = line.replace(/\s+/g, ' ').trim();
@@ -152,7 +158,7 @@ export function noteLines(enml: string): Array<string | { gif: boolean; hash: st
     if (name === 'EN-MEDIA') {
       breakLine();
       const type = (el.getAttribute('type') ?? '').toLowerCase();
-      out.push({ gif: type === 'image/gif', hash: (el.getAttribute('hash') ?? '').toLowerCase() });
+      out.push({ image: type.startsWith('image/'), hash: (el.getAttribute('hash') ?? '').toLowerCase() });
       // HTML ignores the "/>" on <en-media/>, so whatever follows lands inside it.
       el.childNodes.forEach(walk);
       return;
@@ -199,40 +205,130 @@ export function sectionKind(line: string): BlockKind | null {
 
 /** "2x3 minutes", "3 x 5 min": rounds per side, then minutes. */
 const ROUNDS = /\b(\d{1,2})\s*[x×]\s*(\d{1,2})\s*min/i;
+/** "Game 1: Pinning", "Jogo 2 - Meia guarda": a new game, named by the rest. */
+const GAME = /^(?:game|jogo)\s*\d*\s*[:.\-–]\s*(.*)$/i;
+/** "Move: Cross arm drag", "Técnica 2:": a new technique, named by the rest. */
+const MOVE = /^(?:move|technique|t[ée]cnica|golpe)\s*\d*\s*[:.\-–]\s*(.*)$/i;
+/** "Troubleshooting: on the way to the underhook": a technique of its own, named in full. */
+const TROUBLE = /^(?:troubleshoot\w*|problemas?)\b/i;
+/** A label with nothing after it, such as "Details:", which only introduces the lines below. */
+const LABEL = /^(?:details?|detalhes?|notes?|notas?)\s*:?\s*$/i;
 
-/** A technique's name from the line above its GIF: "Move 1:" → "Move 1". */
+/** A technique's name from a line: "Move 1:" → "Move 1". */
 const cleanName = (line: string) => line.replace(/[\s:–-]+$/, '').trim();
 
 /**
- * The class a note becomes. `clips` lines up with note.gifs; a GIF that
- * could not be made into a clip leaves its technique card without one.
+ * The class a note becomes, read line by line. `clips` lines up with
+ * note.images; a picture that could not be made into a clip leaves its
+ * technique card without one.
  *
- * When the note has section headings, each section becomes a block of its
- * kind; otherwise the text goes to a Concept block and the GIFs to Technique.
+ * - A heading ("Warm up:", "[Concept section]", "Free roll") opens a block of
+ *   that kind; "Game 1: …" opens a game, "Move: …" or "Troubleshooting: …"
+ *   a technique card in a Technique block.
+ * - A picture fills the open technique card if it has none yet; otherwise
+ *   it becomes a card of its own, named by the short line just above it.
+ * - Other lines go where that block keeps its words: warm-up drills, the
+ *   concept's focus and notes, the game's objective and goals, the
+ *   technique card's notes.
+ * - Text before any heading goes to a Concept block.
  */
 export function noteToPlan(note: EnexNote, clips: Array<Clip | undefined>, now = new Date()): ClassPlan {
-  // Split the note at its headings. Two headings in a row for the same kind
-  // ("Warm up with:" then "[Movement section]") open one block.
-  const sections: Array<{ kind: BlockKind | null; pieces: Array<string | number> }> = [{ kind: null, pieces: [] }];
-  for (const p of note.pieces) {
-    const kind = typeof p === 'string' ? sectionKind(p) : null;
-    const last = sections[sections.length - 1];
-    if (kind && !(kind === last.kind && !last.pieces.length)) sections.push({ kind, pieces: [] });
-    else if (!kind) last.pieces.push(p);
-  }
-  const headed = sections.length > 1;
-
   const blocks: Block[] = [];
-  for (const { kind, pieces } of sections) {
-    const { lines, moves } = splitMoves(pieces, clips);
-    if (!headed) {
-      if (lines.length || !moves.length) blocks.push({ ...newBlock('concept'), notes: lines.join('\n') });
-      if (moves.length) blocks.push({ ...newBlock('gems'), moves });
-      break;
+  const preamble: string[] = [];
+  // The open block and technique card. `fresh`: nothing has gone into the
+  // block yet, so a second heading for the same kind reuses it. `awaiting`:
+  // the card came from a "Move: …" line and its picture hasn't come yet.
+  const st: { block: Block | null; card: Move | null; fresh: boolean; awaiting: boolean } = {
+    block: null,
+    card: null,
+    fresh: false,
+    awaiting: false,
+  };
+  const { pieces } = note;
+
+  const open = (kind: BlockKind) => {
+    st.card = null;
+    st.awaiting = false;
+    if (st.block?.kind === kind && st.fresh) return st.block;
+    st.block = kind === 'gems' ? { ...newBlock('gems'), moves: [] } : newBlock(kind);
+    blocks.push(st.block);
+    st.fresh = true;
+    return st.block;
+  };
+  const addCard = (name: string) => {
+    const b: Block = st.block ?? open('gems');
+    st.card = move(name);
+    st.awaiting = false;
+    b.moves = [...(b.moves ?? []), st.card];
+    st.fresh = false;
+    return st.card;
+  };
+
+  for (let i = 0; i < pieces.length; i++) {
+    const p = pieces[i];
+    const next = pieces[i + 1];
+    if (typeof p === 'number') {
+      const current = st.card as Move | null;
+      // A card from "Move: …" waiting for its picture takes it.
+      let target = current && st.awaiting ? current : null;
+      st.awaiting = false;
+      if (!target) {
+        const above = pieces[i - 1];
+        let name = typeof above === 'string' && above.length <= NAME_MAX && !isMarker(above) ? cleanName(above) : '';
+        // A second picture straight after the first shows more of the same move.
+        if (!name && typeof above === 'number' && current?.name) name = numbered(st.block?.moves ?? [], current.name);
+        // A picture right under "Game 1: Pinning" is the game's own.
+        if (!name && st.block?.kind === 'game' && typeof above === 'string' && GAME.test(above)) name = st.block.objective;
+        target = addCard(name);
+      }
+      const clip = clips[p];
+      if (clip) target.clip = clip;
+      // Outside Technique a picture stands alone; the lines after it belong to the block.
+      if (st.block?.kind !== 'gems') st.card = null;
+      continue;
     }
-    if (!kind && !lines.length && !moves.length) continue;
-    blocks.push(sectionBlock(kind ?? 'concept', lines, moves));
+
+    const kind = sectionKind(p);
+    if (kind) {
+      open(kind);
+      continue;
+    }
+    const game = GAME.exec(p);
+    if (game) {
+      const g = open('game') as Extract<Block, { kind: 'game' }>;
+      g.objective = cleanName(game[1]) || cleanName(p);
+      st.fresh = false;
+      continue;
+    }
+    const moveLine = MOVE.exec(p);
+    if (moveLine || TROUBLE.test(p)) {
+      if (st.block?.kind !== 'gems') open('gems');
+      addCard(moveLine ? cleanName(moveLine[1]) || cleanName(p) : cleanName(p));
+      st.awaiting = true;
+      continue;
+    }
+    if (LABEL.test(p)) continue;
+    // A short line right above a picture is that picture's name, unless an open card is waiting for one.
+    if (typeof next === 'number' && p.length <= NAME_MAX && !st.awaiting) continue;
+
+    if (st.card) {
+      const c = st.card as Move;
+      c.notes = c.notes ? `${c.notes}\n${p}` : p;
+    } else if (st.block) {
+      addText(st.block, p);
+      st.fresh = false;
+    } else {
+      preamble.push(p);
+    }
   }
+
+  if (preamble.length) blocks.unshift({ ...newBlock('concept'), notes: preamble.join('\n') });
+  for (const b of blocks) {
+    if (b.kind === 'game') setRounds(b);
+    if (b.kind === 'gems' && !b.moves.length) b.moves = [move()];
+    if (b.kind !== 'gems' && b.moves && !b.moves.length) delete b.moves;
+  }
+  if (!blocks.length) blocks.push(newBlock('concept'));
 
   const stamp = now.toISOString();
   return {
@@ -245,72 +341,44 @@ export function noteToPlan(note: EnexNote, clips: Array<Clip | undefined>, now =
   };
 }
 
-/**
- * A section's GIFs as techniques, each named by the short line just above it
- * and holding the lines below it as notes. Lines before the first GIF are the
- * section's own text.
- */
-function splitMoves(pieces: Array<string | number>, clips: Array<Clip | undefined>): { lines: string[]; moves: Move[] } {
-  const lines: string[] = [];
-  const moves: Move[] = [];
-  let current: Move | null = null;
-  for (let i = 0; i < pieces.length; i++) {
-    const p = pieces[i];
-    const next = pieces[i + 1];
-    if (typeof p === 'string') {
-      // A short line right above a GIF is that GIF's name.
-      if (typeof next === 'number' && p.length <= NAME_MAX) continue;
-      if (current) current.notes = current.notes ? `${current.notes}\n${p}` : p;
-      else lines.push(p);
-      continue;
-    }
-    const above = pieces[i - 1];
-    let name = typeof above === 'string' && above.length <= NAME_MAX ? cleanName(above) : '';
-    // A second GIF straight after the first shows more of the same move.
-    if (!name && typeof above === 'number' && current?.name) name = `${current.name.replace(/ \(\d+\)$/, '')} (${countSame(moves, current.name) + 1})`;
-    current = move(name);
-    const clip = clips[p];
-    if (clip) current.clip = clip;
-    moves.push(current);
-  }
-  return { lines, moves };
-}
+const isMarker = (line: string) => sectionKind(line) !== null || GAME.test(line) || MOVE.test(line) || TROUBLE.test(line) || LABEL.test(line);
 
-function countSame(moves: Move[], name: string): number {
+/** "Move 1" → "Move 1 (2)", then "(3)": the next picture of the same move. */
+function numbered(moves: Move[], name: string): string {
   const base = name.replace(/ \(\d+\)$/, '');
-  return moves.filter((m) => m.name === base || m.name.startsWith(`${base} (`)).length;
+  const n = moves.filter((m) => m.name === base || m.name.startsWith(`${base} (`)).length;
+  return `${base} (${n + 1})`;
 }
 
-/** The block a section becomes, its text put where that kind of block keeps it. */
-function sectionBlock(kind: BlockKind, lines: string[], moves: Move[]): Block {
-  const items = (xs: string[]) => xs.map((x) => item(x));
-  const text = lines.join('\n');
-  const extra = moves.length ? { moves } : {};
-  switch (kind) {
+/** Puts a line where that kind of block keeps its words. */
+function addText(b: Block, line: string) {
+  switch (b.kind) {
     case 'warmup':
-      return { ...newBlock('warmup'), drills: items(lines), ...extra };
-    case 'concept': {
+      b.drills.push(item(line));
+      return;
+    case 'concept':
       // The first line is the focus; the rest is how it's explained.
-      const [rule = '', ...rest] = lines;
-      return { ...newBlock('concept'), rule, notes: rest.join('\n'), ...extra };
-    }
-    case 'game': {
-      const game = newBlock('game');
-      // "2x3 minutes" sets the rounds; a bare "Rounds:" above it goes too.
-      const rounds = lines.findIndex((l) => ROUNDS.test(l));
-      if (rounds >= 0) {
-        const [, n, min] = ROUNDS.exec(lines[rounds])!;
-        game.rounds = { ...game.rounds, roundsPerSide: Number(n), minutes: Number(min) };
-      }
-      const rest = lines.filter((l, i) => i !== rounds && !(rounds >= 0 && /^rounds?:?$|^rounds?\s*:$|^rodadas?:?$/i.test(l)));
-      const [objective = '', ...goals] = rest;
-      return { ...game, objective, goals: items(goals), ...extra };
-    }
+      if (!b.rule) b.rule = line;
+      else b.notes = b.notes ? `${b.notes}\n${line}` : line;
+      return;
+    case 'game':
+      if (!b.objective) b.objective = line;
+      else b.goals.push(item(line));
+      return;
     case 'gems':
-      return { ...newBlock('gems'), moves: moves.length ? moves : [move()], options: items(lines) };
+      b.options.push(item(line));
+      return;
     case 'freeRoll':
-      return { ...newBlock('freeRoll'), notes: text, ...extra };
     case 'wrapup':
-      return { ...newBlock('wrapup'), notes: text, ...extra };
+      b.notes = b.notes ? `${b.notes}\n${line}` : line;
   }
+}
+
+/** "2x3 minutes" in a game's goals sets its rounds; a bare "Rounds:" above it goes too. */
+function setRounds(game: Extract<Block, { kind: 'game' }>) {
+  const at = game.goals.findIndex((g) => ROUNDS.test(g.text));
+  if (at < 0) return;
+  const [, n, min] = ROUNDS.exec(game.goals[at].text)!;
+  game.rounds = { ...game.rounds, roundsPerSide: Number(n), minutes: Number(min) };
+  game.goals = game.goals.filter((g, i) => i !== at && !/^(rounds?|rodadas?)\s*:?$/i.test(g.text));
 }
