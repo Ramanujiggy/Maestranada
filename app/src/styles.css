@@ -518,9 +518,14 @@ a {
   touch-action: none;
 }
 
-.drag-handle:hover,
 .drag-handle:focus-visible {
   color: var(--ink);
+}
+
+@media (hover: hover) {
+  .drag-handle:hover {
+    color: var(--ink);
+  }
 }
 
 .section.dragging {
@@ -565,8 +570,10 @@ a {
   text-align: left;
 }
 
-.menu-pop button:hover:not(:disabled) {
-  background: var(--sheet);
+@media (hover: hover) {
+  .menu-pop button:hover:not(:disabled) {
+    background: var(--sheet);
+  }
 }
 
 .menu-pop button:disabled {
@@ -594,9 +601,11 @@ a {
   font-weight: 600;
 }
 
-.add-block:hover {
-  color: var(--ink);
-  background: var(--sheet);
+@media (hover: hover) {
+  .add-block:hover {
+    color: var(--ink);
+    background: var(--sheet);
+  }
 }
 
 .add-block:active {
@@ -660,8 +669,10 @@ a {
   white-space: nowrap;
 }
 
-.strip-kind:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .strip-kind:hover {
+    border-color: var(--ink);
+  }
 }
 
 .strip-kind.unused {
@@ -670,8 +681,10 @@ a {
   font-weight: 500;
 }
 
-.strip-kind.unused:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .strip-kind.unused:hover {
+    color: var(--ink);
+  }
 }
 
 .strip-tally {
@@ -954,8 +967,10 @@ a {
   color: var(--on-marker);
 }
 
-.btn-primary:hover {
-  background: var(--marker-press);
+@media (hover: hover) {
+  .btn-primary:hover {
+    background: var(--marker-press);
+  }
 }
 
 .btn-secondary {
@@ -964,8 +979,10 @@ a {
   border-color: var(--rule-strong);
 }
 
-.btn-secondary:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .btn-secondary:hover {
+    border-color: var(--ink);
+  }
 }
 
 .btn-ghost {
@@ -974,9 +991,11 @@ a {
   padding: 8px 10px;
 }
 
-.btn-ghost:hover {
-  color: var(--ink);
-  background: var(--sheet);
+@media (hover: hover) {
+  .btn-ghost:hover {
+    color: var(--ink);
+    background: var(--sheet);
+  }
 }
 
 /* Destructive actions stay ink: red is reserved for "act now". */
@@ -1039,9 +1058,11 @@ a {
     color var(--fast);
 }
 
-.icon-btn:hover {
-  background: var(--sheet);
-  color: var(--ink);
+@media (hover: hover) {
+  .icon-btn:hover {
+    background: var(--sheet);
+    color: var(--ink);
+  }
 }
 
 .icon-btn:active:not(:disabled) {
@@ -1092,9 +1113,11 @@ a {
   color: var(--hint);
 }
 
-.input:hover,
-.textarea:hover {
-  border-color: var(--muted);
+@media (hover: hover) {
+  .input:hover,
+  .textarea:hover {
+    border-color: var(--muted);
+  }
 }
 
 .input:focus,
@@ -1103,6 +1126,15 @@ a {
   outline: none;
   border-color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+/* One-line fields are textareas that grow, so a long line wraps on a phone. */
+.line-input {
+  display: block;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.4;
+  font-family: inherit;
 }
 
 .textarea {
@@ -1185,9 +1217,11 @@ a {
   border-radius: 7px;
 }
 
-.stepper button:hover {
-  color: var(--ink);
-  background: var(--sheet);
+@media (hover: hover) {
+  .stepper button:hover {
+    color: var(--ink);
+    background: var(--sheet);
+  }
 }
 
 .stepper button:active {
@@ -1294,7 +1328,7 @@ a {
   margin-right: 4px;
 }
 
-.list-row input {
+.list-row .line-input {
   flex: 1;
   min-width: 0;
   background: transparent;
@@ -1304,7 +1338,7 @@ a {
   color: var(--ink);
 }
 
-.list-row input:focus {
+.list-row .line-input:focus {
   outline: none;
 }
 
@@ -1314,9 +1348,14 @@ a {
   transition: opacity var(--fast);
 }
 
-.list-row:hover .list-row-actions,
 .list-row:focus-within .list-row-actions {
   opacity: 1;
+}
+
+@media (hover: hover) {
+  .list-row:hover .list-row-actions {
+    opacity: 1;
+  }
 }
 
 .list-row-actions .icon-btn {
@@ -1374,10 +1413,12 @@ a {
     border-color var(--fast);
 }
 
-.chip:hover {
-  border-style: solid;
-  border-color: var(--ink);
-  color: var(--ink);
+@media (hover: hover) {
+  .chip:hover {
+    border-style: solid;
+    border-color: var(--ink);
+    color: var(--ink);
+  }
 }
 
 .chip:active {
@@ -1419,13 +1460,18 @@ a {
   gap: 10px;
 }
 
+.move-head .input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .move-num {
   white-space: nowrap;
-  font-family: var(--font-head);
-  font-size: 17px;
+  font-family: var(--font-num);
+  font-size: 15px;
   font-weight: 600;
   color: var(--ink);
-  min-width: 56px;
+  min-width: 30px;
   flex-shrink: 0;
   align-self: stretch;
   display: flex;
@@ -1483,8 +1529,10 @@ a {
   width: 100%;
 }
 
-.timeline-row:hover {
-  background: var(--sheet);
+@media (hover: hover) {
+  .timeline-row:hover {
+    background: var(--sheet);
+  }
 }
 
 .timeline-num {
@@ -1569,8 +1617,10 @@ a {
   transition: border-color var(--fast);
 }
 
-.plan-card:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .plan-card:hover {
+    border-color: var(--ink);
+  }
 }
 
 .plan-card-head {
@@ -1812,9 +1862,11 @@ a {
   }
 }
 
-.shelf-row-main:hover .shelf-title {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+@media (hover: hover) {
+  .shelf-row-main:hover .shelf-title {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .empty {
@@ -2307,13 +2359,19 @@ html:has(.backdrop) body {
   transition: border-color var(--fast);
 }
 
-.clip-add:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .clip-add:hover {
+    border-color: var(--ink);
+  }
 }
 
 .clip-add:active {
   background: var(--sheet-2);
   transition: none;
+}
+
+.clip-add > svg {
+  flex: none;
 }
 
 .clip-add > span {
@@ -2653,8 +2711,10 @@ html:has(.backdrop) body {
   transition: border-color var(--fast);
 }
 
-.template:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .template:hover {
+    border-color: var(--ink);
+  }
 }
 
 .template:active {
@@ -2840,13 +2900,33 @@ html:has(.backdrop) body {
 
 .library-foot {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 48px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.library-foot-row {
+  display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 6px 10px;
-  margin-top: 48px;
-  font-size: 13px;
-  color: var(--muted);
+}
+
+/* On a narrow phone the two facts stack instead of leaving a stray dot. */
+@media (max-width: 420px) {
+  .library-foot-info {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .library-foot-info .sep {
+    display: none;
+  }
 }
 
 .library-foot .sep {
@@ -2865,8 +2945,10 @@ html:has(.backdrop) body {
   text-decoration-color: var(--rule-strong);
 }
 
-.link:hover {
-  text-decoration-color: var(--ink);
+@media (hover: hover) {
+  .link:hover {
+    text-decoration-color: var(--ink);
+  }
 }
 
 .update-toast {
@@ -2944,7 +3026,7 @@ html:has(.backdrop) body {
   textarea,
   select,
   .input:not(.title-input),
-  .list-row input,
+  .list-row .line-input,
   .list-add .input {
     font-size: 16px;
   }
@@ -3182,9 +3264,14 @@ html:has(.backdrop) body {
   display: none;
 }
 
-/* The class the Teach button points at, when it isn't the next by date. */
-.plan-card.is-picked {
-  border-top-color: var(--marker);
+/* On a phone, the class the bottom Teach button starts: the one tapped, else
+   the one opened last, else the next one. */
+@media (max-width: 620px) {
+  .plan-card.is-picked,
+  .plan-card.is-picked:hover {
+    border-color: var(--marker);
+    box-shadow: 0 0 0 1px var(--marker);
+  }
 }
 
 .next-tag {

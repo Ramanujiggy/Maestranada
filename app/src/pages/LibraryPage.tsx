@@ -36,6 +36,9 @@ import { lastOpened } from '../lib/lastOpened.ts';
 import { LangSwitch } from '../components/LangSwitch.tsx';
 import { ThemeButton, ThemeSheet } from '../components/ThemeSheet.tsx';
 import { Shelf, useJustFiled } from '../components/Shelf.tsx';
+import { EvernoteImport } from '../components/EvernoteImport.tsx';
+import { looksLikeEnex } from '../lib/evernote.ts';
+import type { EnexProgress } from '../lib/enexImport.ts';
 
 const STRUCTURE: Key[] = ['stripWarmup', 'sec.concept', 'sec.game', 'sec.gems', 'sec.freeRoll'];
 
@@ -137,10 +140,15 @@ export function LibraryPage({
   const today = todayISO();
   const shelf = shelveLibrary(api.plans, today);
   const next = nextClass(api.plans);
-  // The Teach button follows the class in the middle of the screen once the coach
-  // scrolls, else the class opened last, else the next one by date.
-  const onScreen = useCardOnScreen();
-  const picked = api.plans.find((p) => p.id === onScreen) ?? api.plans.find((p) => p.id === lastOpened()) ?? next;
+  // The Teach button follows the class the coach tapped, else the class opened
+  // last, else the next one by date.
+  const [selected, setSelected] = useState<string | null>(null);
+  const picked = api.plans.find((p) => p.id === selected) ?? api.plans.find((p) => p.id === lastOpened()) ?? next;
+  // On a phone a first tap selects a card for the Teach button; a second tap (or its title) opens it.
+  const tapCard = (p: ClassPlan) => {
+    if (p !== picked && window.matchMedia('(max-width: 620px)').matches) setSelected(p.id);
+    else navigate({ name: 'edit', id: p.id });
+  };
   const filing = useJustFiled(shelf.months);
   // Just-filed classes keep their card for a beat, then fold into their month.
   const folding = shelf.months.flatMap((m) => m.plans).filter((p) => filing.folding.includes(p.id));
@@ -162,6 +170,8 @@ export function LibraryPage({
   // iOS can refuse to let a button read the clipboard (the coach misses its
   // little Paste bubble). Then a box takes a normal press-and-hold paste.
   const [pasteBox, setPasteBox] = useState(false);
+  const [enex, setEnex] = useState<{ progress: EnexProgress | null } | null>(null);
+  const enexStop = useRef(false);
   const closeCarry = () => {
     markCarryDone();
     setCarryOffer(false);
@@ -212,10 +222,44 @@ export function LibraryPage({
     else notify(t('copyFailed'));
   };
 
+  /** An Evernote export: every note a class, every GIF a technique with its clip. */
+  const importEvernote = async (text: string) => {
+    enexStop.current = false;
+    setEnex({ progress: null });
+    try {
+      const { importEnex } = await import('../lib/enexImport.ts');
+      const r = await importEnex(
+        text,
+        (plan) => api.importMany([plan]),
+        (progress) => setEnex({ progress }),
+        () => enexStop.current,
+      );
+      if (r.error) notify(r.error);
+      else if (!r.classes && !enexStop.current) notify(t('enEmpty'));
+      else
+        notify(
+          t('enDone', {
+            classes: t(r.classes === 1 ? 'planCountOne' : 'planCountMany', { n: r.classes }),
+            clips: r.clips === 1 ? t('enClipsOne') : t('enClipsMany', { n: r.clips }),
+          }) +
+            (r.skipped ? t('enSkipped', { n: r.skipped }) : '') +
+            (r.missing ? t('enMissing', { n: r.missing }) : ''),
+        );
+    } catch (e) {
+      console.error(e);
+      notify(t('importBad'));
+    } finally {
+      setEnex(null);
+    }
+  };
+
   const onImport = async (file: File) => {
+    // The picker takes any file now, so a photo or video is turned away before it's read.
+    if (/^(image|video|audio)\//.test(file.type)) return notify(t('importBad'));
     let raw: unknown[];
     try {
       const text = await file.text();
+      if (looksLikeEnex(text)) return void (await importEvernote(text));
       const classFile = await import('../lib/classFile.ts');
       if (classFile.looksLikeClassFile(text)) {
         const plan = classFile.readClassFile(text);
@@ -294,10 +338,11 @@ export function LibraryPage({
                 : []),
             ]}
           />
+          {/* No accept list: iPhone greys out any file whose type it doesn't know, such as
+              Evernote's .enex. What the file holds decides how it's read. */}
           <input
             ref={fileRef}
             type="file"
-            accept="application/json,.json,text/html,.html,.htm,text/plain,.txt"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -387,9 +432,8 @@ export function LibraryPage({
           {cards.map((p) => (
             <article
               key={p.id}
-              data-plan={p.id}
-              className={`card plan-card${p === next ? ' is-next' : ''}${p === picked && picked !== next ? ' is-picked' : ''}${folding.includes(p) ? ' is-folding' : ''}`}
-              onClick={() => navigate({ name: 'edit', id: p.id })}
+              className={`card plan-card${p === next ? ' is-next' : ''}${p === picked && api.plans.length > 1 ? ' is-picked' : ''}${folding.includes(p) ? ' is-folding' : ''}`}
+              onClick={() => tapCard(p)}
               onAnimationEnd={folding.includes(p) ? () => filing.done(p.id) : undefined}
             >
               <div className="plan-card-head">
@@ -450,25 +494,28 @@ export function LibraryPage({
       )}
 
       <footer className="library-foot">
-        <span>{t('worksOffline')}</span>
-        <span className="sep">·</span>
-        <span>{t('plansStayHere')}</span>
-        {api.plans.length > 0 && (
-          <>
-            <span className="sep">·</span>
-            <button type="button" className="link" onClick={() => void exportAll()}>
-              {t('backUpAll')}
-            </button>
-            <span className="sep">·</span>
-            <button type="button" className="link" onClick={() => void copyAll()}>
-              {t('copyClasses')}
-            </button>
-          </>
-        )}
-        <span className="sep">·</span>
-        <button type="button" className="link" onClick={() => void paste()}>
-          {t('pasteClasses')}
-        </button>
+        <div className="library-foot-row library-foot-info">
+          <span>{t('worksOffline')}</span>
+          <span className="sep">·</span>
+          <span>{t('plansStayHere')}</span>
+        </div>
+        <div className="library-foot-row">
+          {api.plans.length > 0 && (
+            <>
+              <button type="button" className="link" onClick={() => void exportAll()}>
+                {t('backUpAll')}
+              </button>
+              <span className="sep">·</span>
+              <button type="button" className="link" onClick={() => void copyAll()}>
+                {t('copyClasses')}
+              </button>
+              <span className="sep">·</span>
+            </>
+          )}
+          <button type="button" className="link" onClick={() => void paste()}>
+            {t('pasteClasses')}
+          </button>
+        </div>
       </footer>
 
       {/* On a phone the two things a coach does here sit under the thumb. */}
@@ -519,6 +566,8 @@ export function LibraryPage({
 
       {themeOpen && <ThemeSheet onClose={() => setThemeOpen(false)} />}
 
+      {enex && <EvernoteImport progress={enex.progress} onStop={() => (enexStop.current = true)} />}
+
       {pendingDelete && (
         <ConfirmDialog
           title={t('deleteClassTitle')}
@@ -535,35 +584,3 @@ export function LibraryPage({
     </div>
   );
 }
-
-/** The class card under the middle of the screen, from the coach's first scroll on.
-    Phone only, where the Teach button sits in the bottom bar. */
-function useCardOnScreen(): string | null {
-  const [id, setId] = useState<string | null>(null);
-  useEffect(() => {
-    const phone = window.matchMedia('(max-width: 620px)');
-    let frame = 0;
-    const pick = () => {
-      frame = 0;
-      if (!phone.matches) return;
-      const mid = window.innerHeight * 0.45;
-      let best: { id: string; d: number } | null = null;
-      for (const el of document.querySelectorAll<HTMLElement>('.plan-card[data-plan]')) {
-        const r = el.getBoundingClientRect();
-        const d = r.top <= mid && r.bottom >= mid ? 0 : Math.min(Math.abs(r.top - mid), Math.abs(r.bottom - mid));
-        if (!best || d < best.d) best = { id: el.dataset.plan!, d };
-      }
-      if (best) setId(best.id);
-    };
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(pick);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      cancelAnimationFrame(frame);
-    };
-  }, []);
-  return id;
-}
-

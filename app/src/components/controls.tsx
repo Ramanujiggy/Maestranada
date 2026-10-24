@@ -1,6 +1,6 @@
 // Small form controls shared by the editor.
 
-import { useId, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { t } from '../lib/i18n.ts';
 
@@ -17,28 +17,78 @@ export function Field({ label, children, hint }: { label: string; children: (id:
   );
 }
 
+/** Grows a one-line field to fit its text, so a long line wraps instead of hiding off the edge. */
+export function fitHeight(el: HTMLTextAreaElement | null) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight + (el.offsetHeight - el.clientHeight)}px`;
+}
+
+/** A one-line field that wraps on narrow screens. Enter never adds a line break. */
+export function LineInput({
+  value,
+  onChange,
+  onEnter,
+  className = '',
+  ...rest
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onEnter?: () => void;
+  className?: string;
+  id?: string;
+  placeholder?: string;
+  'aria-label'?: string;
+  onBlur?: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
+  inputRef?: React.Ref<HTMLTextAreaElement>;
+}) {
+  const ref = useRef<HTMLTextAreaElement | null>(null);
+  const { inputRef, ...props } = rest;
+  useLayoutEffect(() => fitHeight(ref.current), [value]);
+  useEffect(() => {
+    const refit = () => fitHeight(ref.current);
+    window.addEventListener('resize', refit);
+    return () => window.removeEventListener('resize', refit);
+  }, []);
+  return (
+    <textarea
+      {...props}
+      ref={(el) => {
+        ref.current = el;
+        if (typeof inputRef === 'function') inputRef(el);
+        else if (inputRef) (inputRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+      }}
+      rows={1}
+      className={`line-input ${className}`}
+      value={value}
+      onChange={(e) => onChange(e.target.value.replace(/\s*\n+\s*/g, ' '))}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (onEnter) onEnter();
+          else e.currentTarget.blur();
+        }
+      }}
+    />
+  );
+}
+
 export function TextInput({
   id,
   value,
   onChange,
   placeholder,
   className = '',
+  'aria-label': ariaLabel,
 }: {
   id?: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   className?: string;
+  'aria-label'?: string;
 }) {
-  return (
-    <input
-      id={id}
-      className={`input ${className}`}
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  );
+  return <LineInput id={id} className={`input ${className}`} value={value} placeholder={placeholder} aria-label={ariaLabel} onChange={onChange} />;
 }
 
 export function TextArea({
@@ -54,8 +104,12 @@ export function TextArea({
   placeholder?: string;
   rows?: number;
 }) {
+  // Grows with what's typed, so notes never hide behind a scroll on a phone.
+  const ref = useRef<HTMLTextAreaElement | null>(null);
+  useLayoutEffect(() => fitHeight(ref.current), [value]);
   return (
     <textarea
+      ref={ref}
       id={id}
       className="textarea"
       value={value}

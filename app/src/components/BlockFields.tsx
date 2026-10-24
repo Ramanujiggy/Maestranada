@@ -286,8 +286,15 @@ export function MoveCards({
       {moves.map((m, i) => (
         <div className="move-card" key={m.id}>
           <div className="move-head">
-            <span className="move-num">{t('moveN', { n: i + 1 })}</span>
-            <TextInput value={m.name} placeholder={t('moveNamePh')} onChange={(name) => setMove(m.id, { name })} />
+            <span className="move-num" aria-hidden>
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <TextInput
+              value={m.name}
+              aria-label={t('moveN', { n: i + 1 })}
+              placeholder={t('moveNamePh')}
+              onChange={(name) => setMove(m.id, { name })}
+            />
             <button
               type="button"
               className="icon-btn danger"

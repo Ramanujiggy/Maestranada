@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react';
 import { item, type ListItem } from '../lib/plan.ts';
 import { t } from '../lib/i18n.ts';
+import { LineInput } from './controls.tsx';
 
 export function EditableList({
   items,
@@ -20,7 +21,7 @@ export function EditableList({
   addLabel?: string;
 }) {
   const [draft, setDraft] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const add = (refocus = true) => {
     const text = draft.trim();
@@ -47,10 +48,10 @@ export function EditableList({
         {items.map((x, i) => (
           <li className="list-row" key={x.id}>
             <span className="list-bullet" aria-hidden />
-            <input
+            <LineInput
               value={x.text}
               aria-label={t('itemN', { n: i + 1 })}
-              onChange={(e) => update(x.id, e.target.value)}
+              onChange={(v) => update(x.id, v)}
               onBlur={(e) => {
                 if (!e.target.value.trim()) remove(x.id);
               }}
@@ -76,20 +77,15 @@ export function EditableList({
         ))}
       </ul>
       <div className="list-add">
-        <input
-          ref={inputRef}
+        <LineInput
+          inputRef={inputRef}
           className="input"
           value={draft}
           placeholder={placeholder}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={setDraft}
           // A typed line is kept even if the coach never presses Add.
           onBlur={() => add(false)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              add();
-            }
-          }}
+          onEnter={() => add()}
         />
         <button type="button" className="btn btn-secondary" aria-label={addLabel} onClick={() => add()} disabled={!draft.trim()}>
           <Plus size={15} /> <span className="list-add-label">{addLabel}</span>

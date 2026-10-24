@@ -87,7 +87,11 @@ export function RunPage({ plan }: { plan: ClassPlan }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [plan.id, last]);
 
-  useEffect(() => window.scrollTo({ top: 0 }), [step]);
+  // Braces matter: newer Chrome returns a promise from scrollTo, and React
+  // would call that as the effect's clean-up and crash Teach mode.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [step]);
 
   // Swipe left or right between blocks, as well as the buttons. Only a
   // mostly horizontal flick counts, so scrolling a long list never moves on.
