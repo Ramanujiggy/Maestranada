@@ -42,7 +42,7 @@ Updated 2026-10-21. The product is built. What stands between it and the first s
 ### Claude, ready to start
 
 - [ ] Retake the sales page screenshots. The ones in `site/img` date from PR #7, before the rename, the new blocks and the Rank logo, and the Portuguese page shows English screenshots.
-- [ ] Add privacy, terms and refund pages to `site/`, in both languages.
+- [x] Add privacy, terms and refund pages to `site/`, in both languages (`/privacy`, `/terms`, `/refunds`).
 - [x] Make `og:image` an absolute URL, so links shared in WhatsApp and iMessage show a picture.
 - [ ] Add a link to the site in the class file footer, so every class a coach sends tells the reader where it came from.
 - [ ] Put the founder line on the sales page once Robert sends it.
