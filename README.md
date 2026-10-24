@@ -20,7 +20,7 @@ npm run build      # static build in app/dist
 
 ## Deploy
 
-The app is static files, so any static host works. The recommended setup (Cloudflare Pages, with a Netlify spare, behind the `prancheta.app` domain) and what an outage means for buyers are in [HOSTING.md](HOSTING.md).
+The app is static files, so any static host works. The recommended setup (Cloudflare Pages, with a Netlify spare, behind the `pranchetabjj.com` domain) and what an outage means for buyers are in [HOSTING.md](HOSTING.md).
 
 - **Cloudflare Pages:** Root directory empty, build command `npm run build`, output `app/dist`.
 - **Netlify:** reads `netlify.toml`.
@@ -37,7 +37,7 @@ The app is a Progressive Web App. After the first visit it works with no connect
 There is no free tier, no account and no license key. A buyer pays once and gets the app.
 
 1. Create a $10 product in Lemon Squeezy.
-2. Set the purchase to deliver the app link (`https://app.prancheta.app`, never a host's own URL; see [HOSTING.md](HOSTING.md)) in the receipt page and email. The same link is the install for every device:
+2. Set the purchase to deliver the app link (`https://app.pranchetabjj.com`, never a host's own URL; see [HOSTING.md](HOSTING.md)) in the receipt page and email. The same link is the install for every device:
    - **Laptop:** Chrome or Edge show an **Install app** button. Safari on a Mac uses File → Add to Dock.
    - **iPhone / iPad:** Share → Add to Home Screen.
    - **Android:** the **Install app** button.
