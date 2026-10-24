@@ -7,6 +7,8 @@ import { RunPage } from './pages/RunPage.tsx';
 import { Toast } from './components/feedback.tsx';
 import { Welcome } from './components/Welcome.tsx';
 import { InstallGuide } from './components/InstallGuide.tsx';
+import { UnlockSheet } from './components/UnlockSheet.tsx';
+import { freeLeft } from './lib/access.ts';
 import { canInstall, installNudgeDue, markInstallNudged, useInstall } from './lib/pwa.ts';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { usePendingFile } from './lib/files.ts';
@@ -60,7 +62,11 @@ export default function App() {
 
 function Screens() {
   const route = useRoute();
-  const api = usePlans();
+  // The unlock sheet: 'limit' when a new class was turned down, 'open' from the class list.
+  const [unlock, setUnlock] = useState<'limit' | 'open' | null>(null);
+  const onLimit = useCallback(() => setUnlock('limit'), []);
+  const closeUnlock = useCallback(() => setUnlock(null), []);
+  const api = usePlans(onLimit);
   const [toast, setToast] = useState<string | null>(null);
   const notify = useCallback((m: string) => setToast(m), []);
   const clearToast = useCallback(() => setToast(null), []);
@@ -114,6 +120,7 @@ function Screens() {
         install={install}
         onHelp={() => setWelcomeOpen(true)}
         onInstall={() => setInstallOpen(true)}
+        onUnlock={() => setUnlock('open')}
         pickerOpen={pickerOpen}
         setPickerOpen={setPickerOpen}
       />
@@ -169,6 +176,7 @@ function Screens() {
           }}
         />
       )}
+      {unlock && <UnlockSheet limitHit={unlock === 'limit' || freeLeft(api.plans) === 0} onClose={closeUnlock} />}
       {installOpen && <InstallGuide install={install} hasPlans={ownWork} onCarry={carry} onClose={closeInstall} />}
     </>
   );

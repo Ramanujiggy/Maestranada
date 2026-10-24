@@ -30,7 +30,8 @@ import type { Template } from '../lib/samples.ts';
 import { canInstall, isApple, isStandalone, type InstallState } from '../lib/pwa.ts';
 import { restoreClipData, withClipData } from '../lib/clips.ts';
 import { saveFile } from '../lib/files.ts';
-import { carryOfferDone, copyClasses, freshCopy, markCarryDone, readBackup, readClipboard } from '../lib/carry.ts';
+import { carryOfferDone, copyClasses, freshCopy, markCarryDone, readBackup, readClipboard, takeUnlockFrom } from '../lib/carry.ts';
+import { FREE_CLASSES, freeLeft, useUnlocked } from '../lib/access.ts';
 import { t, type Key } from '../lib/i18n.ts';
 import { lastOpened } from '../lib/lastOpened.ts';
 import { LangSwitch } from '../components/LangSwitch.tsx';
@@ -121,6 +122,7 @@ export function LibraryPage({
   install,
   onHelp,
   onInstall,
+  onUnlock,
   pickerOpen,
   setPickerOpen,
 }: {
@@ -129,6 +131,7 @@ export function LibraryPage({
   install: InstallState;
   onHelp: () => void;
   onInstall: () => void;
+  onUnlock: () => void;
   pickerOpen: boolean;
   setPickerOpen: (open: boolean) => void;
 }) {
@@ -154,13 +157,17 @@ export function LibraryPage({
   const folding = shelf.months.flatMap((m) => m.plans).filter((p) => filing.folding.includes(p.id));
   const cards = [...shelf.cards, ...folding];
 
-  const open = (plan: ClassPlan) => {
-    api.upsert(plan);
+  const open = (plan: ClassPlan): boolean => {
+    const added = api.upsert(plan);
     setPickerOpen(false);
     setAiOpen(false);
-    navigate({ name: 'edit', id: plan.id });
+    if (added) navigate({ name: 'edit', id: plan.id });
+    return added;
   };
-  const create = () => setPickerOpen(true);
+  const unlocked = useUnlocked();
+  const left = unlocked ? FREE_CLASSES : freeLeft(api.plans);
+  // With the free classes used up, New class goes straight to the unlock.
+  const create = () => (left > 0 ? setPickerOpen(true) : onUnlock());
 
   // Classes waiting elsewhere: in Safari, when this is the Home Screen app on
   // Apple, or at an old web address that sent the coach here with ?paste.
@@ -178,19 +185,23 @@ export function LibraryPage({
     setPasteBox(false);
   };
 
-  /** Stores backup plans, their clips first. Says how it went. */
-  const importBackup = async (raw: unknown[]): Promise<boolean> => {
+  /** Stores backup plans, their clips first. Says how it went: 'none' when
+   *  there were no classes in it, 'limit' when the unlock was asked for.
+   *  `moving` = the coach's own classes from another copy or a backup, which
+   *  are never turned down; a class from someone else counts as a new one. */
+  const importBackup = async (raw: unknown[], moving = false): Promise<'done' | 'none' | 'limit'> => {
     const list = raw.map(normalizePlan).filter((p): p is ClassPlan => p !== null);
-    if (!list.length) return false;
+    if (!list.length) return 'none';
     try {
       await restoreClipData(raw);
     } catch {
       notify(t('importNoSpace'));
-      return true;
+      return 'done';
     }
-    const changed = api.importMany(list);
+    const changed = api.importMany(list, moving);
+    if (changed === null) return 'limit';
     notify(changed ? (changed === 1 ? t('importedOne') : t('importedMany', { n: changed })) : t('importNothing'));
-    return true;
+    return 'done';
   };
 
   /** Classes copied from another Prancheta: from the paste offer, the footer, or the AI box. */
@@ -198,7 +209,9 @@ export function LibraryPage({
     // On a fresh copy, the coach's own classes replace the untouched example
     // rather than sit beside a second one. Anywhere else nothing is removed.
     const examples = freshCopy(api.plans) ? api.plans.map((p) => p.id) : [];
-    if (!(await importBackup(raw))) return notify(t('pasteNothing'));
+    const result = await importBackup(raw, true);
+    if (result === 'none') return notify(t('pasteNothing'));
+    if (result === 'limit') return;
     const pasted = new Set(raw.map((p) => (p as { id?: unknown } | null)?.id));
     examples.filter((id) => !pasted.has(id)).forEach(api.remove);
     closeCarry();
@@ -212,6 +225,7 @@ export function LibraryPage({
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return notify(t('pasteRefused'));
     }
+    if (takeUnlockFrom(text)) notify(t('unlockCarried'));
     const raw = readBackup(text);
     if (raw) await pasteClasses(raw);
     else notify(t('pasteNothing'));
@@ -228,13 +242,16 @@ export function LibraryPage({
     setEnex({ progress: null });
     try {
       const { importEnex } = await import('../lib/enexImport.ts');
+      // Past the free classes the import stops and the unlock sheet says why.
+      let limited = false;
       const r = await importEnex(
         text,
-        (plan) => api.importMany([plan]),
+        (plan) => !(limited = api.importMany([plan]) === null),
         (progress) => setEnex({ progress }),
         () => enexStop.current,
       );
       if (r.error) notify(r.error);
+      else if (!r.classes && limited) return;
       else if (!r.classes && !enexStop.current) notify(t('enEmpty'));
       else
         notify(
@@ -257,6 +274,9 @@ export function LibraryPage({
     // The picker takes any file now, so a photo or video is turned away before it's read.
     if (/^(image|video|audio)\//.test(file.type)) return notify(t('importBad'));
     let raw: unknown[];
+    // A whole-library backup is the coach's own classes moving over. A single
+    // class (a class file, one class's backup) may be someone else's.
+    let moving = false;
     try {
       const text = await file.text();
       if (looksLikeEnex(text)) return void (await importEvernote(text));
@@ -277,17 +297,18 @@ export function LibraryPage({
         if (!backup) {
           const result = parsed ? planFromJson(parsed) : readAiReply(text);
           if ('plan' in result) {
-            open(result.plan);
+            if (!open(result.plan)) return;
             notify(result.skipped ? t('aiBuiltSkipped', { n: result.skipped }) : t('aiBuilt'));
             return;
           }
         }
+        moving = Array.isArray(parsed);
         raw = Array.isArray(parsed) ? parsed : parsed ? [parsed] : [];
       }
     } catch {
       raw = [];
     }
-    if (!(await importBackup(raw))) notify(t('importBad'));
+    if ((await importBackup(raw, moving)) === 'none') notify(t('importBad'));
   };
 
   const exportAll = async () => {
@@ -367,6 +388,7 @@ export function LibraryPage({
                 placeholder={t('pasteHere')}
                 aria-label={t('pasteHere')}
                 onChange={(e) => {
+                  if (takeUnlockFrom(e.target.value)) notify(t('unlockCarried'));
                   const raw = readBackup(e.target.value);
                   if (raw) void pasteClasses(raw);
                   else notify(t('pasteNothing'));
@@ -460,8 +482,7 @@ export function LibraryPage({
                     aria-label={t('duplicate')}
                     title={t('duplicate')}
                     onClick={() => {
-                      api.upsert(duplicatePlan(p));
-                      notify(t('planDuplicated'));
+                      if (api.upsert(duplicatePlan(p))) notify(t('planDuplicated'));
                     }}
                   >
                     <Copy size={16} />
@@ -489,6 +510,15 @@ export function LibraryPage({
           <strong>{t('iosKeepTitle')}</strong> {t('iosKeep')}{' '}
           <button type="button" className="link" onClick={onInstall}>
             {t('installShowMe')}
+          </button>
+        </div>
+      )}
+
+      {!unlocked && (
+        <div className="subpanel free-note">
+          <span>{left > 0 ? t('freeLeft', { n: left, total: FREE_CLASSES }) : t('freeUsed', { total: FREE_CLASSES })}</span>{' '}
+          <button type="button" className="link" onClick={onUnlock}>
+            {t('unlockLink')}
           </button>
         </div>
       )}
@@ -554,7 +584,7 @@ export function LibraryPage({
             setPickerOpen(true);
           }}
           onPlan={(plan, skipped) => {
-            open(plan);
+            if (!open(plan)) return;
             notify(skipped ? t('aiBuiltSkipped', { n: skipped }) : t('aiBuilt'));
           }}
           onClasses={(raw) => {

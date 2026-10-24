@@ -7,6 +7,7 @@ The one-page site for pranchetabjj.com. Plain HTML, no build step. The app itsel
 At the bottom of `index.html`, set:
 
 - `CHECKOUT_URL`: the Lemon Squeezy checkout link. Until it's set, the buy buttons scroll to the price.
+- `APP_URL`: the app (`https://app.pranchetabjj.com`). The Try it free buttons open it; until it's set, they scroll to the price.
 - `SUPPORT_EMAIL`: the address shown in the footer.
 
 ## Deploy

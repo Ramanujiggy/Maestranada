@@ -9,7 +9,7 @@ Prancheta is a set of plain files (HTML, scripts, icons). Nothing runs on a serv
 | Who | During an outage |
 | --- | --- |
 | A coach who has opened the app before (installed or not) | Keeps working. The app, fonts and icons are cached on the device, so it opens and saves offline. They just don't get updates until the host is back. |
-| A new buyer opening the receipt link | Sees an error page. This is the real risk: they paid and got nothing. |
+| A new coach trying it, or a buyer opening the receipt link | Sees an error page. A buyer who already has the app can still paste their key later, but checking it needs Cloudflare (or Netlify) and Lemon Squeezy to be up. |
 | Someone visiting the sales page | Sees an error page, so no sales during the outage. |
 
 ## The rule that matters most: own the address
@@ -61,6 +61,7 @@ In Cloudflare DNS, change the `app` and root records to CNAMEs pointing at the N
 
 - `app/public/_headers`: cache rules for Cloudflare Pages and Netlify. The page and service worker are always rechecked, so updates reach buyers.
 - `app/public/serve.json`: the same rules for Railway.
-- `netlify.toml`, `site/netlify.toml`: Netlify build settings.
+- `netlify.toml`, `site/netlify.toml`: Netlify build settings. The app's `netlify.toml` also passes license checks on to Lemon Squeezy.
+- `functions/api/license.js`: the same license pass-through on Cloudflare Pages (Railway has none; the app then asks Lemon Squeezy directly).
 - `railway.toml`, `site/railway.toml`, root `package.json`: Railway.
 - `.node-version`: Node 22 for every host's build.
