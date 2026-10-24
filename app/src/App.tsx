@@ -8,7 +8,7 @@ import { Toast } from './components/feedback.tsx';
 import { Welcome } from './components/Welcome.tsx';
 import { InstallGuide } from './components/InstallGuide.tsx';
 import { UnlockSheet } from './components/UnlockSheet.tsx';
-import { freeLeft } from './lib/access.ts';
+import { freeLeft, paidSession } from './lib/access.ts';
 import { canInstall, installNudgeDue, markInstallNudged, useInstall } from './lib/pwa.ts';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { usePendingFile } from './lib/files.ts';
@@ -62,8 +62,21 @@ export default function App() {
 
 function Screens() {
   const route = useRoute();
-  // The unlock sheet: 'limit' when a new class was turned down, 'open' from the class list.
-  const [unlock, setUnlock] = useState<'limit' | 'open' | null>(null);
+  // Back from paying: Stripe adds the checkout's id to the address. It's
+  // checked once in the unlock sheet and taken off the address straight away,
+  // so it isn't left in a bookmark or the Home Screen icon.
+  const [session] = useState(() => {
+    const id = paidSession(location.search);
+    if (id) {
+      const url = new URL(location.href);
+      url.searchParams.delete('paid');
+      history.replaceState(history.state, '', url);
+    }
+    return id ?? undefined;
+  });
+  // The unlock sheet: 'paid' back from paying, 'limit' when a new class was
+  // turned down, 'open' from the class list.
+  const [unlock, setUnlock] = useState<'paid' | 'limit' | 'open' | null>(session ? 'paid' : null);
   const onLimit = useCallback(() => setUnlock('limit'), []);
   const closeUnlock = useCallback(() => setUnlock(null), []);
   const api = usePlans(onLimit);
@@ -176,7 +189,13 @@ function Screens() {
           }}
         />
       )}
-      {unlock && <UnlockSheet limitHit={unlock === 'limit' || freeLeft(api.plans) === 0} onClose={closeUnlock} />}
+      {unlock && (
+        <UnlockSheet
+          limitHit={unlock === 'limit' || (unlock === 'open' && freeLeft(api.plans) === 0)}
+          session={unlock === 'paid' ? session : undefined}
+          onClose={closeUnlock}
+        />
+      )}
       {installOpen && <InstallGuide install={install} hasPlans={ownWork} onCarry={carry} onClose={closeInstall} />}
     </>
   );

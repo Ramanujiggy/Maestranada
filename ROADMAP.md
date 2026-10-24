@@ -6,14 +6,14 @@ Updated 2026-10-21. The product is built. What stands between it and the first s
 
 1. **Settle the address before anyone uses the app for real.** `pranchetabjj.com` is bought (2026-10-24); move the app to `app.pranchetabjj.com` before the first sale. A web app's saved classes belong to its address, so anything saved on the Railway test URL stays behind when the address changes. Host the app and site on Cloudflare Pages with a Netlify spare instead of Railway, which went down on 2026-10-20, 10-21, 10-22 and 10-24 ([HOSTING.md](HOSTING.md)). A buyer who opens the receipt link during an outage asks for a refund.
 2. **One iPhone test pass of everything since PR #8.** None of these has run on a real iPhone yet: making a clip, the class file, Teach mode with the phone locked, the folding editor, flexible blocks, the Rank icon on the home screen, and Plan with AI. Use the checklist below.
-3. **Open the store.** Create the Lemon Squeezy store and the $10 product, turn on license keys, set the receipt to give the app link and the key, add `CHECKOUT_URL` and `PRODUCT_ID` to `app/src/lib/access.ts`, add `CHECKOUT_URL`, `APP_URL` and the support email to `site/index.html`, and add privacy, terms and refund pages. Lemon Squeezy reviews new stores, and those pages are what it looks for.
+3. **Open the store.** Set up the $10 Stripe payment link (Managed Payments) with the redirect back to the app, add the `STRIPE_KEY` secret to the `prancheta` Worker (README → Stripe setup), add `CHECKOUT_URL` to `app/src/lib/access.ts`, add `CHECKOUT_URL`, `APP_URL` and the support email to `site/index.html`, and add privacy, terms and refund pages. Lemon Squeezy reviews new stores, and those pages are what it looks for.
 
 ## Shipped (PRs #1 to #16, all merged)
 
 | Area | What's in | PRs |
 | --- | --- | --- |
 | Class prep | Plan, time, teach with a round timer, print a sheet | #1 |
-| Product | Installable offline app, 3 classes free, then $10 once with a license key; no accounts | #3, #4 |
+| Product | Installable offline app, 3 classes free, then $10 once through Stripe, unlocked by the payment or the buyer's email; no accounts | #3, #4 |
 | Look | Clipboard style, night theme that follows the phone | #5 |
 | Clips | Short videos made on the phone, a self-contained class file you can send | #6, #10 |
 | Sturdiness | Phone sheets, safe saving, a timer that survives a locked phone | #8 |
@@ -32,8 +32,8 @@ Updated 2026-10-21. The product is built. What stands between it and the first s
 
 - [x] Buy the domain: `pranchetabjj.com` (2026-10-24; `prancheta.app` was taken).
 - [ ] Create Cloudflare and Netlify accounts and connect the repo (steps in [HOSTING.md](HOSTING.md)), and an UptimeRobot check.
-- [ ] Open the Lemon Squeezy store, create the $10 product with license keys on, confirm the 30-day refund.
-- [ ] Buy it once yourself and unlock the app with the key, on Safari and the Home Screen app.
+- [ ] Stripe: Managed Payments on, $10 payment link redirecting to the app, `STRIPE_KEY` secret on the Worker, confirm the 30-day refund.
+- [ ] Buy it once yourself: the app should unlock on return, and the Home Screen app with your email.
 - [ ] Set up the support inbox (`help@pranchetabjj.com` is on the page now).
 - [ ] Send the founder line: name, belt, gym, years teaching.
 - [ ] Confirm "Luta" for the rolling block in Portuguese (it replaced "Rola" in #14).
@@ -64,7 +64,7 @@ Updated 2026-10-21. The product is built. What stands between it and the first s
 
 - Soft launch to Robert's own gym and 10 to 20 coaches he knows. Watch for install trouble and refunds.
 - Then the launch posts in the Launch Kit (Instagram, Reddit, BJJ forums, Brazilian groups).
-- Measure: sales and refunds in Lemon Squeezy. If page traffic is wanted, add a cookie-free counter to the sales page only, so "nothing is collected" stays true for the app.
+- Measure: sales and refunds in Stripe. If page traffic is wanted, add a cookie-free counter to the sales page only, so "nothing is collected" stays true for the app.
 
 ## Phase 3: after launch, driven by what coaches ask for
 

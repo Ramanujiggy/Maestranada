@@ -4,9 +4,3 @@
 command = "npm run build"
 publish = "app/dist"
 
-# License checks go to Lemon Squeezy from the app's own address (see app/src/lib/access.ts).
-[[redirects]]
-from = "/api/license"
-to = "https://api.lemonsqueezy.com/v1/licenses/validate"
-status = 200
-force = true

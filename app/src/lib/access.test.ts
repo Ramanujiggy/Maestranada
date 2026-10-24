@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { FREE_CLASSES, freeLeft, getUnlock, isUnlocked, judgeKey, recordMade, roomFor, saveUnlock, takeCarriedUnlock } from './access.ts';
+import { checkPurchase, FREE_CLASSES, freeLeft, getUnlock, isUnlocked, paidSession, recordMade, roomFor, saveUnlock, takeCarriedUnlock } from './access.ts';
+import { isPaid, unlockRoute } from '../../../worker/unlock.js';
 import { blankPlan, duplicatePlan, normalizePlan, samplePlan, type ClassPlan } from './plan.ts';
 import { copyClasses, readBackup, takeUnlockFrom } from './carry.ts';
 
@@ -57,17 +58,73 @@ describe('free classes', () => {
   it('lets everything in once unlocked', () => {
     const plans = [own(), own(), own()];
     recordMade(plans);
-    saveUnlock({ key: 'ABC', at: '' });
+    saveUnlock({ via: 'paid', at: '' });
     expect(roomFor(plans, [own(), own()])).toBe(true);
   });
 });
 
-describe('judgeKey', () => {
-  it('takes a valid key and turns down the rest', () => {
-    expect(judgeKey({ valid: true, license_key: { status: 'inactive' }, meta: { product_id: 1 } })).toBe('ok');
-    expect(judgeKey({ valid: false, error: 'license_key not found.' })).toBe('bad');
-    expect(judgeKey({ valid: true, license_key: { status: 'disabled' } })).toBe('bad');
-    expect(judgeKey(null)).toBe('bad');
+describe('paidSession', () => {
+  it('reads the checkout id Stripe sends back, and nothing else', () => {
+    expect(paidSession('?paid=cs_live_a1B2c3')).toBe('cs_live_a1B2c3');
+    expect(paidSession('?paid={CHECKOUT_SESSION_ID}')).toBeNull();
+    expect(paidSession('?paste')).toBeNull();
+  });
+});
+
+describe('checkPurchase', () => {
+  const answer = (body: unknown, type = 'application/json') =>
+    Object.assign(globalThis, { fetch: async () => new Response(JSON.stringify(body), { headers: { 'content-type': type } }) });
+
+  it('says ok or bad from the Worker, and offline when there is no Worker', async () => {
+    answer({ ok: true });
+    expect(await checkPurchase({ session: 'cs_test_1' })).toBe('ok');
+    answer({ ok: false });
+    expect(await checkPurchase({ email: 'a@b.co' })).toBe('bad');
+    answer({ error: 'check failed' });
+    expect(await checkPurchase({ email: 'a@b.co' })).toBe('offline');
+    answer('<html>', 'text/html');
+    expect(await checkPurchase({ email: 'a@b.co' })).toBe('offline');
+  });
+});
+
+describe('the Worker unlock check', () => {
+  const env = { STRIPE_KEY: 'rk_test_x', PAYMENT_LINK: 'plink_1' };
+  const paid = { status: 'complete', payment_status: 'paid', payment_link: 'plink_1' };
+  const stripe = (routes: Record<string, unknown>) => {
+    const asked: string[] = [];
+    const impl = (async (url: string) => {
+      asked.push(url);
+      const hit = Object.entries(routes).find(([k]) => url.includes(k));
+      return hit ? new Response(JSON.stringify(hit[1])) : new Response('{}', { status: 404 });
+    }) as unknown as typeof fetch;
+    return { impl, asked };
+  };
+
+  it('takes a paid checkout from the payment link', async () => {
+    const { impl } = stripe({ '/checkout/sessions/cs_live_ok': paid, '/checkout/sessions/cs_live_other': { ...paid, payment_link: 'plink_2' } });
+    expect(await isPaid({ session: 'cs_live_ok' }, env, impl)).toBe(true);
+    expect(await isPaid({ session: 'cs_live_other' }, env, impl)).toBe(false);
+    expect(await isPaid({ session: 'cs_live_missing' }, env, impl)).toBe(false);
+    expect(await isPaid({ session: '../customers' }, env, impl)).toBe(false);
+  });
+
+  it('turns down a checkout that is not paid', async () => {
+    const { impl } = stripe({ '/checkout/sessions/cs_live_open': { ...paid, payment_status: 'unpaid' } });
+    expect(await isPaid({ session: 'cs_live_open' }, env, impl)).toBe(false);
+  });
+
+  it('finds a purchase by email, as typed or in lower case', async () => {
+    const { impl, asked } = stripe({ 'email%5D=coach%40gym.com': { data: [paid] } });
+    expect(await isPaid({ email: ' Coach@Gym.com ' }, env, impl)).toBe(true);
+    expect(asked[0]).toContain('payment_link=plink_1');
+    expect(await isPaid({ email: 'not an email' }, env, impl)).toBe(false);
+  });
+
+  it('answers without ok when Stripe or the secret fails, so the app says try again', async () => {
+    const post = (body: unknown) => new Request('https://x/api/unlock', { method: 'POST', body: JSON.stringify(body) });
+    const res = await unlockRoute(post({ email: 'a@b.co' }), {});
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({ error: 'check failed' });
   });
 });
 
@@ -79,7 +136,7 @@ describe('carrying the unlock', () => {
     expect(readBackup(text)).toHaveLength(2);
     expect(takeUnlockFrom(text)).toBe(true);
     expect(isUnlocked()).toBe(true);
-    expect(getUnlock()?.key).toBeUndefined();
+    expect(getUnlock()?.via).toBe('carried');
   });
 
   it('ignores copied text without the mark', () => {
@@ -88,12 +145,12 @@ describe('carrying the unlock', () => {
     expect(isUnlocked()).toBe(false);
   });
 
-  it('never puts the key in copied classes', async () => {
-    saveUnlock({ key: 'SECRET-KEY', at: '' });
+  it('puts only a mark in copied classes, nothing about the purchase', async () => {
+    saveUnlock({ via: 'paid', at: '' });
     let copied = '';
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (s: string) => void (copied = s) } });
     expect(await copyClasses([own()])).toBe(true);
-    expect(copied).not.toContain('SECRET-KEY');
+    expect(copied).not.toContain('"via"');
     expect(JSON.parse(copied).unlocked).toBe(true);
   });
 });

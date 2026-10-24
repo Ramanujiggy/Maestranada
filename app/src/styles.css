@@ -3469,8 +3469,6 @@ html:has(.backdrop) body {
 }
 
 .unlock-row .input {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 14px;
   min-width: 0;
 }
 

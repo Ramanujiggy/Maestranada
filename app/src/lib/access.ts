@@ -1,29 +1,28 @@
 // The free version and the unlock. Every coach can make three classes for
 // free; after that, a new class asks for the $10 unlock. Classes already made
-// always open, teach and print. There are no accounts: Lemon Squeezy issues a
-// license key, the app checks it once while online and remembers it here, and
-// from then on it works offline for good. Someone determined can get around
-// this by clearing storage. At $10 that's fine.
+// always open, teach and print. There are no accounts: the coach pays through a
+// Stripe payment link, which sends them back here with the checkout's id. The
+// app asks Stripe once, through the app's own Worker, whether it was paid,
+// remembers the answer here and works offline from then on. On another copy
+// of the app, the email they paid with does the same. Someone determined can
+// get around this by editing storage. At $10 that's fine.
 
 import { useSyncExternalStore } from 'react';
 import type { ClassPlan } from './plan.ts';
 
 export const FREE_CLASSES = 3;
 
-/** The Lemon Squeezy checkout link. Until it's set, the unlock sheet only takes a key. */
+/** The Stripe payment link. Until it's set, the unlock sheet only offers "Already bought it?". */
 export const CHECKOUT_URL = '';
-/** The Lemon Squeezy product id. When set, keys for any other product are turned down. */
-export const PRODUCT_ID = 0;
 
 const MADE_KEY = 'maestranada.made';
 const UNLOCK_KEY = 'maestranada.unlock';
-const LS_VALIDATE = 'https://api.lemonsqueezy.com/v1/licenses/validate';
+/** The Worker route that asks Stripe (worker/index.js). */
+const CHECK_URL = '/api/unlock';
 
 export interface Unlock {
-  /** The license key, kept on this device only. Never copied, backed up or sent anywhere but the check. */
-  key?: string;
-  /** Unlocked by pasting classes from an unlocked copy, which brings a mark, not the key. */
-  carried?: true;
+  /** 'paid': Stripe confirmed a purchase. 'carried': pasted from an unlocked copy. */
+  via: 'paid' | 'carried';
   /** When it was unlocked. */
   at: string;
 }
@@ -105,9 +104,8 @@ function readUnlock(raw: string | null): Unlock | null {
   try {
     const u: unknown = raw === null ? null : JSON.parse(raw);
     if (!u || typeof u !== 'object') return null;
-    const { key, carried, at } = u as Unlock;
-    if (typeof key === 'string' && key.trim()) return { key: key.trim(), at: String(at ?? '') };
-    if (carried === true) return { carried: true, at: String(at ?? '') };
+    const { via, at } = u as Unlock;
+    if (via === 'paid' || via === 'carried') return { via, at: String(at ?? '') };
   } catch {
     // Not an unlock.
   }
@@ -137,12 +135,12 @@ export function saveUnlock(u: Unlock): void {
 
 /**
  * Unlocks this copy when classes pasted from an unlocked copy say so (see
- * carry.ts). Only a mark travels, never the key, so copied classes that end
- * up in a group chat or an AI chat don't give the key away.
+ * carry.ts). Only a mark travels: nothing about the purchase (no checkout id,
+ * no email) is ever in copied classes, backups or exports.
  */
 export function takeCarriedUnlock(mark: unknown): boolean {
   if (mark !== true || isUnlocked()) return false;
-  saveUnlock({ carried: true, at: new Date().toISOString() });
+  saveUnlock({ via: 'carried', at: new Date().toISOString() });
   return true;
 }
 
@@ -160,48 +158,39 @@ export function useUnlocked(): boolean {
   return useSyncExternalStore(subscribe, isUnlocked, () => false);
 }
 
-// ---- Checking a key ----
+// ---- Checking a purchase ----
 
-export type KeyCheck = 'ok' | 'bad' | 'offline';
+export type PurchaseCheck = 'ok' | 'bad' | 'offline';
 
-/** What Lemon Squeezy's answer says about the key. */
-export function judgeKey(data: unknown): Exclude<KeyCheck, 'offline'> {
-  const d = data as { valid?: unknown; license_key?: { status?: unknown }; meta?: { product_id?: unknown } } | null;
-  if (!d || d.valid !== true) return 'bad';
-  const status = d.license_key?.status;
-  if (status === 'disabled' || status === 'expired') return 'bad';
-  if (PRODUCT_ID && Number(d.meta?.product_id) !== PRODUCT_ID) return 'bad';
-  return 'ok';
+/** What the app's checkout id or email asks Stripe about. */
+export type Proof = { session: string } | { email: string };
+
+/** The checkout id Stripe sends the coach back with (`?paid=cs_...`), if any. */
+export function paidSession(search: string): string | null {
+  const id = new URLSearchParams(search).get('paid');
+  return id && /^cs_[A-Za-z0-9_]+$/.test(id) ? id : null;
 }
 
-/**
- * Asks Lemon Squeezy whether the key is real. The app's own address passes the
- * question on first (a tiny function on Cloudflare Pages, a proxy rule on
- * Netlify), since browsers may not be let through to Lemon Squeezy directly;
- * where neither exists, it asks Lemon Squeezy straight.
- */
-export async function checkKey(key: string): Promise<KeyCheck> {
-  const body = new URLSearchParams({ license_key: key.trim() });
-  for (const url of ['/api/license', LS_VALIDATE]) {
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
-        body,
-      });
-      if (!(res.headers.get('content-type') ?? '').includes('json')) continue;
-      const data: unknown = await res.json();
-      if (data && typeof data === 'object' && 'valid' in data) return judgeKey(data);
-    } catch {
-      // Not reachable this way. Try the next.
-    }
+/** Asks the app's Worker whether Stripe has a paid purchase for this checkout or email. */
+export async function checkPurchase(proof: Proof): Promise<PurchaseCheck> {
+  try {
+    const res = await fetch(CHECK_URL, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(proof),
+    });
+    if (!(res.headers.get('content-type') ?? '').includes('json')) return 'offline';
+    const data = (await res.json()) as { ok?: unknown } | null;
+    if (data && typeof data.ok === 'boolean') return data.ok ? 'ok' : 'bad';
+  } catch {
+    // No connection, or no Worker behind this address.
   }
   return 'offline';
 }
 
-/** Checks the key and, when it's good, unlocks this copy of the app. */
-export async function unlockWith(key: string): Promise<KeyCheck> {
-  const result = await checkKey(key);
-  if (result === 'ok') saveUnlock({ key: key.trim(), at: new Date().toISOString() });
+/** Checks the purchase and, when Stripe says it was paid, unlocks this copy of the app. */
+export async function unlockWith(proof: Proof): Promise<PurchaseCheck> {
+  const result = await checkPurchase(proof);
+  if (result === 'ok') saveUnlock({ via: 'paid', at: new Date().toISOString() });
   return result;
 }

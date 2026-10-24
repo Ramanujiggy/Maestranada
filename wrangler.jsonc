@@ -1,0 +1,16 @@
+// Cloudflare Workers deploy for the app: build with `npm run build`, then serve app/dist.
+// "name" must match the Worker's name in the Cloudflare dashboard.
+// The Worker script only runs for /api/* (the unlock check); everything else is served
+// straight from app/dist. Secrets (set in the dashboard, never in this file): STRIPE_KEY.
+// Optional variable: PAYMENT_LINK, the plink_ id of the $10 payment link.
+{
+  "name": "prancheta",
+  "compatibility_date": "2026-10-01",
+  "main": "./worker/index.js",
+  "assets": {
+    "directory": "./app/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  }
+}

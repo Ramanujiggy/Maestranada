@@ -293,7 +293,7 @@ roll 5x5</div>
             <a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a>
             <a class="cta-alt try" href="#buy" data-i18n="tryFirst">Try it free first</a>
           </div>
-          <p class="fine" data-i18n="priceFine">Secure checkout by Lemon Squeezy. Your unlock key arrives right away: paste it into the app once. Full refund within 30 days.</p>
+          <p class="fine" data-i18n="priceFine">Secure checkout by Stripe. After paying you land back in the app, unlocked. Full refund within 30 days.</p>
         </div>
       </div>
     </section>
@@ -305,7 +305,7 @@ roll 5x5</div>
         <div class="faq">
           <details><summary data-i18n="q0">Can I try it first?</summary><p data-i18n="q0a">Yes. Open the app and make 3 classes free, with everything in: AI planning, clips, Teach mode, printing. To make more, unlock it for $10 once. The classes you made stay yours either way.</p></details>
           <details><summary data-i18n="q1">Is it a subscription?</summary><p data-i18n="q1a">No. You pay $10 once and keep it, updates included.</p></details>
-          <details><summary data-i18n="q2">Do I need an account?</summary><p data-i18n="q2a">No. Open the app and start. When you buy, you paste the key from your receipt once, and that's it.</p></details>
+          <details><summary data-i18n="q2">Do I need an account?</summary><p data-i18n="q2a">No. Open the app and start. When you buy, the app unlocks as soon as you're back from checkout. On another device, enter the email you paid with.</p></details>
           <details><summary data-i18n="q3">Which devices does it work on?</summary><p data-i18n="q3a">iPhone, iPad, Android, Mac, Windows and Chromebook. One purchase covers all of yours.</p></details>
           <details><summary data-i18n="q4">How do I install it?</summary><p data-i18n="q4a">Open the app. On iPhone or iPad, tap Share, then Add to Home Screen. On Android, Chrome or Edge, tap Install app. From then on it opens like any other app.</p></details>
           <details><summary data-i18n="q5">Does it work without signal?</summary><p data-i18n="q5a">Yes, once it's installed.</p></details>
@@ -328,7 +328,7 @@ roll 5x5</div>
 
     <script>
       // The things to change before launch.
-      const CHECKOUT_URL = ''; // Lemon Squeezy checkout link, e.g. https://prancheta.lemonsqueezy.com/buy/...
+      const CHECKOUT_URL = ''; // Stripe payment link, e.g. https://buy.stripe.com/...
       const APP_URL = 'https://app.pranchetabjj.com'; // The app
       const SUPPORT_EMAIL = 'help@pranchetabjj.com';
 
@@ -429,7 +429,7 @@ luta 5x5`,
         priceEyebrow: 'Preço',
         amount: 'US$10<small>uma vez</small>',
         priceLead: 'Suas 3 primeiras aulas são grátis. Depois, US$10 libera quantas você quiser, com todas as atualizações incluídas. Menos que um instrucional. Menos que um mês de sistema de academia.',
-        priceFine: 'Pagamento seguro pela Lemon Squeezy, cobrado em dólar no cartão. A chave de desbloqueio chega na hora: cole no app uma vez. Reembolso integral em até 30 dias.',
+        priceFine: 'Pagamento seguro pela Stripe. Depois de pagar, você volta para o app já desbloqueado. Reembolso integral em até 30 dias.',
         faqEyebrow: 'Dúvidas',
         faqTitle: 'Bom saber',
         q0: 'Posso testar antes?',
@@ -437,7 +437,7 @@ luta 5x5`,
         q1: 'É assinatura?',
         q1a: 'Não. Você paga US$10 uma vez e é seu, com as atualizações incluídas.',
         q2: 'Preciso fazer cadastro?',
-        q2a: 'Não. Abra o app e comece. Quando comprar, cole a chave do recibo uma vez e pronto.',
+        q2a: 'Não. Abra o app e comece. Quando comprar, o app desbloqueia assim que você volta do pagamento. Em outro aparelho, coloque o e-mail que usou para pagar.',
         q3: 'Em quais aparelhos funciona?',
         q3a: 'iPhone, iPad, Android, Mac, Windows e Chromebook. Uma compra vale para todos os seus.',
         q4: 'Como eu instalo?',

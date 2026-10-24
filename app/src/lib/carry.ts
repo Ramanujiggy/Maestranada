@@ -11,7 +11,7 @@ const CARRIED_KEY = 'maestranada.carryDone';
 
 /**
  * Everything the coach has, clips included, as backup JSON. Once the app is
- * unlocked, a mark saying so comes along (never the license key), so the copy
+ * unlocked, a mark saying so comes along (nothing about the purchase), so the copy
  * it's pasted into is unlocked as well.
  */
 async function carryText(plans: ClassPlan[]): Promise<string> {
