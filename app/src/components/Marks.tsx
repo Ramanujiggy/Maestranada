@@ -6,8 +6,8 @@
 export function RankMark({ height = 22 }: { height?: number }) {
   return (
     <svg className="rank-mark" width={height * 1.5} height={height} viewBox="0 0 60 40" aria-hidden>
-      <rect x="0" y="4" width="60" height="32" rx="6" className="belt" />
-      <rect x="32" y="4" width="15" height="32" className="bar" />
+      <rect x="0.75" y="4.75" width="58.5" height="30.5" rx="5.5" className="belt" />
+      <rect x="32" y="5.5" width="15" height="29" className="bar" />
     </svg>
   );
 }
