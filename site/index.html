@@ -173,7 +173,7 @@
             <button type="button" data-lang="en" aria-pressed="true" lang="en">EN</button>
             <button type="button" data-lang="pt" aria-pressed="false" lang="pt-BR">PT</button>
           </div>
-          <a class="link-quiet" href="#buy" data-i18n="getIt">$10 · Get it</a>
+          <a class="link-quiet try" href="#buy" data-i18n="getIt">Try it free</a>
         </div>
       </header>
 
@@ -181,8 +181,8 @@
         <p class="eyebrow" data-i18n="heroEyebrow">Class prep for Jiu-Jitsu coaches</p>
         <h1 data-i18n="heroTitle">Plan your class in minutes and teach it from your phone.</h1>
         <p class="lead" data-i18n="heroLead">You already know what you want to teach. Prancheta puts it in a clear class format, with times, rounds and short clips of the moves, and you run it on the mat with a round timer.</p>
-        <a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a>
-        <p class="fine" data-i18n="heroFine">$10 once. No subscription, no account. Works offline.</p>
+        <a class="btn try" href="#buy" data-i18n="try">Try it free</a>
+        <p class="fine" data-i18n="heroFine">Your first 3 classes are free, no card. Then $10 once. No subscription, no account. Works offline.</p>
       </div>
     </div>
 
@@ -287,11 +287,11 @@ roll 5x5</div>
       <div class="wrap price">
         <div>
           <div class="amount" data-i18n="amount">$10<small>once</small></div>
-          <p class="lead" data-i18n="priceLead">Updates included. Your app link arrives right after checkout. Made by a working Jiu-Jitsu coach, around the class format they teach every week.</p>
+          <p class="lead" data-i18n="priceLead">Your first 3 classes are free. After that, $10 unlocks as many as you want, updates included. Made by a working Jiu-Jitsu coach, around the class format they teach every week.</p>
         </div>
         <div>
-          <a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a>
-          <p class="fine" data-i18n="priceFine">Secure checkout by Lemon Squeezy. Full refund within 30 days.</p>
+          <div class="buy-slot"><a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a></div>
+          <p class="fine" data-i18n="priceFine">Secure checkout by Stripe. After paying you land back in the app, unlocked. Full refund within 30 days.</p>
         </div>
       </div>
     </section>
@@ -301,9 +301,9 @@ roll 5x5</div>
         <h2 data-i18n="faqTitle">Questions</h2>
         <div class="faq">
           <details><summary data-i18n="q1">Is it a subscription?</summary><p data-i18n="q1a">No. You pay $10 once and keep it, updates included.</p></details>
-          <details><summary data-i18n="q2">Do I need an account?</summary><p data-i18n="q2a">No. You pay, you get the link, it works.</p></details>
-          <details><summary data-i18n="q3">What does it run on?</summary><p data-i18n="q3a">iPhone, iPad, Android, Mac, Windows and Chromebook, one purchase for all of them. Open your link and add it to your home screen (on iPhone, tap Share, then Add to Home Screen). After that it works without signal. It isn't in the App Store yet.</p></details>
-          <details><summary data-i18n="q6">Where are my classes kept?</summary><p data-i18n="q6a">On your device, not on a server. Tap Back up all now and then and keep the file anywhere. On a new phone, open your link and import it.</p></details>
+          <details><summary data-i18n="q2">Do I need an account?</summary><p data-i18n="q2a">No. Open the app and start. When you buy, the app unlocks as soon as you're back from checkout. On another device, tap Unlock and enter the email you paid with.</p></details>
+          <details><summary data-i18n="q3">What does it run on?</summary><p data-i18n="q3a">iPhone, iPad, Android, Mac, Windows and Chromebook, one purchase for all of them. Open the app and add it to your home screen (on iPhone, tap Share, then Add to Home Screen). After that it works without signal. It isn't in the App Store yet.</p></details>
+          <details><summary data-i18n="q6">Where are my classes kept?</summary><p data-i18n="q6a">On your device, not on a server. Tap Back up all now and then and keep the file anywhere. On a new phone, open the app and import it.</p></details>
           <details><summary data-i18n="q11">Does Prancheta send my classes to an AI?</summary><p data-i18n="q11a">No. You copy the class format into your own AI chat and paste the answer back. Prancheta itself never sends your classes anywhere.</p></details>
           <details data-only="pt" hidden><summary data-i18n="q9">Is the app in Portuguese?</summary><p data-i18n="q9a">Yes.</p></details>
           <details><summary data-i18n="q8">What if it isn't for me?</summary><p data-i18n="q8a">Email us within 30 days for a full refund.</p></details>
@@ -320,10 +320,30 @@ roll 5x5</div>
 
     <script>
       // The only two things to change before launch.
-      const CHECKOUT_URL = ''; // Lemon Squeezy checkout link, e.g. https://prancheta.lemonsqueezy.com/buy/...
+      // Stripe buy button (Payment Links → Buy button). The same id and key are in
+      // app/src/lib/access.ts. A pk_test key takes test cards only.
+      const BUY_BUTTON = {
+        id: 'buy_btn_1UVJLxPlmWaVC6nQ9BqQdrhz',
+        publishableKey: 'pk_test_51UTsBpPlmWaVC6nQ5jUpP5gw5zu675TPy3Kmm7bHeV6uO9hFCOV1q9gqVMDgCCk2YAAcSpVgA09ZgcZWUvgesviv00RD4VX9Hn',
+      };
+      const APP_URL = 'https://app.pranchetabjj.com';
       const SUPPORT_EMAIL = 'help@pranchetabjj.com';
 
-      if (CHECKOUT_URL) document.querySelectorAll('a.buy').forEach((a) => (a.href = CHECKOUT_URL));
+      document.querySelectorAll('a.try').forEach((a) => (a.href = APP_URL));
+      // The buy button replaces the plain link once Stripe's script has loaded;
+      // if it can't load, the link stays.
+      if (BUY_BUTTON.id) {
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://js.stripe.com/v3/buy-button.js';
+        script.onload = () => {
+          const button = document.createElement('stripe-buy-button');
+          button.setAttribute('buy-button-id', BUY_BUTTON.id);
+          button.setAttribute('publishable-key', BUY_BUTTON.publishableKey);
+          document.querySelector('.buy-slot').replaceChildren(button);
+        };
+        document.head.appendChild(script);
+      }
       document.querySelectorAll('a.support').forEach((a) => {
         a.href = 'mailto:' + SUPPORT_EMAIL;
         a.textContent = SUPPORT_EMAIL;
@@ -345,12 +365,13 @@ roll 5x5</div>
       const PT = {
         title: 'Prancheta · Planejamento de aula para professores de Jiu-Jitsu',
         desc: 'O app de planejamento de aula para professores de Jiu-Jitsu. Planeje a aula em minutos e dê a aula direto do celular. US$10 uma vez. Funciona offline no celular, tablet e notebook.',
-        getIt: 'US$10 · Comprar',
+        getIt: 'Teste grátis',
+        try: 'Teste grátis',
         heroEyebrow: 'Planejamento de aula para professores de Jiu-Jitsu',
         heroTitle: 'Planeje a aula em minutos e dê a aula direto do celular.',
         heroLead: 'Você já sabe o que quer ensinar. A Prancheta coloca isso num formato de aula claro, com tempos, rounds e clipes curtos das técnicas, e você conduz a aula no tatame com o cronômetro de rounds.',
         buy: 'Quero a Prancheta · US$10',
-        heroFine: 'US$10 uma vez. Sem assinatura, sem cadastro. Funciona offline.',
+        heroFine: 'Suas 3 primeiras aulas são grátis, sem cartão. Depois, US$10 uma vez. Sem assinatura, sem cadastro. Funciona offline.',
         demoEyebrow: 'Do seu app de notas',
         demoTitle: 'A mesma aula, mais fácil de dar.',
         demoLead: 'Aqui está uma aula do jeito que muito professor anota no celular, ao lado da mesma aula na Prancheta. Role as duas e toque num bloco para abrir.',
@@ -385,17 +406,17 @@ luta 5x5`,
         f5: 'Offline e só seu',
         f5d: 'As suas aulas ficam no seu aparelho e funcionam sem sinal. Sem cadastro, e nada é coletado.',
         amount: 'US$10<small>uma vez</small>',
-        priceLead: 'Atualizações incluídas. O link do seu app chega logo depois do pagamento. Feita por um professor de Jiu-Jitsu na ativa, em torno do formato de aula que ensina toda semana.',
-        priceFine: 'Pagamento seguro pela Lemon Squeezy, cobrado em dólar no cartão. Reembolso integral em até 30 dias.',
+        priceLead: 'Suas 3 primeiras aulas são grátis. Depois, US$10 libera quantas você quiser, com as atualizações incluídas. Feita por um professor de Jiu-Jitsu na ativa, em torno do formato de aula que ensina toda semana.',
+        priceFine: 'Pagamento seguro pela Stripe. Depois de pagar, você volta para o app já desbloqueado. Reembolso integral em até 30 dias.',
         faqTitle: 'Dúvidas',
         q1: 'É assinatura?',
         q1a: 'Não. Você paga US$10 uma vez e é seu, com as atualizações incluídas.',
         q2: 'Preciso fazer cadastro?',
-        q2a: 'Não. Você paga, recebe o link e já funciona.',
+        q2a: 'Não. Abra o app e comece. Quando comprar, o app desbloqueia assim que você volta do pagamento. Em outro aparelho, toque em Desbloquear e coloque o e-mail que usou para pagar.',
         q3: 'Em quais aparelhos funciona?',
-        q3a: 'iPhone, iPad, Android, Mac, Windows e Chromebook, uma compra para todos. Abra o seu link e adicione à tela de início (no iPhone, toque em Compartilhar e depois em Adicionar à Tela de Início). Depois disso funciona sem sinal. Ainda não está na App Store.',
+        q3a: 'iPhone, iPad, Android, Mac, Windows e Chromebook, uma compra para todos. Abra o app e adicione à tela de início (no iPhone, toque em Compartilhar e depois em Adicionar à Tela de Início). Depois disso funciona sem sinal. Ainda não está na App Store.',
         q6: 'Onde minhas aulas ficam salvas?',
-        q6a: 'No seu aparelho, não num servidor. Toque em Fazer backup de vez em quando e guarde o arquivo onde quiser. No celular novo, abra seu link e importe.',
+        q6a: 'No seu aparelho, não num servidor. Toque em Fazer backup de vez em quando e guarde o arquivo onde quiser. No celular novo, abra o app e importe.',
         q11: 'A Prancheta manda minhas aulas para uma IA?',
         q11a: 'Não. Você copia o formato da aula para o seu próprio chat de IA e cola a resposta de volta. A Prancheta em si nunca envia as suas aulas para lugar nenhum.',
         q9: 'O app está em português?',

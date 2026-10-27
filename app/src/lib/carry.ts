@@ -5,12 +5,18 @@
 
 import { storedPlan, type ClassPlan } from './plan.ts';
 import { withClipData } from './clips.ts';
+import { isUnlocked, takeCarriedUnlock } from './access.ts';
 
 const CARRIED_KEY = 'maestranada.carryDone';
 
-/** Everything the coach has, clips included, as backup JSON. */
+/**
+ * Everything the coach has, clips included, as backup JSON. Once the app is
+ * unlocked, a mark saying so comes along (nothing about the purchase), so the copy
+ * it's pasted into is unlocked as well.
+ */
 async function carryText(plans: ClassPlan[]): Promise<string> {
-  return JSON.stringify((await withClipData(plans)).map(storedPlan));
+  const classes = (await withClipData(plans)).map(storedPlan);
+  return JSON.stringify(isUnlocked() ? { classes, unlocked: true } : classes);
 }
 
 /**
@@ -42,9 +48,20 @@ export async function copyClasses(plans: ClassPlan[]): Promise<boolean> {
  * class an AI wrote is something else, so this says null for it.
  */
 export function readBackup(text: string | null): unknown[] | null {
+  const parsed = parse(text);
+  const list = parsed && typeof parsed === 'object' && 'classes' in parsed ? (parsed as { classes: unknown }).classes : parsed;
+  return Array.isArray(list) && list.some((p) => p && typeof p === 'object' && 'createdAt' in p) ? list : null;
+}
+
+/** Unlocks this copy when the copied classes came with an unlock. Says whether it did. */
+export function takeUnlockFrom(text: string | null): boolean {
+  const parsed = parse(text);
+  return !!parsed && typeof parsed === 'object' && takeCarriedUnlock((parsed as { unlocked?: unknown }).unlocked);
+}
+
+function parse(text: string | null): unknown {
   try {
-    const parsed: unknown = JSON.parse((text ?? '').trim());
-    return Array.isArray(parsed) && parsed.some((p) => p && typeof p === 'object' && 'createdAt' in p) ? parsed : null;
+    return JSON.parse((text ?? '').trim());
   } catch {
     return null;
   }

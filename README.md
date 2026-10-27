@@ -32,17 +32,27 @@ Plans are saved in the browser's local storage on the device they were made on. 
 
 The app is a Progressive Web App. After the first visit it works with no connection (app, fonts and icons are all cached). On Chrome, Edge and Android it shows an **Install app** button; on iPhone and iPad, use Share → Add to Home Screen. New versions show an **Update** prompt.
 
-## Selling it (pay once, download, it works)
+## Selling it (3 classes free, then $10 once)
 
-There is no free tier, no account and no license key. A buyer pays once and gets the app.
+Anyone can open the app at `https://app.pranchetabjj.com` (never a host's own URL; see [HOSTING.md](HOSTING.md)), install it and make **3 classes free**, with everything in. Making a 4th asks for the $10 unlock. Every new class counts: blank, from a template, a duplicate, one planned or brought in with AI, or a single class file from someone else. Moving the coach's own classes (Paste classes, or restoring a whole-library backup) is never turned down, though those classes still count as made. Deleting a class never gives a free one back, the example class never counts, and every class already made stays open, teachable and printable. There are no accounts.
 
-1. Create a $10 product in Lemon Squeezy.
-2. Set the purchase to deliver the app link (`https://app.pranchetabjj.com`, never a host's own URL; see [HOSTING.md](HOSTING.md)) in the receipt page and email. The same link is the install for every device:
+How the unlock works (`app/src/lib/access.ts`, `worker/`): the coach pays through a Stripe payment link (Managed Payments, so Stripe is the merchant of record and handles tax). Stripe sends them back to the app with the checkout's id (`?paid=cs_...`). The app asks its own Worker, `/api/unlock`, which asks Stripe with a restricted read-only key whether that checkout was paid, and answers only yes or no. The app remembers the yes and works offline from then on. The id is taken off the address straight away.
+
+On another copy of the app (the iPhone Home Screen app, which keeps storage apart from Safari, a new phone, or a new web address), the coach taps Unlock and enters the email they paid with; the Worker looks for a paid checkout with that email. **Copy my classes** also carries the unlock: only a mark saying "unlocked" travels, never the checkout id or the email, so nothing about the purchase is in copied classes, backups, class files or exports.
+
+Someone technical could get around this by editing the app's storage, and anyone who knows a buyer's email could unlock with it. At $10 that's fine; stopping it would need accounts. A refunded checkout still reads as paid; refunds are rare enough to leave.
+
+The check needs the Worker: on the Netlify spare the app says it can't check right now (classes and everything else still work).
+
+### Stripe setup
+
+1. Turn on Managed Payments. Create a $10 one-time product with a software or digital tax category, and a payment link for it with **Enable Managed Payments** ticked.
+2. In the payment link, under **After payment**, choose not to show the confirmation page and redirect to `https://app.pranchetabjj.com/?paid={CHECKOUT_SESSION_ID}`, exactly as written.
+3. Create a restricted key with **Read** on Checkout Sessions and nothing else. In Cloudflare, on the `prancheta` Worker, add it as a secret named `STRIPE_KEY` (Settings → Variables and Secrets). Optionally add a plain variable `PAYMENT_LINK` with the link's `plink_...` id, so other products in the account don't unlock the app.
+4. Create a buy button for that payment link (Payment Links → the link → Buy button) and put its id and publishable key in `BUY_BUTTON` in `app/src/lib/access.ts` and in `site/index.html`. A `pk_test_` key (and a test-mode `STRIPE_KEY`) takes test cards only; swap all three for live ones to sell.
+5. Install works the same for everyone, buyers or not:
    - **Laptop:** Chrome or Edge show an **Install app** button. Safari on a Mac uses File → Add to Dock.
    - **iPhone / iPad:** Share → Add to Home Screen.
    - **Android:** the **Install app** button.
-3. Once installed it opens like any other app and runs offline. Every deploy reaches every buyer as an update.
 
-Plans stay on the buyer's device. Nothing about them is collected; the checkout keeps the buyer's email for the receipt.
-
-The app link itself is not secret: anyone who has it can open the app. At $10 that trade-off keeps delivery simple.
+Plans stay on the coach's device. Nothing about them is collected; Stripe keeps the buyer's email for the receipt, and the unlock check sends only the checkout id or the email the coach types, and gets back yes or no.

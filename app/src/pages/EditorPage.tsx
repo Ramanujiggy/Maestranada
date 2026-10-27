@@ -600,7 +600,7 @@ export function EditorPage({ plan, api, notify }: { plan: ClassPlan; api: PlansA
                   style={{ flex: 1 }}
                   onClick={() => {
                     const copy = duplicatePlan(plan);
-                    api.upsert(copy);
+                    if (!api.upsert(copy)) return;
                     navigate({ name: 'edit', id: copy.id });
                     notify(t('planDuplicated'));
                   }}

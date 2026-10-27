@@ -27,7 +27,8 @@ export interface EnexResult {
 
 export async function importEnex(
   text: string,
-  save: (plan: ClassPlan) => void,
+  /** Stores a class. False when it was turned down (the free classes are used up), which ends the import. */
+  save: (plan: ClassPlan) => boolean,
   onProgress: (p: EnexProgress) => void,
   stopped: () => boolean,
 ): Promise<EnexResult> {
@@ -67,7 +68,7 @@ export async function importEnex(
       result.clips++;
     }
     if (!note.images.length) onProgress({ note: n, notes, title: note.title, clip: 0, clips: 0 });
-    save(noteToPlan(note, clips));
+    if (!save(noteToPlan(note, clips))) return done(result);
     result.classes++;
   }
   return done(result);
