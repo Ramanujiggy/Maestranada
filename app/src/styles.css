@@ -3446,11 +3446,11 @@ html:has(.backdrop) body {
 }
 
 .unlock-buy {
-  display: flex;
-  justify-content: center;
   width: 100%;
   min-height: 52px;
   margin-bottom: 18px;
+  font-size: 17px;
+  text-decoration: none;
 }
 
 .unlock-buy-off {

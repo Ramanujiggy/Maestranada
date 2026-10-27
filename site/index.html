@@ -320,30 +320,13 @@ roll 5x5</div>
 
     <script>
       // The only two things to change before launch.
-      // Stripe buy button (Payment Links → Buy button). The same id and key are in
-      // app/src/lib/access.ts. A pk_test key takes test cards only.
-      const BUY_BUTTON = {
-        id: 'buy_btn_1UVJxMBuehHAvIq3luHmh5Tt',
-        publishableKey: 'pk_live_51UTupZBuehHAvIq3ZKvQKSeLIkL6XCaDDU0Ppu2kaqzug12LIIrmkqYeXrXQ7adnfzMxX33s4bL6ON7zvP7vHRdt00cfSY1EqK',
-      };
+      // The $10 Stripe payment link. The same link is in app/src/lib/access.ts.
+      const CHECKOUT_URL = 'https://buy.stripe.com/28E3cufEv1cCaLc3TT2B201';
       const APP_URL = 'https://app.pranchetabjj.com';
       const SUPPORT_EMAIL = 'help@pranchetabjj.com';
 
       document.querySelectorAll('a.try').forEach((a) => (a.href = APP_URL));
-      // The buy button replaces the plain link once Stripe's script has loaded;
-      // if it can't load, the link stays.
-      if (BUY_BUTTON.id) {
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = 'https://js.stripe.com/v3/buy-button.js';
-        script.onload = () => {
-          const button = document.createElement('stripe-buy-button');
-          button.setAttribute('buy-button-id', BUY_BUTTON.id);
-          button.setAttribute('publishable-key', BUY_BUTTON.publishableKey);
-          document.querySelector('.buy-slot').replaceChildren(button);
-        };
-        document.head.appendChild(script);
-      }
+      document.querySelectorAll('a.buy').forEach((a) => (a.href = CHECKOUT_URL));
       document.querySelectorAll('a.support').forEach((a) => {
         a.href = 'mailto:' + SUPPORT_EMAIL;
         a.textContent = SUPPORT_EMAIL;

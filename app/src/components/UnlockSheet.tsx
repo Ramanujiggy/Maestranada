@@ -1,4 +1,4 @@
-// The unlock: pay once through Stripe's buy button, whose payment link sends the coach
+// The unlock: pay once through the Stripe payment link, which sends the coach
 // back here, and this copy of the app makes classes without limit. Another
 // copy (the Home Screen app, a new phone) unlocks with the email they paid
 // with. It opens by itself when a new class would go past the free ones, when
@@ -6,9 +6,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Check, Mail, X } from 'lucide-react';
-import { BUY_BUTTON, FREE_CLASSES, unlockWith, useUnlocked, type PurchaseCheck } from '../lib/access.ts';
+import { CHECKOUT_URL, FREE_CLASSES, unlockWith, useUnlocked, type PurchaseCheck } from '../lib/access.ts';
 import { isApple } from '../lib/pwa.ts';
-import { BuyButton } from './BuyButton.tsx';
 import { t } from '../lib/i18n.ts';
 
 export function UnlockSheet({
@@ -107,7 +106,15 @@ export function UnlockSheet({
               </p>
             )}
 
-            {BUY_BUTTON.id && !session && <BuyButton />}
+            {CHECKOUT_URL &&
+              !session &&
+              (navigator.onLine ? (
+                <a className="btn btn-primary btn-lg unlock-buy" href={CHECKOUT_URL}>
+                  {t('unlockBuy')}
+                </a>
+              ) : (
+                <p className="muted unlock-buy-off">{t('unlockBuyOffline')}</p>
+              ))}
 
             <form
               className="unlock-key"
@@ -137,7 +144,7 @@ export function UnlockSheet({
                 />
                 <button
                   type="submit"
-                  className={BUY_BUTTON.id && !session ? 'btn btn-secondary' : 'btn btn-primary'}
+                  className={CHECKOUT_URL && !session ? 'btn btn-secondary' : 'btn btn-primary'}
                   disabled={!email.trim() || state === 'checking'}
                 >
                   {state === 'checking' && asked === 'email' ? t('unlockChecking') : t('unlockButton')}
