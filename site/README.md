@@ -6,7 +6,7 @@ The one-page site for pranchetabjj.com. Plain HTML, no build step. The app itsel
 
 At the bottom of `index.html`, set:
 
-- `BUY_BUTTON`: the Stripe buy button's id and publishable key (the same as in `app/src/lib/access.ts`). It replaces the price section's buy link once Stripe's script loads. A `pk_test_` key takes test cards only; swap in the live id and key to sell.
+- `CHECKOUT_URL`: the $10 Stripe payment link (the same as in `app/src/lib/access.ts`). Every `a.buy` button opens it. A `buy.stripe.com/test_` link takes test cards only.
 - `APP_URL`: the app (`https://app.pranchetabjj.com`). The Try it free buttons open it.
 - `SUPPORT_EMAIL`: the address shown in the footer.
 

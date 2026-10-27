@@ -13,15 +13,12 @@ import type { ClassPlan } from './plan.ts';
 export const FREE_CLASSES = 3;
 
 /**
- * The Stripe buy button (Payment Links → Buy button), the same one the sales
- * page shows. Its payment link redirects back here with the checkout's id.
- * A pk_test key takes test cards only; swap in the live id and key to sell.
- * With no id, the unlock sheet only offers "Already bought it?".
+ * The $10 Stripe payment link (Managed Payments), the same one the sales page
+ * opens. After paying, it redirects back here with the checkout's id. A
+ * buy.stripe.com/test_ link takes test cards only. With no link, the unlock
+ * sheet only offers "Already bought it?".
  */
-export const BUY_BUTTON = {
-  id: 'buy_btn_1UVJxMBuehHAvIq3luHmh5Tt',
-  publishableKey: 'pk_live_51UTupZBuehHAvIq3ZKvQKSeLIkL6XCaDDU0Ppu2kaqzug12LIIrmkqYeXrXQ7adnfzMxX33s4bL6ON7zvP7vHRdt00cfSY1EqK',
-};
+export const CHECKOUT_URL = 'https://buy.stripe.com/28E3cufEv1cCaLc3TT2B201';
 
 const MADE_KEY = 'maestranada.made';
 const UNLOCK_KEY = 'maestranada.unlock';
