@@ -19,8 +19,8 @@ export const FREE_CLASSES = 3;
  * With no id, the unlock sheet only offers "Already bought it?".
  */
 export const BUY_BUTTON = {
-  id: 'buy_btn_1UVJLxPlmWaVC6nQ9BqQdrhz',
-  publishableKey: 'pk_test_51UTsBpPlmWaVC6nQ5jUpP5gw5zu675TPy3Kmm7bHeV6uO9hFCOV1q9gqVMDgCCk2YAAcSpVgA09ZgcZWUvgesviv00RD4VX9Hn',
+  id: 'buy_btn_1UVJxMBuehHAvIq3luHmh5Tt',
+  publishableKey: 'pk_live_51UTupZBuehHAvIq3ZKvQKSeLIkL6XCaDDU0Ppu2kaqzug12LIIrmkqYeXrXQ7adnfzMxX33s4bL6ON7zvP7vHRdt00cfSY1EqK',
 };
 
 const MADE_KEY = 'maestranada.made';
