@@ -12,8 +12,16 @@ import type { ClassPlan } from './plan.ts';
 
 export const FREE_CLASSES = 3;
 
-/** The Stripe payment link. Until it's set, the unlock sheet only offers "Already bought it?". */
-export const CHECKOUT_URL = '';
+/**
+ * The Stripe buy button (Payment Links → Buy button), the same one the sales
+ * page shows. Its payment link redirects back here with the checkout's id.
+ * A pk_test key takes test cards only; swap in the live id and key to sell.
+ * With no id, the unlock sheet only offers "Already bought it?".
+ */
+export const BUY_BUTTON = {
+  id: 'buy_btn_1UVJLxPlmWaVC6nQ9BqQdrhz',
+  publishableKey: 'pk_test_51UTsBpPlmWaVC6nQ5jUpP5gw5zu675TPy3Kmm7bHeV6uO9hFCOV1q9gqVMDgCCk2YAAcSpVgA09ZgcZWUvgesviv00RD4VX9Hn',
+};
 
 const MADE_KEY = 'maestranada.made';
 const UNLOCK_KEY = 'maestranada.unlock';

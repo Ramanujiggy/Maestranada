@@ -17,7 +17,11 @@
   --rule: #d9dee6;
   --rule-strong: #b7c1ce;
   --marker: #d42a20;
+  /* The logo is the same black belt and red bar as the app icon in every
+     look; dark looks only add a faint light edge so it doesn't sink. */
   --belt: #0d1117;
+  --belt-bar: #d42a20;
+  --belt-edge: transparent;
   --marker-press: #b3221a;
   --on-marker: #ffffff;
   --rest: #13233b;
@@ -61,7 +65,7 @@
   --rule: #2a3a54;
   --rule-strong: #3e5272;
   --marker: #ff6a5c;
-  --belt: var(--ink);
+  --belt-edge: rgba(238, 242, 247, 0.4);
   --marker-press: #ff8578;
   --on-marker: #0f1a2b;
   --rest: #24467a;
@@ -88,7 +92,7 @@
   --rule: #2a2f37;
   --rule-strong: #3b424a;
   --marker: #ff6a5c;
-  --belt: var(--ink);
+  --belt-edge: rgba(236, 238, 241, 0.4);
   --marker-press: #ff8578;
   --on-marker: #181b22;
   --rest: #3b424a;
@@ -115,7 +119,7 @@
   --rule: #3b2e22;
   --rule-strong: #55432f;
   --marker: #ff6a5c;
-  --belt: var(--ink);
+  --belt-edge: rgba(239, 227, 201, 0.4);
   --marker-press: #ff8578;
   --on-marker: #1d1610;
   --rest: #6a4426;
@@ -141,7 +145,7 @@
   --rule: #2e2e2e;
   --rule-strong: #444444;
   --marker: #ff5b4f;
-  --belt: var(--ink);
+  --belt-edge: rgba(230, 227, 220, 0.4);
   --marker-press: #ff7a70;
   --on-marker: #161616;
   --rest: #3a3a3a;
@@ -228,15 +232,17 @@ a {
   line-height: 1;
 }
 
-/* The logo: belt black by day, light by night, one red bar. */
+/* The logo: the app icon's black belt and red bar in every look. */
 .rank-mark {
   flex: none;
 }
 .rank-mark .belt {
   fill: var(--belt);
+  stroke: var(--belt-edge);
+  stroke-width: 1.5;
 }
 .rank-mark .bar {
-  fill: var(--marker);
+  fill: var(--belt-bar);
 }
 
 .page-title {
@@ -2561,10 +2567,7 @@ html:has(.backdrop) body {
     border-bottom: 2px solid #13233b;
   }
   .print-sheet .ps-head .rank-mark .belt {
-    fill: #0d1117;
-  }
-  .print-sheet .ps-head .rank-mark .bar {
-    fill: #d42a20;
+    stroke: none;
   }
   .print-sheet h1 {
     font-family: var(--font-head);
@@ -3446,7 +3449,13 @@ html:has(.backdrop) body {
   display: flex;
   justify-content: center;
   width: 100%;
+  min-height: 52px;
   margin-bottom: 18px;
+}
+
+.unlock-buy-off {
+  margin: 0 0 18px;
+  font-size: 14px;
 }
 
 .unlock-key {
