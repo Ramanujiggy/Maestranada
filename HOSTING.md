@@ -38,16 +38,16 @@ Any product that is plain files (a PWA, a landing page) can follow this exactly:
 
 ## Setup steps
 
-### Cloudflare Pages (primary)
+### Cloudflare Workers (primary, as set up 2026-10-28)
 
-Create two Pages projects from the GitHub repo (Workers & Pages → Create → Pages → Connect to Git):
+Both are Workers built from **`Ramanujiggy/Maestranada`**, branch `main` (Workers & Pages → the Worker → Settings → Build). Not the `Prancheta` repo, which is an old copy.
 
-| Project | Root directory | Build command | Output directory |
-| --- | --- | --- | --- |
-| App | *(empty)* | `npm run build` | `app/dist` |
-| Sales page | `site` | *(empty)* | `.` |
+| Worker | Domain | Root directory | Build command | Deploy command |
+| --- | --- | --- | --- | --- |
+| `prancheta` (app) | `app.pranchetabjj.com` | *(empty)* | *(empty; `wrangler.jsonc` builds the app)* | `npx wrangler deploy` |
+| `prancheta-site` (sales page) | `pranchetabjj.com` | `site` | *(empty)* | `npx wrangler deploy` |
 
-Then add custom domains: `app.pranchetabjj.com` on the app project, `pranchetabjj.com` on the sales page project. Because the domain is on Cloudflare, it sets the DNS records for you.
+The `STRIPE_KEY` secret goes on `prancheta` only. To check it, open `https://app.pranchetabjj.com/api/unlock` in a private window: it should say `ok (live key)`.
 
 ### Netlify (spare)
 
