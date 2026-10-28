@@ -6,7 +6,7 @@
 // Variables (set in the dashboard): PAYMENT_LINK, the plink_ id of the $10 payment link,
 // and the AI_* ones listed in AI.md.
 {
-  "name": "prancheta",
+  "name": "prancheta-app",
   "compatibility_date": "2026-10-01",
   "main": "./worker/index.js",
   // Keeps the variables set in the dashboard when this file is deployed.

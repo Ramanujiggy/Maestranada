@@ -4,7 +4,7 @@ Prancheta AI is the optional $5/month chat inside the app that plans a class wit
 
 There are still no accounts. Stripe is the only record of who pays. The phone keeps a signed key; another phone gets it with a 6-digit code sent to the subscription's email. Classes and chats are never stored on the server. The KV store `AI_KV` only keeps each subscription's usage this month and short-lived counters. It's created automatically on the first deploy.
 
-All of the settings below go on the **`prancheta`** Worker: Cloudflare dashboard → Workers & Pages → `prancheta` → Settings → Variables and Secrets. "Secret" means choose type *Secret*; the rest are *Text*. `wrangler.jsonc` has `keep_vars: true`, so deploys keep them.
+All of the settings below go on the **`prancheta-app`** Worker (the one serving app.pranchetabjj.com): Cloudflare dashboard → Workers & Pages → `prancheta-app` → Settings → Variables and Secrets. "Secret" means choose type *Secret*; the rest are *Text*. `wrangler.jsonc` has `keep_vars: true`, so deploys keep them.
 
 ## 1. Anthropic (the AI)
 
