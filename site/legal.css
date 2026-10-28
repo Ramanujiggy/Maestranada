@@ -1,0 +1,50 @@
+/* Shared look for the privacy, terms and refund pages: same paper, ink and lines as index.html. */
+:root {
+  --paper: #ffffff;
+  --ink: #13233b;
+  --ink-2: #3d4c63;
+  --muted: #5d6b80;
+  --rule: #dfe3ea;
+  --marker: #d42a20;
+  --belt: #0d1117;
+  --head: 'IBM Plex Sans Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --ui: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --num: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0f1a2b;
+    --ink: #eef2f7;
+    --ink-2: #c9d3e0;
+    --muted: #9fb0c6;
+    --rule: #26354d;
+    --marker: #ff6a5c;
+    --belt: #eef2f7;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--paper); color: var(--ink); }
+body { font: 400 17px/1.6 var(--ui); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; }
+[hidden] { display: none !important; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+header.top { display: flex; align-items: center; justify-content: space-between; padding: 22px 0 18px; border-bottom: 2px solid var(--ink); }
+.logo { display: flex; align-items: center; gap: 12px; font: 700 24px/1 var(--head); text-decoration: none; }
+.logo svg { width: 36px; height: 24px; }
+.lang { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.lang button { font: 600 13px/1 var(--num); letter-spacing: 0.06em; color: var(--muted); background: transparent; border: 0; padding: 8px 10px; min-width: 40px; min-height: 32px; cursor: pointer; }
+.lang button + button { border-left: 1px solid var(--rule); }
+.lang button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.lang button:focus-visible { outline: 3px solid #2f6fd6; outline-offset: -3px; }
+article { padding: 36px 0 24px; }
+h1, h2 { font-family: var(--head); font-weight: 700; line-height: 1.1; margin: 0; }
+h1 { font-size: clamp(32px, 6vw, 44px); }
+h2 { font-size: 22px; font-weight: 600; margin: 32px 0 8px; padding-top: 14px; border-top: 1px solid var(--rule); }
+p, ul { margin: 0 0 12px; color: var(--ink-2); }
+ul { padding-left: 22px; }
+li { margin-bottom: 6px; }
+strong { color: var(--ink); }
+.date { font: 500 14px/1 var(--num); color: var(--muted); margin: 12px 0 24px; }
+.short { border-left: 3px solid var(--marker); padding: 4px 0 4px 14px; color: var(--ink); }
+.caps { font-size: 15px; }
+footer { border-top: 2px solid var(--ink); padding: 24px 0 44px; font-size: 15px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 12px 24px; }

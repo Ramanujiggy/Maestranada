@@ -290,7 +290,7 @@ roll 5x5</div>
           <p class="lead" data-i18n="priceLead">Your first 3 classes are free. After that, $10 unlocks as many as you want, updates included. Made by a working Jiu-Jitsu coach, around the class format they teach every week.</p>
         </div>
         <div>
-          <div class="buy-slot"><a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a></div>
+          <a class="btn buy" href="#buy" data-i18n="buy">Get Prancheta · $10</a>
           <p class="fine" data-i18n="priceFine">Secure checkout by Stripe. After paying you land back in the app, unlocked. Full refund within 30 days.</p>
         </div>
       </div>
@@ -306,7 +306,7 @@ roll 5x5</div>
           <details><summary data-i18n="q6">Where are my classes kept?</summary><p data-i18n="q6a">On your device, not on a server. Tap Back up all now and then and keep the file anywhere. On a new phone, open the app and import it.</p></details>
           <details><summary data-i18n="q11">Does Prancheta send my classes to an AI?</summary><p data-i18n="q11a">No. You copy the class format into your own AI chat and paste the answer back. Prancheta itself never sends your classes anywhere.</p></details>
           <details data-only="pt" hidden><summary data-i18n="q9">Is the app in Portuguese?</summary><p data-i18n="q9a">Yes.</p></details>
-          <details><summary data-i18n="q8">What if it isn't for me?</summary><p data-i18n="q8a">Email us within 30 days for a full refund.</p></details>
+          <details><summary data-i18n="q8">What if it isn't for me?</summary><p data-i18n="q8a">Email us within 30 days for a full refund. <a href="/refunds">How refunds work</a>.</p></details>
         </div>
       </div>
     </section>
@@ -314,7 +314,7 @@ roll 5x5</div>
     <div class="wrap">
       <footer>
         <span>© <span id="year">2026</span> Prancheta<span data-only="en"> · <i>Prancheta</i> <span class="say">pran‑SHET‑uh</span> is Portuguese for clipboard.</span></span>
-        <span><a class="support" href="mailto:help@pranchetabjj.com">help@pranchetabjj.com</a></span>
+        <span class="legal"><a href="/privacy" data-i18n="footPrivacy">Privacy</a> · <a href="/terms" data-i18n="footTerms">Terms</a> · <a href="/refunds" data-i18n="footRefunds">Refunds</a> · <a class="support" href="mailto:help@pranchetabjj.com">help@pranchetabjj.com</a></span>
       </footer>
     </div>
 
@@ -390,7 +390,7 @@ luta 5x5`,
         f5d: 'As suas aulas ficam no seu aparelho e funcionam sem sinal. Sem cadastro, e nada é coletado.',
         amount: 'US$10<small>uma vez</small>',
         priceLead: 'Suas 3 primeiras aulas são grátis. Depois, US$10 libera quantas você quiser, com as atualizações incluídas. Feita por um professor de Jiu-Jitsu na ativa, em torno do formato de aula que ensina toda semana.',
-        priceFine: 'Pagamento seguro pela Stripe. Depois de pagar, você volta para o app já desbloqueado. Reembolso integral em até 30 dias.',
+        priceFine: 'Pagamento seguro pela Stripe, cobrado em dólar no cartão. Depois de pagar, você volta para o app já desbloqueado. Reembolso integral em até 30 dias.',
         faqTitle: 'Dúvidas',
         q1: 'É assinatura?',
         q1a: 'Não. Você paga US$10 uma vez e é seu, com as atualizações incluídas.',
@@ -405,7 +405,10 @@ luta 5x5`,
         q9: 'O app está em português?',
         q9a: 'Sim. O app segue o idioma do seu celular, e você troca entre português e inglês quando quiser.',
         q8: 'E se não for para mim?',
-        q8a: 'Mande um e-mail em até 30 dias e devolvemos o valor integral.',
+        footPrivacy: 'Privacidade',
+        footTerms: 'Termos',
+        footRefunds: 'Reembolso',
+        q8a: 'Mande um e-mail em até 30 dias e devolvemos o valor integral. <a href="/refunds">Como funciona o reembolso</a>.',
       };
       const EN = { title: document.title };
       document.querySelectorAll('[data-i18n]').forEach((el) => (EN[el.dataset.i18n] = el.innerHTML));
