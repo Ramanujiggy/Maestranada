@@ -44,10 +44,10 @@ Both are Workers built from **`Ramanujiggy/Maestranada`**, branch `main` (Worker
 
 | Worker | Domain | Root directory | Build command | Deploy command |
 | --- | --- | --- | --- | --- |
-| `prancheta` (app) | `app.pranchetabjj.com` | *(empty)* | *(empty; `wrangler.jsonc` builds the app)* | `npx wrangler deploy` |
+| `prancheta-app` (app) | `app.pranchetabjj.com` | *(empty)* | *(empty; `wrangler.jsonc` builds the app)* | `npx wrangler deploy` |
 | `prancheta-site` (sales page) | `pranchetabjj.com` | `site` | *(empty)* | `npx wrangler deploy` |
 
-The `STRIPE_KEY` secret goes on `prancheta` only. To check it, open `https://app.pranchetabjj.com/api/unlock` in a private window: it should say `ok (live key)`.
+The `STRIPE_KEY` secret goes on `prancheta-app` only. To check it, open `https://app.pranchetabjj.com/api/unlock` in a private window: it should say `ok (live key)`.
 
 ### Netlify (spare)
 
