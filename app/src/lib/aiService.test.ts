@@ -165,11 +165,13 @@ describe('Prancheta AI routes', () => {
     const body = (await res.json()) as { ok: boolean; reply: string; used: number };
     expect(body.ok).toBe(true);
     expect('error' in readAiReply(body.reply)).toBe(false);
-    expect(body.used).toBeCloseTo(0.032);
-    expect(Number(kv.data.get('use:sub_123:2026-10'))).toBeCloseTo(3.2);
+    // 4,000 in and 800 out at $0.10 / $0.50 per million: 0.08 cents.
+    expect(body.used).toBeCloseTo(0.0008);
+    expect(Number(kv.data.get('use:sub_123:2026-10'))).toBeCloseTo(0.08);
     const params = client.calls[0];
-    expect(params.model).toBe('claude-opus-5-5');
-    expect(params.fallbacks).toBe('default');
+    expect(params.model).toBe('claude-haiku-5-5');
+    // Haiku has no server-side refusal fallback.
+    expect(params.fallbacks).toBeUndefined();
     expect(JSON.stringify(params.system)).toContain('Prancheta AI');
   });
 

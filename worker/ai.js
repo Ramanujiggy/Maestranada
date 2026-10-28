@@ -28,7 +28,7 @@ const SUB_ID = /^sub_[A-Za-z0-9]+$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LIVE = new Set(['active', 'trialing']);
 
-export const DEFAULT_MODEL = 'claude-opus-5-5';
+export const DEFAULT_MODEL = 'claude-haiku-5-5';
 /** What a month of Prancheta AI may cost us, in US cents, unless AI_MONTHLY_CENTS says otherwise. */
 export const DEFAULT_MONTHLY_CENTS = 250;
 const CODE_WINDOW_MS = 10 * 60 * 1000;

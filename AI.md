@@ -8,7 +8,7 @@ All of the settings below go on the **`prancheta`** Worker: Cloudflare dashboard
 
 ## 1. Anthropic (the AI)
 
-1. Go to console.anthropic.com and sign up. This is separate from a Claude subscription.
+1. Go to console.anthropic.com and sign up. This is separate from a Claude subscription: a Claude Pro or Max plan can't be used by an app, and the API is billed per use.
 2. Billing: add a card and some credit.
 3. Limits: set a monthly spend limit (for example $50), so a surprise can't run up a bill.
 4. API keys → Create key, named `prancheta-worker`. Copy it.
@@ -40,10 +40,10 @@ On the Worker add the secret **`AI_SECRET`**: any long random text (40 or more c
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `AI_MODEL` | `claude-opus-5-5` | Which Claude model answers. `claude-haiku-5-5` costs far less per class. |
+| `AI_MODEL` | `claude-haiku-5-5` | Which Claude model answers. `claude-sonnet-5-5` or `claude-opus-5-5` write better classes but cost far more. |
 | `AI_MONTHLY_CENTS` | `250` | What one subscriber's AI may cost us in a month, in US cents. The app shows it as "This month: N% used". |
 
-Rough cost per class with the default model is 10 to 15 cents (a few questions and the class JSON), so $2.50 a month covers about 20 classes. On `claude-haiku-5-5` the same class costs well under a cent. The real numbers show in console.anthropic.com → Usage after a few test classes.
+Rough cost per class with the default model (Haiku 5.5) is well under a cent (a few questions and the class JSON), so $2.50 a month covers hundreds of classes. The same class on `claude-opus-5-5` costs 10 to 15 cents, about 20 classes for $2.50. The real numbers show in console.anthropic.com → Usage after a few test classes.
 
 ## 6. Turn it on and test
 
