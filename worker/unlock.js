@@ -40,7 +40,27 @@ export async function isPaid(proof, env, fetchImpl = fetch) {
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 
+/**
+ * GET /api/unlock: a health check to open in a browser. It says whether the
+ * secret is set and whether Stripe accepts it, never the key itself.
+ */
+export async function keyStatus(env, fetchImpl = fetch) {
+  if (!env.STRIPE_KEY) return 'STRIPE_KEY is not set on this Worker';
+  const mode = env.STRIPE_KEY.includes('_live_') ? 'live' : env.STRIPE_KEY.includes('_test_') ? 'test' : 'unknown';
+  try {
+    const res = await fetchImpl(`${STRIPE}/checkout/sessions?limit=1`, { headers: { Authorization: `Bearer ${env.STRIPE_KEY}` } });
+    if (res.ok) return `ok (${mode} key)`;
+    const body = await res.json().catch(() => null);
+    // Stripe's message can quote part of the key; leave that out.
+    const message = String(body?.error?.message ?? 'no message').replace(/\b(sk|rk|pk)_\S+/g, '[key]');
+    return `Stripe answered ${res.status} for the ${mode} key: ${message}`;
+  } catch (e) {
+    return `Could not reach Stripe: ${e instanceof Error ? e.message : e}`;
+  }
+}
+
 export async function unlockRoute(request, env, fetchImpl) {
+  if (request.method === 'GET') return json({ stripe: await keyStatus(env, fetchImpl) });
   if (request.method !== 'POST') return json({ error: 'POST only' }, 405);
   let proof;
   try {
