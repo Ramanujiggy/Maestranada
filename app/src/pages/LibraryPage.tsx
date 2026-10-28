@@ -37,7 +37,7 @@ import { lastOpened } from '../lib/lastOpened.ts';
 import { LangSwitch } from '../components/LangSwitch.tsx';
 import { ThemeButton, ThemeSheet } from '../components/ThemeSheet.tsx';
 import { Shelf, useJustFiled } from '../components/Shelf.tsx';
-import { EvernoteImport } from '../components/EvernoteImport.tsx';
+import { EvernoteHelp, EvernoteImport } from '../components/EvernoteImport.tsx';
 import { looksLikeEnex } from '../lib/evernote.ts';
 import type { EnexProgress } from '../lib/enexImport.ts';
 
@@ -138,6 +138,7 @@ export function LibraryPage({
   const [pendingDelete, setPendingDelete] = useState<ClassPlan | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
+  const [enexHelp, setEnexHelp] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const today = todayISO();
@@ -545,6 +546,10 @@ export function LibraryPage({
           <button type="button" className="link" onClick={() => void paste()}>
             {t('pasteClasses')}
           </button>
+          <span className="sep">·</span>
+          <button type="button" className="link" onClick={() => setEnexHelp(true)}>
+            {t('enHelpLink')}
+          </button>
         </div>
       </footer>
 
@@ -594,6 +599,15 @@ export function LibraryPage({
         />
       )}
 
+      {enexHelp && (
+        <EvernoteHelp
+          onClose={() => setEnexHelp(false)}
+          onOpenFile={() => {
+            setEnexHelp(false);
+            fileRef.current?.click();
+          }}
+        />
+      )}
       {themeOpen && <ThemeSheet onClose={() => setThemeOpen(false)} />}
 
       {enex && <EvernoteImport progress={enex.progress} onStop={() => (enexStop.current = true)} />}

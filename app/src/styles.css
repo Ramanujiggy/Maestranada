@@ -2920,15 +2920,20 @@ html:has(.backdrop) body {
   gap: 6px 10px;
 }
 
-/* On a narrow phone the two facts stack instead of leaving a stray dot. */
+/* On a narrow phone the two facts stack and the links drop their dots, so a
+   wrapped line never starts with a stray one. The links are underlined anyway. */
 @media (max-width: 420px) {
   .library-foot-info {
     flex-direction: column;
     gap: 2px;
   }
 
-  .library-foot-info .sep {
+  .library-foot .sep {
     display: none;
+  }
+
+  .library-foot-row:not(.library-foot-info) {
+    gap: 8px 18px;
   }
 }
 
