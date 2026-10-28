@@ -24,6 +24,8 @@ import { ConfirmDialog } from '../components/feedback.tsx';
 import { formatDate } from '../components/PrintSheet.tsx';
 import { TemplatePicker } from '../components/TemplatePicker.tsx';
 import { AiPlanner } from '../components/AiPlanner.tsx';
+import { PranchetaAi } from '../components/PranchetaAi.tsx';
+import { aiInfo, getAiKey, type AiInfo } from '../lib/aiService.ts';
 import { planFromJson, readAiReply } from '../lib/aiClass.ts';
 import { ClipboardIcon, Logo } from '../components/Marks.tsx';
 import type { Template } from '../lib/samples.ts';
@@ -125,6 +127,7 @@ export function LibraryPage({
   onUnlock,
   pickerOpen,
   setPickerOpen,
+  aiCheckout,
 }: {
   api: PlansApi;
   notify: (m: string) => void;
@@ -134,9 +137,22 @@ export function LibraryPage({
   onUnlock: () => void;
   pickerOpen: boolean;
   setPickerOpen: (open: boolean) => void;
+  /** The checkout id Stripe sent a new Prancheta AI subscriber back with. */
+  aiCheckout?: string;
 }) {
   const [pendingDelete, setPendingDelete] = useState<ClassPlan | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
+  const [paiOpen, setPaiOpen] = useState(!!aiCheckout);
+  // Whether Prancheta AI is switched on. Asked once; offline, it isn't offered
+  // unless this phone already subscribes.
+  const [pai, setPai] = useState<AiInfo | null>(null);
+  useEffect(() => {
+    let live = true;
+    void aiInfo().then((info) => live && setPai(info));
+    return () => {
+      live = false;
+    };
+  }, []);
   const [themeOpen, setThemeOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -161,6 +177,7 @@ export function LibraryPage({
     const added = api.upsert(plan);
     setPickerOpen(false);
     setAiOpen(false);
+    setPaiOpen(false);
     if (added) navigate({ name: 'edit', id: plan.id });
     return added;
   };
@@ -572,6 +589,34 @@ export function LibraryPage({
           onAi={() => {
             setPickerOpen(false);
             setAiOpen(true);
+          }}
+          onPai={
+            pai?.ready || getAiKey()
+              ? () => {
+                  setPickerOpen(false);
+                  setPaiOpen(true);
+                }
+              : undefined
+          }
+        />
+      )}
+
+      {paiOpen && (
+        <PranchetaAi
+          info={pai}
+          checkout={aiCheckout}
+          onClose={() => setPaiOpen(false)}
+          onBack={
+            aiCheckout
+              ? undefined
+              : () => {
+                  setPaiOpen(false);
+                  setPickerOpen(true);
+                }
+          }
+          onPlan={(plan, skipped) => {
+            if (!open(plan)) return;
+            notify(skipped ? t('aiBuiltSkipped', { n: skipped }) : t('aiBuilt'));
           }}
         />
       )}
