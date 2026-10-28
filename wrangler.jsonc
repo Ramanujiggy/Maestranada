@@ -7,6 +7,9 @@
   "name": "prancheta",
   "compatibility_date": "2026-10-01",
   "main": "./worker/index.js",
+  // Builds the app on every deploy, so `npx wrangler deploy` publishes app/dist
+  // even when the dashboard's Build command is left empty.
+  "build": { "command": "npm run build" },
   "assets": {
     "directory": "./app/dist",
     "binding": "ASSETS",
