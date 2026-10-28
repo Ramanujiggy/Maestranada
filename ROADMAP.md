@@ -6,7 +6,7 @@ Updated 2026-10-21. The product is built. What stands between it and the first s
 
 1. **Settle the address before anyone uses the app for real.** `pranchetabjj.com` is bought (2026-10-24); move the app to `app.pranchetabjj.com` before the first sale. A web app's saved classes belong to its address, so anything saved on the Railway test URL stays behind when the address changes. Host the app and site on Cloudflare Pages with a Netlify spare instead of Railway, which went down on 2026-10-20, 10-21, 10-22 and 10-24 ([HOSTING.md](HOSTING.md)). A buyer who opens the receipt link during an outage asks for a refund.
 2. **One iPhone test pass of everything since PR #8.** None of these has run on a real iPhone yet: making a clip, the class file, Teach mode with the phone locked, the folding editor, flexible blocks, the Rank icon on the home screen, and Plan with AI. Use the checklist below.
-3. **Open the store.** Set up the $10 Stripe payment link (Managed Payments) with the redirect back to the app, add the `STRIPE_KEY` secret to the `prancheta` Worker (README → Stripe setup), put the live payment link in `CHECKOUT_URL` (`app/src/lib/access.ts` and `site/index.html`), and add privacy, terms and refund pages (Stripe's checkout links to them; set them in Checkout settings).
+3. **Open the store.** Set up the $10 Stripe payment link (Managed Payments) with the redirect back to the app, add the `STRIPE_KEY` secret to the `prancheta-app` Worker (README → Stripe setup), put the live payment link in `CHECKOUT_URL` (`app/src/lib/access.ts` and `site/index.html`), and add privacy, terms and refund pages (Stripe's checkout links to them; set them in Checkout settings).
 
 ## Shipped (PRs #1 to #16, all merged)
 
@@ -20,7 +20,7 @@ Updated 2026-10-21. The product is built. What stands between it and the first s
 | Name and language | Prancheta, English and Brazilian Portuguese in the app and on the sales page | #9 |
 | Editor | One block at a time, optional parts as chips | #11 |
 | Class format | Gym words for blocks; add, remove, repeat, rename and reorder blocks; five starting formats | #12, #13 |
-| Copy and logo | Copy fixes in both languages, "The professor's clipboard", the Rank logo | #14 |
+| Copy and logo | Copy fixes in both languages, "The coach's clipboard", the Rank logo | #14 |
 | Plan with AI | Copy or save the class format for your own AI chat, paste or open the answer | #15, #16 |
 | Sales page | One page in `site/`, EN/PT switch, not yet deployed | #7, #9 |
 

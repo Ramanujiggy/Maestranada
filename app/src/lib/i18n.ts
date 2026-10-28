@@ -127,7 +127,7 @@ const en = {
   howItWorks: 'How it works',
   import: 'Import',
   exportAll: 'Back up all',
-  classPrep: "The professor's clipboard",
+  classPrep: "The coach's clipboard",
   libraryTitle: 'Plan the class before you step on the mat.',
   libraryLead: 'Warm up, set the focus, spar from a position, teach the technique, then roll.',
   stripWarmup: 'Warm-up',
