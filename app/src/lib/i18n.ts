@@ -10,7 +10,7 @@ export type Lang = 'en' | 'pt';
 const KEY = 'prancheta.lang';
 
 const en = {
-  // The five blocks
+  // The blocks
   'sec.warmup': 'Warm-up',
   'sec.concept': 'Concept / Focus',
   'sec.game': 'Positional sparring',
@@ -220,8 +220,8 @@ const en = {
 
   // Welcome
   welcome: 'Welcome',
-  welcomeTitle: 'Build each class from five blocks.',
-  welcomeLead: 'Use them in any order. Plan before you step on the mat, then teach from your phone.',
+  welcomeTitle: 'Build each class from blocks.',
+  welcomeLead: 'Use as many as you like, in any order. Plan before you step on the mat, then teach from your phone.',
   welcomeWarmup: "Get the body ready for today's position.",
   welcomeConcept: "The focus of today's class: the one idea everything comes back to.",
   welcomeGame: 'Sparring from one position toward one goal. Give the goals first and the details after a few rounds.',
@@ -231,7 +231,7 @@ const en = {
   welcomeTeachTitle: 'Teach mode',
   welcomeTeach: 'shows one block at a time in big type, with a round timer that calls the switches for you.',
   welcomePrivateTitle: 'Your classes stay on this device.',
-  welcomePrivate: 'No account, no sign-in. Tap Back up all to keep a copy or move your classes to another device.',
+  welcomePrivate: 'No account, no sign-in. Tap Back up all classes at the bottom of your library to save a file you can keep or open on another device.',
   welcomeInstallTitle: 'Install it on this device',
   welcomeInstall: 'so it opens like an app and works offline.',
 
@@ -680,8 +680,8 @@ const pt: Record<Key, string> = {
   'level.Advanced': 'Avançado',
 
   welcome: 'Boas-vindas',
-  welcomeTitle: 'Monte cada aula com cinco blocos.',
-  welcomeLead: 'Use na ordem que quiser. Planeje antes de pisar no tatame e dê a aula pelo celular.',
+  welcomeTitle: 'Monte cada aula com blocos.',
+  welcomeLead: 'Use quantos quiser, na ordem que quiser. Planeje antes de pisar no tatame e dê a aula pelo celular.',
   welcomeWarmup: 'Prepare o corpo para a posição do dia.',
   welcomeConcept: 'O foco da aula de hoje: a ideia que guia todo o resto.',
   welcomeGame: 'Treino de uma posição com um objetivo. Passe os objetivos primeiro e os detalhes depois de alguns rounds.',
@@ -691,7 +691,7 @@ const pt: Record<Key, string> = {
   welcomeTeachTitle: 'O modo aula',
   welcomeTeach: 'mostra um bloco por vez em letra grande, com um cronômetro de rounds que avisa as trocas para você.',
   welcomePrivateTitle: 'Suas aulas ficam neste aparelho.',
-  welcomePrivate: 'Sem conta, sem login. Toque em Fazer backup para guardar uma cópia ou passar as aulas para outro aparelho.',
+  welcomePrivate: 'Sem conta, sem login. Toque em Fazer backup de tudo, no fim da sua biblioteca, para salvar um arquivo que você pode guardar ou abrir em outro aparelho.',
   welcomeInstallTitle: 'Instale neste aparelho',
   welcomeInstall: 'para abrir como um app e usar até offline.',
 
