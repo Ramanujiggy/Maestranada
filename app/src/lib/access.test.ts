@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { checkPurchase, FREE_CLASSES, freeLeft, getUnlock, isUnlocked, paidSession, recordMade, roomFor, saveUnlock, takeCarriedUnlock } from './access.ts';
-import { isPaid, unlockRoute } from '../../../worker/unlock.js';
+import { isPaid, keyStatus, unlockRoute } from '../../../worker/unlock.js';
 import { blankPlan, duplicatePlan, normalizePlan, samplePlan, type ClassPlan } from './plan.ts';
 import { copyClasses, readBackup, takeUnlockFrom } from './carry.ts';
 
@@ -125,6 +125,19 @@ describe('the Worker unlock check', () => {
     const res = await unlockRoute(post({ email: 'a@b.co' }), {});
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({ error: 'check failed' });
+  });
+});
+
+describe('the Worker key check', () => {
+  it('says whether the secret is set and whether Stripe takes it, never the key', async () => {
+    expect(await keyStatus({})).toBe('STRIPE_KEY is not set on this Worker');
+    const ok = (async () => new Response('{"data":[]}')) as unknown as typeof fetch;
+    expect(await keyStatus({ STRIPE_KEY: 'rk_live_secret' }, ok)).toBe('ok (live key)');
+    const denied = (async () =>
+      new Response(JSON.stringify({ error: { message: 'Invalid API Key provided: rk_test_****cret' } }), { status: 401 })) as unknown as typeof fetch;
+    const status = await keyStatus({ STRIPE_KEY: 'rk_test_secret' }, denied);
+    expect(status).toBe('Stripe answered 401 for the test key: Invalid API Key provided: [key]');
+    expect(status).not.toContain('secret');
   });
 });
 
