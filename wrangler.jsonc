@@ -1,15 +1,22 @@
 // Cloudflare Workers deploy for the app: build with `npm run build`, then serve app/dist.
 // "name" must match the Worker's name in the Cloudflare dashboard.
-// The Worker script only runs for /api/* (the unlock check); everything else is served
-// straight from app/dist. Secrets (set in the dashboard, never in this file): STRIPE_KEY.
-// Optional variable: PAYMENT_LINK, the plink_ id of the $10 payment link.
+// The Worker script only runs for /api/* (the unlock check and Prancheta AI); everything
+// else is served straight from app/dist. Secrets (set in the dashboard, never in this
+// file): STRIPE_KEY, and for Prancheta AI ANTHROPIC_KEY, AI_SECRET, RESEND_KEY.
+// Variables (set in the dashboard): PAYMENT_LINK, the plink_ id of the $10 payment link,
+// and the AI_* ones listed in AI.md.
 {
   "name": "prancheta-app",
   "compatibility_date": "2026-10-01",
   "main": "./worker/index.js",
+  // Keeps the variables set in the dashboard when this file is deployed.
+  "keep_vars": true,
   // Builds the app on every deploy, so `npx wrangler deploy` publishes app/dist
   // even when the dashboard's Build command is left empty.
   "build": { "command": "npm run build" },
+  // Prancheta AI's usage counts and short-lived codes (worker/ai.js). No id:
+  // the first deploy creates the store and keeps using it after that.
+  "kv_namespaces": [{ "binding": "AI_KV" }],
   "assets": {
     "directory": "./app/dist",
     "binding": "ASSETS",

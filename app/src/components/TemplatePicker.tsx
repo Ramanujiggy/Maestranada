@@ -1,7 +1,7 @@
-// "New class" sheet: plan it with AI, start blank, or from one of the ready-made classes.
+// "New class" sheet: plan it with your own AI or Prancheta AI, start blank, or from one of the ready-made classes.
 
 import { useEffect } from 'react';
-import { FilePlus2, MessagesSquare, X } from 'lucide-react';
+import { FilePlus2, MessagesSquare, Sparkles, X } from 'lucide-react';
 import { templates, type Template } from '../lib/samples.ts';
 import { FORMATS, FORMAT_ORDER, type FormatKey } from '../lib/plan.ts';
 import { t } from '../lib/i18n.ts';
@@ -10,11 +10,14 @@ export function TemplatePicker({
   onBlank,
   onTemplate,
   onAi,
+  onPai,
   onClose,
 }: {
   onBlank: (format: FormatKey) => void;
   onTemplate: (t: Template) => void;
   onAi: () => void;
+  /** Prancheta AI, offered only once it's switched on. */
+  onPai?: () => void;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -51,6 +54,15 @@ export function TemplatePicker({
             <span className="template-blurb">{t('aiStartBlurb')}</span>
           </span>
         </button>
+        {onPai && (
+          <button type="button" className="template ai-start pai-start" onClick={onPai}>
+            <Sparkles size={20} color="var(--marker)" />
+            <span>
+              <span className="template-title">{t('paiStart')}</span>
+              <span className="template-blurb">{t('paiStartBlurb')}</span>
+            </span>
+          </button>
+        )}
 
         <div className="eyebrow ruled" style={{ margin: '20px 0 4px' }}>
           {t('pickLayout')}

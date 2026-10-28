@@ -3131,6 +3131,129 @@ html:has(.backdrop) body {
   border-color: var(--ink);
 }
 
+.template.pai-start {
+  margin-top: 10px;
+}
+
+/* ─── Prancheta AI ───────────────────────────────────────────────────────── */
+
+.pai-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pai-chat {
+  display: grid;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.pai-msg {
+  margin: 0;
+  max-width: 88%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 15px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.pai-msg p {
+  margin: 0;
+}
+
+.pai-msg p + p {
+  margin-top: 8px;
+}
+
+.pai-msg.assistant {
+  justify-self: start;
+  background: var(--sheet);
+  border-left: 3px solid var(--ink);
+  border-radius: 0 10px 10px 0;
+  color: var(--ink);
+}
+
+.pai-msg.user {
+  justify-self: end;
+  background: var(--paper);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+}
+
+.pai-busy {
+  color: var(--muted);
+}
+
+.pai-class {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.pai-class svg {
+  color: var(--marker);
+}
+
+.pai-open {
+  width: 100%;
+  min-height: 50px;
+}
+
+.pai-compose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.pai-compose .textarea {
+  min-width: 0;
+  min-height: 72px;
+}
+
+.pai-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pai-foot .link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pai-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+}
+
+.pai-meter-bar {
+  display: block;
+  width: 72px;
+  height: 6px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pai-meter-bar span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+
 /* ─── Theme picker ───────────────────────────────────────────────────────── */
 
 .theme-sheet {
