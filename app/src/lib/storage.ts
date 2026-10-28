@@ -1,7 +1,9 @@
 // Local persistence. Plans live in this browser's localStorage as one JSON
-// array; the first visit seeds the example class so the app is never empty.
+// array; the first visit in a browser seeds the example class so the app is
+// never empty. Once seeded, it never comes back, even when deleted.
 
 import { normalizePlan, samplePlan, storedPlan, type ClassPlan } from './plan.ts';
+import { isStandalone } from './pwa.ts';
 
 // Keys keep the app's first name so plans saved before the rename still load.
 export const PLANS_KEY = 'maestranada.plans.v1';
@@ -34,7 +36,13 @@ export interface Loaded {
 export function loadPlans(): Loaded {
   const raw = safeGet(PLANS_KEY);
   if (raw === null) {
-    if (safeGet(SEEDED_KEY)) return { plans: [], damaged: false };
+    // The installed app is where coaches bring their classes from the browser
+    // (on Apple it starts with its own, empty storage), so it starts empty
+    // rather than bring back an example the coach already deleted there.
+    if (safeGet(SEEDED_KEY) || isStandalone()) {
+      safeSet(SEEDED_KEY, '1');
+      return { plans: [], damaged: false };
+    }
     const seeded = [samplePlan()];
     savePlans(seeded);
     safeSet(SEEDED_KEY, '1');
