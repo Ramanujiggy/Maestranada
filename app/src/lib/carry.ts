@@ -10,13 +10,18 @@ import { isUnlocked, takeCarriedUnlock } from './access.ts';
 const CARRIED_KEY = 'maestranada.carryDone';
 
 /**
- * Everything the coach has, clips included, as backup JSON. Once the app is
+ * Everything the coach has made, clips included, as backup JSON. Once the app is
  * unlocked, a mark saying so comes along (nothing about the purchase), so the copy
  * it's pasted into is unlocked as well.
  */
 async function carryText(plans: ClassPlan[]): Promise<string> {
-  const classes = (await withClipData(plans)).map(storedPlan);
+  const classes = (await withClipData(carried(plans))).map(storedPlan);
   return JSON.stringify(isUnlocked() ? { classes, unlocked: true } : classes);
+}
+
+/** The classes that travel: the untouched example stays behind, so a copy where it was deleted never gets it back. */
+export function carried(plans: ClassPlan[]): ClassPlan[] {
+  return plans.filter((p) => !(p.example && p.updatedAt === p.createdAt));
 }
 
 /**

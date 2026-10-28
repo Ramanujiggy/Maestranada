@@ -126,7 +126,7 @@ export interface ClassPlan {
   updatedAt: string;
   /** The class in teaching order. Never empty. */
   blocks: Block[];
-  /** The example class every fresh copy starts with. It never counts as one the coach made. */
+  /** The example class older copies of the app started with. It never counts as one the coach made. */
   example?: true;
 }
 
