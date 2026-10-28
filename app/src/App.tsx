@@ -105,7 +105,7 @@ function Screens() {
     }
   }, [api.plans, notify]);
 
-  // Once the coach has written a class of their own (the seeded example is
+  // Once the coach has written a class of their own (an old seeded example is
   // never edited), offer to install, back on the class list with nothing else
   // open. At most twice, a week apart (see pwa.ts).
   const ownWork = api.plans.some((p) => p.updatedAt !== p.createdAt);

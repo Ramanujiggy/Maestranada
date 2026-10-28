@@ -47,24 +47,9 @@ describe('storage', () => {
     expect(kept && localStorage.getItem(kept)).toBe('{broken');
   });
 
-  it('seeds the example once, and never after it is deleted', () => {
-    expect(loadPlans().plans.map((p) => p.example)).toEqual([true]);
-    savePlans([]);
+  it('starts empty, without the example class', () => {
     expect(loadPlans().plans).toEqual([]);
-    localStorage.removeItem(PLANS_KEY);
-    expect(loadPlans().plans).toEqual([]);
-  });
-
-  it('starts the installed app empty', () => {
-    const was = window.matchMedia;
-    window.matchMedia = ((q: string) => ({ matches: q === '(display-mode: standalone)' })) as typeof window.matchMedia;
-    try {
-      expect(loadPlans().plans).toEqual([]);
-      window.matchMedia = was;
-      expect(loadPlans().plans).toEqual([]);
-    } finally {
-      window.matchMedia = was;
-    }
+    expect(localStorage.getItem(PLANS_KEY)).toBeNull();
   });
 
   it('round-trips plans', () => {
