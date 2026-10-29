@@ -13,7 +13,10 @@ export async function isPaid(proof, env, fetchImpl = fetch) {
   const get = async (path) => {
     const res = await fetchImpl(STRIPE + path, { headers: { Authorization: `Bearer ${env.STRIPE_KEY}` } });
     if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`Stripe answered ${res.status}`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(`Stripe answered ${res.status}: ${body?.error?.message ?? 'no message'}`);
+    }
     return res.json();
   };
   const ours = (s) =>
@@ -37,6 +40,9 @@ export async function isPaid(proof, env, fetchImpl = fetch) {
   return false;
 }
 
+/** Stripe's messages can quote part of a key; leave that out of anything we send back. */
+const hideKeys = (text) => String(text).replace(/\b(sk|rk|pk)_\S+/g, '[key]');
+
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 
@@ -51,8 +57,7 @@ export async function keyStatus(env, fetchImpl = fetch) {
     const res = await fetchImpl(`${STRIPE}/checkout/sessions?limit=1`, { headers: { Authorization: `Bearer ${env.STRIPE_KEY}` } });
     if (res.ok) return `ok (${mode} key)`;
     const body = await res.json().catch(() => null);
-    // Stripe's message can quote part of the key; leave that out.
-    const message = String(body?.error?.message ?? 'no message').replace(/\b(sk|rk|pk)_\S+/g, '[key]');
+    const message = hideKeys(body?.error?.message ?? 'no message');
     return `Stripe answered ${res.status} for the ${mode} key: ${message}`;
   } catch (e) {
     return `Could not reach Stripe: ${e instanceof Error ? e.message : e}`;
@@ -72,7 +77,7 @@ export async function unlockRoute(request, env, fetchImpl) {
     return json({ ok: await isPaid(proof && typeof proof === 'object' ? proof : {}, env, fetchImpl) });
   } catch (e) {
     console.error(e);
-    // No "ok" in the answer: the app says it couldn't check, and to try again.
-    return json({ error: 'check failed' }, 502);
+    // No "ok" in the answer: the app says it couldn't check, and shows why in small print.
+    return json({ error: 'check failed', reason: hideKeys(e instanceof Error ? e.message : e) }, 502);
   }
 }

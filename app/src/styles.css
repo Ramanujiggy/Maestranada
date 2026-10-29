@@ -3458,6 +3458,14 @@ html:has(.backdrop) body {
   text-decoration: none;
 }
 
+.unlock-problem {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
 .unlock-buy-off {
   margin: 0 0 18px;
   font-size: 14px;
