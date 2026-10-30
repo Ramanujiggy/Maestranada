@@ -8,8 +8,17 @@ const STRIPE = 'https://api.stripe.com/v1';
 const SESSION_ID = /^cs_(live|test)_[A-Za-z0-9]+$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * Says the key is missing and lists the names (never the values) of what this
+ * Worker does have, so a misnamed secret or one set as a build variable shows up.
+ */
+function missingKey(env) {
+  const names = Object.keys(env ?? {}).filter((k) => k !== 'ASSETS');
+  return `STRIPE_KEY is not set on this Worker (it has: ${names.length ? names.join(', ') : 'nothing'})`;
+}
+
 export async function isPaid(proof, env, fetchImpl = fetch) {
-  if (!env.STRIPE_KEY) throw new Error('STRIPE_KEY is not set on this Worker');
+  if (!env.STRIPE_KEY) throw new Error(missingKey(env));
   const get = async (path) => {
     const res = await fetchImpl(STRIPE + path, { headers: { Authorization: `Bearer ${env.STRIPE_KEY}` } });
     if (res.status === 404) return null;
@@ -51,7 +60,7 @@ const json = (body, status = 200) =>
  * secret is set and whether Stripe accepts it, never the key itself.
  */
 export async function keyStatus(env, fetchImpl = fetch) {
-  if (!env.STRIPE_KEY) return 'STRIPE_KEY is not set on this Worker';
+  if (!env.STRIPE_KEY) return missingKey(env);
   const mode = env.STRIPE_KEY.includes('_live_') ? 'live' : env.STRIPE_KEY.includes('_test_') ? 'test' : 'unknown';
   try {
     const res = await fetchImpl(`${STRIPE}/checkout/sessions?limit=1`, { headers: { Authorization: `Bearer ${env.STRIPE_KEY}` } });
