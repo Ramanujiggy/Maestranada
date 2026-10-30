@@ -132,7 +132,7 @@ describe('the Worker unlock check', () => {
     const post = (body: unknown) => new Request('https://x/api/unlock', { method: 'POST', body: JSON.stringify(body) });
     const res = await unlockRoute(post({ email: 'a@b.co' }), {});
     expect(res.status).toBe(502);
-    expect(await res.json()).toEqual({ error: 'check failed', reason: 'STRIPE_KEY is not set on this Worker' });
+    expect(await res.json()).toEqual({ error: 'check failed', reason: 'STRIPE_KEY is not set on this Worker (it has: nothing)' });
     const denied = (async () =>
       new Response(JSON.stringify({ error: { message: 'Invalid API Key provided: rk_live_****abcd' } }), { status: 401 })) as unknown as typeof fetch;
     const res2 = await unlockRoute(post({ email: 'a@b.co' }), { STRIPE_KEY: 'rk_live_x' }, denied);
@@ -142,7 +142,8 @@ describe('the Worker unlock check', () => {
 
 describe('the Worker key check', () => {
   it('says whether the secret is set and whether Stripe takes it, never the key', async () => {
-    expect(await keyStatus({})).toBe('STRIPE_KEY is not set on this Worker');
+    expect(await keyStatus({})).toBe('STRIPE_KEY is not set on this Worker (it has: nothing)');
+    expect(await keyStatus({ stripe_key: 'x' } as never)).toBe('STRIPE_KEY is not set on this Worker (it has: stripe_key)');
     const ok = (async () => new Response('{"data":[]}')) as unknown as typeof fetch;
     expect(await keyStatus({ STRIPE_KEY: 'rk_live_secret' }, ok)).toBe('ok (live key)');
     const denied = (async () =>
