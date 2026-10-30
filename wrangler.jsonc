@@ -10,6 +10,9 @@
   // Builds the app on every deploy, so `npx wrangler deploy` publishes app/dist
   // even when the dashboard's Build command is left empty.
   "build": { "command": "npm run build" },
+  // Keep variables set in the dashboard. Without this, every deploy deletes
+  // dashboard variables of type Text (a STRIPE_KEY added as Text vanished this way).
+  "keep_vars": true,
   "assets": {
     "directory": "./app/dist",
     "binding": "ASSETS",
