@@ -48,7 +48,7 @@ The check needs the Worker: on the Netlify spare the app says it can't check rig
 
 1. Turn on Managed Payments. Create a $10 one-time product with a software or digital tax category, and a payment link for it with **Enable Managed Payments** ticked.
 2. In the payment link, under **After payment**, choose not to show the confirmation page and redirect to `https://app.pranchetabjj.com/?paid={CHECKOUT_SESSION_ID}`, exactly as written.
-3. Create a restricted key with **Read** on Checkout Sessions and nothing else. In Cloudflare, on the `prancheta-app` Worker, add it as a secret named `STRIPE_KEY` (Settings → Variables and Secrets). Optionally add a plain variable `PAYMENT_LINK` with the link's `plink_...` id, so other products in the account don't unlock the app.
+3. Create a restricted key with **Read** on Checkout Sessions and Charges, and nothing else (Charges lets it turn down refunded purchases). In Cloudflare, on the `prancheta-app` Worker, add it as a secret named `STRIPE_KEY` (Settings → Variables and Secrets). Optionally add a plain variable `PAYMENT_LINK` with the link's `plink_...` id, so other products in the account don't unlock the app.
 4. Put the payment link's address (`https://buy.stripe.com/...`) in `CHECKOUT_URL` in `app/src/lib/access.ts` and in `site/index.html`. Both show it as our own styled button. A `test_` link (and a test-mode `STRIPE_KEY`) takes test cards only; swap both for live ones to sell.
 5. Install works the same for everyone, buyers or not:
    - **Laptop:** Chrome or Edge show an **Install app** button. Safari on a Mac uses File → Add to Dock.
