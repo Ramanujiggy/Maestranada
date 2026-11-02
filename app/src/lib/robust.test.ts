@@ -47,6 +47,11 @@ describe('storage', () => {
     expect(kept && localStorage.getItem(kept)).toBe('{broken');
   });
 
+  it('starts empty, without the example class', () => {
+    expect(loadPlans().plans).toEqual([]);
+    expect(localStorage.getItem(PLANS_KEY)).toBeNull();
+  });
+
   it('round-trips plans', () => {
     const s = samplePlan();
     expect(savePlans([s])).toBe(true);

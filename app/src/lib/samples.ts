@@ -274,8 +274,13 @@ export function templates(): Template[] {
     const spec = pt ? ptSpec : en;
     if (!spec) {
       // The leg drag class is the app's own example, kept in plan.ts.
+      // A class built from it is the coach's own, like any other template.
       const sample = samplePlan();
-      return { key, level, title: sample.title, blurb: firstOf(sample, 'concept')?.rule ?? '', build: samplePlan };
+      const build = (now?: Date) => {
+        const { example: _example, ...plan } = samplePlan(now);
+        return plan;
+      };
+      return { key, level, title: sample.title, blurb: firstOf(sample, 'concept')?.rule ?? '', build };
     }
     return { key, level, title: spec.title, blurb: spec.rule, build: (now?: Date) => fromSpec(spec, now) };
   });

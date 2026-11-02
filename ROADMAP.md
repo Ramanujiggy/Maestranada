@@ -20,7 +20,7 @@ Updated 2026-10-21. The product is built. What stands between it and the first s
 | Name and language | Prancheta, English and Brazilian Portuguese in the app and on the sales page | #9 |
 | Editor | One block at a time, optional parts as chips | #11 |
 | Class format | Gym words for blocks; add, remove, repeat, rename and reorder blocks; five starting formats | #12, #13 |
-| Copy and logo | Copy fixes in both languages, "The professor's clipboard", the Rank logo | #14 |
+| Copy and logo | Copy fixes in both languages, "The coach's clipboard", the Rank logo | #14 |
 | Plan with AI | Copy or save the class format for your own AI chat, paste or open the answer | #15, #16 |
 | Sales page | One page in `site/`, EN/PT switch, not yet deployed | #7, #9 |
 

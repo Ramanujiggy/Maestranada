@@ -9,11 +9,12 @@
   "name": "prancheta-app",
   "compatibility_date": "2026-10-01",
   "main": "./worker/index.js",
-  // Keeps the variables set in the dashboard when this file is deployed.
-  "keep_vars": true,
   // Builds the app on every deploy, so `npx wrangler deploy` publishes app/dist
   // even when the dashboard's Build command is left empty.
   "build": { "command": "npm run build" },
+  // Keep variables set in the dashboard. Without this, every deploy deletes
+  // dashboard variables of type Text (a STRIPE_KEY added as Text vanished this way).
+  "keep_vars": true,
   // Prancheta AI's usage counts and short-lived codes (worker/ai.js). No id:
   // the first deploy creates the store and keeps using it after that.
   "kv_namespaces": [{ "binding": "AI_KV" }],

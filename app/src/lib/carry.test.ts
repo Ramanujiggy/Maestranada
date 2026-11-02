@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { freshCopy, readBackup } from './carry.ts';
+import { carried, freshCopy, readBackup } from './carry.ts';
 import { samplePlan } from './plan.ts';
 
 describe('freshCopy', () => {
@@ -25,5 +25,12 @@ describe('readBackup', () => {
     expect(readBackup('{"prancheta":1,"title":"x","blocks":[]}')).toBeNull();
     expect(readBackup('hello')).toBeNull();
     expect(readBackup(null)).toBeNull();
+  });
+});
+
+describe('carried', () => {
+  it('leaves the untouched example behind', () => {
+    const edited = { ...samplePlan(), updatedAt: '2099-01-01T00:00:00.000Z' };
+    expect(carried([samplePlan(), edited])).toEqual([edited]);
   });
 });

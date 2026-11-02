@@ -12,6 +12,7 @@ describe('templates', () => {
       const b = t.build();
       expect(a.title).toBe(t.title);
       expect(a.id).not.toBe(b.id);
+      expect(a.example).toBeUndefined();
       const game = firstOf(a, 'game')!;
       expect(firstOf(a, 'warmup')!.drills.length).toBeGreaterThan(0);
       expect(firstOf(a, 'concept')!.rule).not.toBe('');

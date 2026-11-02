@@ -176,19 +176,32 @@ export function paidSession(search: string): string | null {
   return id && /^cs_[A-Za-z0-9_]+$/.test(id) ? id : null;
 }
 
+let problem = '';
+
+/** Why the last check came back 'offline', in a few words, for the small print under the error. */
+export function lastCheckProblem(): string {
+  return problem;
+}
+
 /** Asks the app's Worker whether Stripe has a paid purchase for this checkout or email. */
 export async function checkPurchase(proof: Proof): Promise<PurchaseCheck> {
+  problem = '';
   try {
     const res = await fetch(CHECK_URL, {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify(proof),
     });
-    if (!(res.headers.get('content-type') ?? '').includes('json')) return 'offline';
-    const data = (await res.json()) as { ok?: unknown } | null;
+    if (!(res.headers.get('content-type') ?? '').includes('json')) {
+      problem = `server ${res.status}, no unlock check at this address`;
+      return 'offline';
+    }
+    const data = (await res.json()) as { ok?: unknown; reason?: unknown } | null;
     if (data && typeof data.ok === 'boolean') return data.ok ? 'ok' : 'bad';
+    problem = `server ${res.status}${typeof data?.reason === 'string' ? `: ${data.reason}` : ''}`;
   } catch {
     // No connection, or no Worker behind this address.
+    problem = 'no connection to the server';
   }
   return 'offline';
 }

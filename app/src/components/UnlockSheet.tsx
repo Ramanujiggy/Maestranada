@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Check, Mail, X } from 'lucide-react';
-import { CHECKOUT_URL, FREE_CLASSES, unlockWith, useUnlocked, type PurchaseCheck } from '../lib/access.ts';
+import { CHECKOUT_URL, FREE_CLASSES, lastCheckProblem, unlockWith, useUnlocked, type PurchaseCheck } from '../lib/access.ts';
 import { isApple } from '../lib/pwa.ts';
 import { t } from '../lib/i18n.ts';
 
@@ -91,6 +91,7 @@ export function UnlockSheet({
             {asked === 'session' && state !== 'idle' ? (
               <p className={state === 'checking' ? 'muted' : 'ai-error'} role={state === 'checking' ? 'status' : 'alert'} style={{ margin: '6px 0 16px' }}>
                 {state === 'checking' ? t('unlockConfirmingBody') : state === 'bad' ? t('unlockPaidBad') : t('unlockOffline')}
+                {state === 'offline' && <Problem />}
                 {state === 'offline' && (
                   <>
                     {' '}
@@ -158,6 +159,7 @@ export function UnlockSheet({
               {asked === 'email' && state === 'offline' && (
                 <p className="ai-error" role="alert">
                   {t('unlockOffline')}
+                  <Problem />
                 </p>
               )}
             </form>
@@ -171,4 +173,10 @@ export function UnlockSheet({
       </div>
     </div>
   );
+}
+
+/** What went wrong, in small print, so the coach can tell us. */
+function Problem() {
+  const problem = lastCheckProblem();
+  return problem ? <small className="unlock-problem">({problem})</small> : null;
 }

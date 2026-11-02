@@ -1,11 +1,11 @@
 // Local persistence. Plans live in this browser's localStorage as one JSON
-// array; the first visit seeds the example class so the app is never empty.
+// array. A new copy starts empty: the example class is offered as a template
+// when the coach plans their first class, never put in the library for them.
 
-import { normalizePlan, samplePlan, storedPlan, type ClassPlan } from './plan.ts';
+import { normalizePlan, storedPlan, type ClassPlan } from './plan.ts';
 
 // Keys keep the app's first name so plans saved before the rename still load.
 export const PLANS_KEY = 'maestranada.plans.v1';
-const SEEDED_KEY = 'maestranada.seeded';
 
 function safeGet(key: string): string | null {
   try {
@@ -33,13 +33,7 @@ export interface Loaded {
 
 export function loadPlans(): Loaded {
   const raw = safeGet(PLANS_KEY);
-  if (raw === null) {
-    if (safeGet(SEEDED_KEY)) return { plans: [], damaged: false };
-    const seeded = [samplePlan()];
-    savePlans(seeded);
-    safeSet(SEEDED_KEY, '1');
-    return { plans: seeded, damaged: false };
-  }
+  if (raw === null) return { plans: [], damaged: false };
   return parsePlans(raw);
 }
 
