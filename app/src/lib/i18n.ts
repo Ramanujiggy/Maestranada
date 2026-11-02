@@ -505,6 +505,13 @@ const en = {
   paiErrNoAnswer: 'No answer came back. Try saying it another way.',
   paiErrFailed: 'Something went wrong. Try again.',
   paiCutOff: 'The answer got cut off. Say "Send the whole class again".',
+  paiConsentTitle: 'Before you start',
+  paiConsentSend: 'What you type to Prancheta AI, and its answers, go through our server to Anthropic, the company that runs the AI, so it can write the reply.',
+  paiConsentKeep: "We don't keep your chats or your classes. They stay in the app on this device.",
+  paiConsentCount: 'Our server counts how much of the monthly allowance your subscription has used.',
+  paiConsentEmail: 'If you use it on another device, your email is used only to send you a sign-in code.',
+  paiConsentPrivacy: 'Read the privacy page',
+  paiConsentAgree: 'I agree',
 };
 
 export type Key = keyof typeof en;
@@ -991,6 +998,13 @@ const pt: Record<Key, string> = {
   paiErrNoAnswer: 'Não veio resposta. Tente dizer de outro jeito.',
   paiErrFailed: 'Algo deu errado. Tente de novo.',
   paiCutOff: 'A resposta veio cortada. Diga "Mande a aula inteira de novo".',
+  paiConsentTitle: 'Antes de começar',
+  paiConsentSend: 'O que você escreve para o Prancheta AI, e as respostas dele, passam pelo nosso servidor até a Anthropic, a empresa que roda a IA, para ela escrever a resposta.',
+  paiConsentKeep: 'Não guardamos suas conversas nem suas aulas. Elas ficam no app deste aparelho.',
+  paiConsentCount: 'Nosso servidor conta quanto da cota do mês a sua assinatura usou.',
+  paiConsentEmail: 'Se você usar em outro aparelho, seu e-mail serve só para mandar um código de acesso.',
+  paiConsentPrivacy: 'Ler a política de privacidade',
+  paiConsentAgree: 'Eu concordo',
 };
 
 export const DICTS: Record<Lang, Record<Key, string>> = { en, pt };

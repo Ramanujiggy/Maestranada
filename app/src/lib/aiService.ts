@@ -11,6 +11,10 @@ import { getLang } from './i18n.ts';
 
 const KEY_KEY = 'maestranada.aiKey';
 const CHAT_KEY = 'maestranada.aiChat';
+const CONSENT_KEY = 'maestranada.aiConsent';
+/** Bump when what Prancheta AI sends or keeps changes, so coaches agree again. */
+const CONSENT_VERSION = '1';
+export const PRIVACY_URL = 'https://pranchetabjj.com/privacy';
 
 export interface AiInfo {
   ready: boolean;
@@ -48,6 +52,10 @@ const session = () => (typeof sessionStorage === 'undefined' ? undefined : sessi
 
 export const getAiKey = (): string | null => safeGet(local(), KEY_KEY);
 export const saveAiKey = (key: string | null): void => safeSet(local(), KEY_KEY, key);
+
+/** Whether the coach agreed, on this device, to how Prancheta AI handles what they type. */
+export const hasAgreed = (): boolean => safeGet(local(), CONSENT_KEY) === CONSENT_VERSION;
+export const saveAgreed = (): void => safeSet(local(), CONSENT_KEY, CONSENT_VERSION);
 
 /** The chat so far in this tab, so closing the sheet by mistake doesn't lose it. */
 export function savedChat(): ChatMessage[] {

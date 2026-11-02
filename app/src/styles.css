@@ -3143,6 +3143,18 @@ html:has(.backdrop) body {
   gap: 12px;
 }
 
+.pai-consent {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 0 12px 20px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
 .pai-chat {
   display: grid;
   gap: 10px;

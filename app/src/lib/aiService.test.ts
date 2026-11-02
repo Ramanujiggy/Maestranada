@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { aiReady, aiRoute, costCents, emailCode, makeKey, readKey, type AiEnv } from '../../../worker/ai.js';
-import { aiSession, replyText } from './aiService.ts';
+import { aiSession, hasAgreed, replyText, saveAgreed } from './aiService.ts';
 import { chatFormat, readAiReply } from './aiClass.ts';
 
 function memoryKv() {
@@ -208,6 +208,13 @@ describe('Prancheta AI routes', () => {
 });
 
 describe('Prancheta AI in the app', () => {
+  it('remembers on this device that the coach agreed', () => {
+    localStorage.removeItem('maestranada.aiConsent');
+    expect(hasAgreed()).toBe(false);
+    saveAgreed();
+    expect(hasAgreed()).toBe(true);
+  });
+
   it('reads the checkout id Stripe sends back', () => {
     expect(aiSession('?ai=cs_live_a1B2')).toBe('cs_live_a1B2');
     expect(aiSession('?ai=<script>')).toBeNull();

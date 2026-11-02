@@ -11,8 +11,11 @@ import {
   aiStatus,
   chat,
   getAiKey,
+  hasAgreed,
   joinWith,
+  PRIVACY_URL,
   replyText,
+  saveAgreed,
   saveChat,
   savedChat,
   sendCode,
@@ -49,6 +52,7 @@ export function PranchetaAi({
   onClose: () => void;
   onPlan: (plan: ClassPlan, skipped: number) => void;
 }) {
+  const [agreed, setAgreed] = useState(hasAgreed);
   const [hasKey, setHasKey] = useState(() => !!getAiKey());
   const [joining, setJoining] = useState<'checking' | KeyResult | null>(checkout ? 'checking' : null);
   const lost = useCallback(() => setHasKey(false), []);
@@ -94,7 +98,14 @@ export function PranchetaAi({
           </button>
         </div>
 
-        {joining === 'checking' ? (
+        {!agreed ? (
+          <Consent
+            onAgree={() => {
+              saveAgreed();
+              setAgreed(true);
+            }}
+          />
+        ) : joining === 'checking' ? (
           <p className="muted" role="status">
             {t('paiJoining')}
           </p>
@@ -105,6 +116,31 @@ export function PranchetaAi({
         )}
       </div>
     </div>
+  );
+}
+
+/** Shown once per device, before Prancheta AI is first used: what it sends, and what's kept. */
+function Consent({ onAgree }: { onAgree: () => void }) {
+  return (
+    <>
+      <p className="field-label" style={{ margin: '6px 0 0' }}>
+        {t('paiConsentTitle')}
+      </p>
+      <ul className="pai-consent">
+        <li>{t('paiConsentSend')}</li>
+        <li>{t('paiConsentKeep')}</li>
+        <li>{t('paiConsentCount')}</li>
+        <li>{t('paiConsentEmail')}</li>
+      </ul>
+      <p className="muted" style={{ margin: 0, fontSize: 14 }}>
+        <a className="link" href={PRIVACY_URL} target="_blank" rel="noreferrer">
+          {t('paiConsentPrivacy')}
+        </a>
+      </p>
+      <button type="button" className="btn btn-primary btn-lg pai-open" onClick={onAgree}>
+        {t('paiConsentAgree')}
+      </button>
+    </>
   );
 }
 
