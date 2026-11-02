@@ -439,6 +439,39 @@ export function classFormat(lang: Lang = getLang()): string {
   return FORMAT[lang];
 }
 
+const CHAT: Record<Lang, string> = {
+  en: `How to plan with the coach. If they paste notes from a class they've already written, that's the class: sort their words into the blocks and keep them as written, in their order. Don't add drills or moves they didn't give you. Only ask about what the notes leave out.
+
+Otherwise, before you fill it in, check you have enough for a class they'd actually teach. If something that changes the plan is missing or unclear (what the class is about, the students' level, how long it runs, gi or no-gi), ask first: a few short questions in one message, only the ones that matter. Small details, decide like a good coach would. When they ask for a change after you've given the class, give the whole class again with the change.
+
+Write the class in English. The JSON has no comments.
+
+${GUIDE.en}
+
+The template, in the usual order:
+\`\`\`json
+${JSON.stringify(TEMPLATE, null, 2)}
+\`\`\``,
+
+  pt: `Como planejar com o professor. Se ele colar anotações de uma aula que já escreveu, essa é a aula: organize as palavras dele nos blocos e mantenha do jeito que ele escreveu, na ordem dele. Não acrescente exercícios ou técnicas que ele não deu. Só pergunte o que as anotações não dizem.
+
+Senão, antes de preencher, veja se você tem o suficiente para uma aula que ele daria de verdade. Se faltar ou não estiver claro algo que muda o plano (do que é a aula, o nível dos alunos, quanto tempo dura, com ou sem kimono), pergunte antes: poucas perguntas curtas numa mensagem só, apenas as que importam. Detalhes pequenos, decida como um bom professor decidiria. Quando ele pedir uma mudança depois que você deu a aula, dê a aula inteira de novo com a mudança.
+
+Converse e escreva a aula em português do Brasil. O JSON não tem comentários.
+
+${GUIDE.pt}
+
+O modelo, na ordem de sempre:
+\`\`\`json
+${JSON.stringify(TEMPLATE, null, 2)}
+\`\`\``,
+};
+
+/** The class format for Prancheta AI, the chat inside the app (worker/ai.js adds its own rules first). */
+export function chatFormat(lang: Lang = getLang()): string {
+  return CHAT[lang];
+}
+
 // ─── A saved class, back to the AI for changes ───────────────────────────────
 
 const KIND_OUT: Record<BlockKind, string> = {

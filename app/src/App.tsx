@@ -9,6 +9,7 @@ import { Welcome } from './components/Welcome.tsx';
 import { InstallGuide } from './components/InstallGuide.tsx';
 import { UnlockSheet } from './components/UnlockSheet.tsx';
 import { freeLeft, paidSession } from './lib/access.ts';
+import { aiSession } from './lib/aiService.ts';
 import { canInstall, installNudgeDue, markInstallNudged, useInstall } from './lib/pwa.ts';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { usePendingFile } from './lib/files.ts';
@@ -70,6 +71,16 @@ function Screens() {
     if (id) {
       const url = new URL(location.href);
       url.searchParams.delete('paid');
+      history.replaceState(history.state, '', url);
+    }
+    return id ?? undefined;
+  });
+  // Back from subscribing to Prancheta AI (?ai=cs_...): the same, for its sheet.
+  const [aiCheckout] = useState(() => {
+    const id = aiSession(location.search);
+    if (id) {
+      const url = new URL(location.href);
+      url.searchParams.delete('ai');
       history.replaceState(history.state, '', url);
     }
     return id ?? undefined;
@@ -136,6 +147,7 @@ function Screens() {
         onUnlock={() => setUnlock('open')}
         pickerOpen={pickerOpen}
         setPickerOpen={setPickerOpen}
+        aiCheckout={aiCheckout}
       />
     );
   } else {
