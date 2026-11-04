@@ -1,4 +1,5 @@
-// The unlock check: "did this checkout, or this email, pay for Prancheta?"
+// The unlock check: "did this checkout, or this email, pay for Prancheta
+// and not get a refund?"
 // Asked of Stripe with a restricted, read-only key (the Worker secret
 // STRIPE_KEY). The answer is only yes or no; nothing about the buyer goes
 // back to the app. PAYMENT_LINK (a plink_ id, optional) keeps other products
@@ -30,10 +31,24 @@ export async function isPaid(proof, env, fetchImpl = fetch) {
   };
   const ours = (s) =>
     !!s && s.status === 'complete' && s.payment_status === 'paid' && (!env.PAYMENT_LINK || s.payment_link === env.PAYMENT_LINK);
+  // A checkout still says "paid" after a refund, so ask about its charge too.
+  // Needs Read on Charges; a key without it still unlocks, and the log says why.
+  const refunded = async (s) => {
+    const pi = typeof s.payment_intent === 'string' ? s.payment_intent : s.payment_intent?.id;
+    if (!pi) return false;
+    try {
+      const charges = await get(`/charges?${new URLSearchParams({ payment_intent: pi, limit: '10' })}`);
+      return !!charges?.data?.some((c) => c.refunded);
+    } catch (e) {
+      console.error('Could not check for a refund:', e);
+      return false;
+    }
+  };
+  const kept = async (s) => ours(s) && !(await refunded(s));
 
   if (typeof proof.session === 'string') {
     if (!SESSION_ID.test(proof.session)) return false;
-    return ours(await get(`/checkout/sessions/${proof.session}`));
+    return kept(await get(`/checkout/sessions/${proof.session}`));
   }
   if (typeof proof.email === 'string') {
     const typed = proof.email.trim();
@@ -43,7 +58,7 @@ export async function isPaid(proof, env, fetchImpl = fetch) {
       const q = new URLSearchParams({ 'customer_details[email]': email, status: 'complete', limit: '100' });
       if (env.PAYMENT_LINK) q.set('payment_link', env.PAYMENT_LINK);
       const list = await get(`/checkout/sessions?${q}`);
-      if (list?.data?.some(ours)) return true;
+      for (const s of list?.data ?? []) if (await kept(s)) return true;
     }
   }
   return false;

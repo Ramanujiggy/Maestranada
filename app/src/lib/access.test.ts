@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { checkPurchase, FREE_CLASSES, lastCheckProblem, freeLeft, getUnlock, isUnlocked, paidSession, recordMade, roomFor, saveUnlock, takeCarriedUnlock } from './access.ts';
 import { isPaid, keyStatus, unlockRoute } from '../../../worker/unlock.js';
 import { blankPlan, duplicatePlan, normalizePlan, samplePlan, type ClassPlan } from './plan.ts';
@@ -119,6 +119,33 @@ describe('the Worker unlock check', () => {
   it('turns down a checkout that is not paid', async () => {
     const { impl } = stripe({ '/checkout/sessions/cs_live_open': { ...paid, payment_status: 'unpaid' } });
     expect(await isPaid({ session: 'cs_live_open' }, env, impl)).toBe(false);
+  });
+
+  it('turns down a refunded checkout, by id or by email', async () => {
+    const bought = { ...paid, payment_intent: 'pi_back' };
+    const { impl } = stripe({
+      '/checkout/sessions/cs_live_back': bought,
+      'email%5D=back%40gym.com': { data: [bought] },
+      'payment_intent=pi_back': { data: [{ refunded: true }] },
+      'payment_intent=pi_kept': { data: [{ refunded: false }] },
+      '/checkout/sessions/cs_live_kept': { ...paid, payment_intent: 'pi_kept' },
+    });
+    expect(await isPaid({ session: 'cs_live_back' }, env, impl)).toBe(false);
+    expect(await isPaid({ email: 'back@gym.com' }, env, impl)).toBe(false);
+    expect(await isPaid({ session: 'cs_live_kept' }, env, impl)).toBe(true);
+  });
+
+  it('still unlocks when the key may not read charges', async () => {
+    const asked: string[] = [];
+    const impl = (async (url: string) => {
+      asked.push(url);
+      if (url.includes('/charges')) return new Response(JSON.stringify({ error: { message: 'no permission' } }), { status: 403 });
+      return new Response(JSON.stringify({ ...paid, payment_intent: 'pi_1' }));
+    }) as unknown as typeof fetch;
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await isPaid({ session: 'cs_live_ok' }, env, impl)).toBe(true);
+    expect(asked.some((u) => u.includes('/charges'))).toBe(true);
+    quiet.mockRestore();
   });
 
   it('finds a purchase by email, as typed or in lower case', async () => {
