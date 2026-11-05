@@ -141,6 +141,8 @@
       .faq summary::after { content: '+'; font-family: var(--num); color: var(--muted); }
       .faq details[open] summary::after { content: '\2212'; }
       .faq details p { margin: 10px 0 0; color: var(--ink-2); }
+      .faq .steps { margin: 10px 0 0; padding-left: 1.3em; color: var(--ink-2); }
+      .faq .steps li + li { margin-top: 6px; }
 
       footer { border-top: 2px solid var(--ink); padding: 24px 0 44px; font-size: 15px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; }
       .say { font: 500 14px/1 var(--num); }
@@ -303,7 +305,8 @@ roll 5x5</div>
           <details><summary data-i18n="q1">Is it a subscription?</summary><p data-i18n="q1a">No. You pay $10 once and keep it, updates included.</p></details>
           <details><summary data-i18n="q2">Do I need an account?</summary><p data-i18n="q2a">No. Open the app and start. When you buy, the app unlocks as soon as you're back from checkout. On another device, tap Unlock and enter the email you paid with.</p></details>
           <details><summary data-i18n="q3">What does it run on?</summary><p data-i18n="q3a">iPhone, iPad, Android, Mac, Windows and Chromebook, one purchase for all of them. Open the app and add it to your home screen (on iPhone, tap Share, then Add to Home Screen). After that it works without signal. It isn't in the App Store yet.</p></details>
-          <details><summary data-i18n="q6">Where are my classes kept?</summary><p data-i18n="q6a">On your device, not on a server. Tap Back up all classes now and then and keep the file anywhere. On a new phone, open the app and import it.</p></details>
+          <details><summary data-i18n="q6">Where are my classes kept?</summary><p data-i18n="q6a">On your device, not on a server. Nothing leaves it unless you send it, so keep a backup file somewhere else.</p></details>
+          <details id="backup"><summary data-i18n="q13">How do I back up my classes?</summary><ol class="steps"><li data-i18n="q13s1">In the app, tap Back up all classes at the bottom of your classes. Once you have a few classes, the app reminds you about once a month.</li><li data-i18n="q13s2">Keep the file off your device. On iPhone, choose Save to Files and pick iCloud Drive. On Android, pick Drive. On a computer it lands in Downloads; email it to yourself or move it to a cloud folder.</li><li data-i18n="q13s3">To bring classes back, open the app on any device, tap Import (in the ⋯ menu on a phone) and pick the file. Every class comes back with its clips, and classes already there aren't doubled.</li></ol></details>
           <details><summary data-i18n="q12">Can I bring my classes from Evernote?</summary><p data-i18n="q12a">Yes. On a computer, select your class notes in Evernote, choose Export and pick ENEX. Then open the file in Prancheta with Import. Each note becomes a class, its GIFs come in as clips and its pictures stay. The app has the same steps under From Evernote at the bottom of your classes.</p></details>
           <details><summary data-i18n="q11">Does Prancheta send my classes to an AI?</summary><p data-i18n="q11a">No. You copy the class format into your own AI chat and paste the answer back. Prancheta itself never sends your classes anywhere.</p></details>
           <details data-only="pt" hidden><summary data-i18n="q9">Is the app in Portuguese?</summary><p data-i18n="q9a">Yes.</p></details>
@@ -327,6 +330,8 @@ roll 5x5</div>
       const SUPPORT_EMAIL = 'help@pranchetabjj.com';
 
       document.querySelectorAll('a.try').forEach((a) => (a.href = APP_URL));
+      // A link to /#backup opens that answer.
+      if (location.hash === '#backup') document.getElementById('backup').open = true;
       document.querySelectorAll('a.buy').forEach((a) => (a.href = CHECKOUT_URL));
       document.querySelectorAll('a.support').forEach((a) => {
         a.href = 'mailto:' + SUPPORT_EMAIL;
@@ -400,7 +405,11 @@ luta 5x5`,
         q3: 'Em quais aparelhos funciona?',
         q3a: 'iPhone, iPad, Android, Mac, Windows e Chromebook, uma compra para todos. Abra o app e adicione à tela de início (no iPhone, toque em Compartilhar e depois em Adicionar à Tela de Início). Depois disso funciona sem sinal. Ainda não está na App Store.',
         q6: 'Onde minhas aulas ficam salvas?',
-        q6a: 'No seu aparelho, não num servidor. Toque em Fazer backup de tudo de vez em quando e guarde o arquivo onde quiser. No celular novo, abra o app e importe.',
+        q6a: 'No seu aparelho, não num servidor. Nada sai dele se você não mandar, então guarde um arquivo de backup em outro lugar.',
+        q13: 'Como faço backup das minhas aulas?',
+        q13s1: 'No app, toque em Fazer backup de tudo no fim da lista de aulas. Depois de algumas aulas, o app lembra mais ou menos uma vez por mês.',
+        q13s2: 'Guarde o arquivo fora do aparelho. No iPhone, escolha Salvar em Arquivos e o iCloud Drive. No Android, escolha o Drive. No computador ele vai para Downloads; mande por e-mail para você ou mova para uma pasta na nuvem.',
+        q13s3: 'Para trazer as aulas de volta, abra o app em qualquer aparelho, toque em Importar (no menu ⋯ no celular) e escolha o arquivo. Todas as aulas voltam com os clipes, e as que já estão lá não ficam repetidas.',
         q11: 'A Prancheta manda minhas aulas para uma IA?',
         q12: 'Dá para trazer minhas aulas do Evernote?',
         q12a: 'Dá. No computador, selecione as notas das aulas no Evernote, escolha Exportar e o formato ENEX. Depois abra o arquivo na Prancheta com Importar. Cada nota vira uma aula, os GIFs entram como clipes e as fotos ficam. O app tem os mesmos passos em Do Evernote, no fim da lista de aulas.',
