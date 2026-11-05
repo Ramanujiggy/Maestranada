@@ -30,7 +30,7 @@ import type { Template } from '../lib/samples.ts';
 import { canInstall, isApple, isStandalone, type InstallState } from '../lib/pwa.ts';
 import { restoreClipData, withClipData } from '../lib/clips.ts';
 import { saveFile } from '../lib/files.ts';
-import { carryOfferDone, copyClasses, freshCopy, markCarryDone, readBackup, readClipboard, takeUnlockFrom } from '../lib/carry.ts';
+import { carried, carryOfferDone, copyClasses, freshCopy, markCarryDone, readBackup, readClipboard, takeUnlockFrom } from '../lib/carry.ts';
 import { FREE_CLASSES, freeLeft, useUnlocked } from '../lib/access.ts';
 import { t, type Key } from '../lib/i18n.ts';
 import { lastOpened } from '../lib/lastOpened.ts';
@@ -38,6 +38,8 @@ import { LangSwitch } from '../components/LangSwitch.tsx';
 import { ThemeButton, ThemeSheet } from '../components/ThemeSheet.tsx';
 import { Shelf, useJustFiled } from '../components/Shelf.tsx';
 import { EvernoteHelp, EvernoteImport } from '../components/EvernoteImport.tsx';
+import { BackupHelp } from '../components/BackupHelp.tsx';
+import { daysSinceBackup, lastBackup, markBackedUp, shouldNudge, snoozeNudge, snoozedUntil } from '../lib/backupNudge.ts';
 import { looksLikeEnex } from '../lib/evernote.ts';
 import type { EnexProgress } from '../lib/enexImport.ts';
 
@@ -139,6 +141,7 @@ export function LibraryPage({
   const [aiOpen, setAiOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [enexHelp, setEnexHelp] = useState(false);
+  const [backupHelp, setBackupHelp] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const today = todayISO();
@@ -312,9 +315,24 @@ export function LibraryPage({
     if ((await importBackup(raw, moving)) === 'none') notify(t('importBad'));
   };
 
+  // Once paid with a real library, a calm monthly nudge to keep a backup file.
+  const [nudgeHidden, setNudgeHidden] = useState(false);
+  const nudge =
+    !nudgeHidden &&
+    shouldNudge({
+      unlocked,
+      classes: carried(api.plans).length,
+      now: Date.now(),
+      lastBackup: lastBackup(),
+      snoozedUntil: snoozedUntil(),
+    });
+  const since = nudge ? daysSinceBackup() : null;
+
   const exportAll = async () => {
     try {
       await downloadBackup(`prancheta-backup-${todayISO()}.json`, api.plans);
+      markBackedUp();
+      setNudgeHidden(true);
     } catch {
       notify(t('backupFailed'));
     }
@@ -403,6 +421,35 @@ export function LibraryPage({
             </button>
             <button type="button" className="icon-btn" aria-label={t('close')} onClick={closeCarry}>
               <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {nudge && (
+        <div className="subpanel carry-offer backup-nudge" role="region" aria-label={t('bkNudgeTitle')}>
+          <div>
+            <strong>{t('bkNudgeTitle')}</strong>
+            <span className="muted">
+              {since === null ? t('bkNudgeNever') : t('bkNudgeSince', { n: since })}{' '}
+              <button type="button" className="link" onClick={() => setBackupHelp(true)}>
+                {t('bkHow')}
+              </button>
+            </span>
+          </div>
+          <div className="carry-actions">
+            <button type="button" className="btn btn-primary" onClick={() => void exportAll()}>
+              <Download size={16} /> {t('bkNow')}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                snoozeNudge();
+                setNudgeHidden(true);
+              }}
+            >
+              {t('bkLater')}
             </button>
           </div>
         </div>
@@ -550,6 +597,10 @@ export function LibraryPage({
           <button type="button" className="link" onClick={() => setEnexHelp(true)}>
             {t('enHelpLink')}
           </button>
+          <span className="sep">·</span>
+          <button type="button" className="link" onClick={() => setBackupHelp(true)}>
+            {t('bkHelpLink')}
+          </button>
         </div>
       </footer>
 
@@ -606,6 +657,19 @@ export function LibraryPage({
             setEnexHelp(false);
             fileRef.current?.click();
           }}
+        />
+      )}
+      {backupHelp && (
+        <BackupHelp
+          onClose={() => setBackupHelp(false)}
+          onBackUp={
+            api.plans.length
+              ? () => {
+                  setBackupHelp(false);
+                  void exportAll();
+                }
+              : undefined
+          }
         />
       )}
       {themeOpen && <ThemeSheet onClose={() => setThemeOpen(false)} />}
